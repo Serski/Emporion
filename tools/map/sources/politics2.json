@@ -1,0 +1,530 @@
+{
+ "version": 1,
+ "polities": {
+  "massalia": {
+   "name": "Massalia",
+   "color": "#e0a33c",
+   "culture": "greek"
+  },
+  "syracuse": {
+   "name": "Syracuse",
+   "color": "#22357a",
+   "culture": "greek"
+  },
+  "akra-leuke": {
+   "name": "Akra Leuke",
+   "color": "#6f9dd6",
+   "culture": "greek"
+  },
+  "roman_republic": {
+   "name": "Roman Republic",
+   "color": "#c93a30",
+   "culture": "italic"
+  },
+  "etruscans": {
+   "name": "Etruscans",
+   "color": "#e0c040",
+   "culture": "italic"
+  },
+  "samnites": {
+   "name": "Samnites",
+   "color": "#cf7a3a",
+   "culture": "italic"
+  },
+  "italiote-league": {
+   "name": "Italiote League",
+   "color": "#4a86dd",
+   "culture": "greek"
+  },
+  "mamertines": {
+   "name": "Mamertines",
+   "color": "#59c4d4",
+   "culture": "italic"
+  },
+  "neapolis": {
+   "name": "Neapolis",
+   "color": "#3f6fb5",
+   "culture": "greek"
+  },
+  "lucani": {
+   "name": "Lucani",
+   "color": "#a56b52",
+   "culture": "italic"
+  },
+  "messapi": {
+   "name": "Messapi",
+   "color": "#b58a45",
+   "culture": "italic"
+  },
+  "arverni": {
+   "name": "Arverni",
+   "color": "#6f5bd6",
+   "culture": "gaulish"
+  },
+  "carthage": {
+   "name": "Carthage",
+   "color": "#9fb59a",
+   "culture": "punic"
+  },
+  "saluvii": {
+   "name": "Saluvii",
+   "color": "#8a6a8f",
+   "culture": "gaulish"
+  },
+  "vocontii": {
+   "name": "Vocontii",
+   "color": "#4f6f5f",
+   "culture": "gaulish"
+  },
+  "cavares": {
+   "name": "Cavares",
+   "color": "#6f8f6f",
+   "culture": "gaulish"
+  },
+  "allobriges": {
+   "name": "Allobriges",
+   "color": "#63a063",
+   "culture": "gaulish"
+  },
+  "helvii": {
+   "name": "Helvii",
+   "color": "#77a077",
+   "culture": "gaulish"
+  },
+  "volcae": {
+   "name": "Volcae",
+   "color": "#3e6b3a",
+   "culture": "gaulish"
+  },
+  "veltanii": {
+   "name": "Veltani",
+   "color": "#557f66",
+   "culture": "gaulish"
+  },
+  "gabati": {
+   "name": "Gabati",
+   "color": "#d8c48a",
+   "culture": "gaulish"
+  },
+  "ruteni": {
+   "name": "Ruteni",
+   "color": "#a9b84e",
+   "culture": "gaulish"
+  },
+  "celtici": {
+   "name": "Celtici",
+   "color": "#8fae9c",
+   "culture": "iberian"
+  },
+  "cunetes": {
+   "name": "Cunetes",
+   "color": "#8f2f2a",
+   "culture": "iberian"
+  },
+  "turdetani": {
+   "name": "Turdetani",
+   "color": "#7fae9c",
+   "culture": "iberian"
+  },
+  "mauretania": {
+   "name": "Mauretania",
+   "color": "#8fa0ac"
+  },
+  "lusitani": {
+   "name": "Lusitani",
+   "color": "#b39288",
+   "culture": "iberian"
+  },
+  "vettones": {
+   "name": "Vettones",
+   "color": "#2f4e8f",
+   "culture": "iberian"
+  },
+  "astures": {
+   "name": "Astures",
+   "color": "#a6a8bc",
+   "culture": "iberian"
+  },
+  "lacetani": {
+   "name": "Lacetani",
+   "color": "#c8a52a",
+   "culture": "iberian"
+  },
+  "ilercavones": {
+   "name": "Lercavones",
+   "color": "#a08a54",
+   "culture": "iberian"
+  },
+  "vascones": {
+   "name": "Vascones",
+   "color": "#79a56a",
+   "culture": "iberian"
+  },
+  "llergetae": {
+   "name": "Ilergatae",
+   "color": "#a9955f",
+   "culture": "iberian"
+  },
+  "convenae": {
+   "name": "Convenae",
+   "color": "#6e8e60",
+   "culture": "gaulish"
+  },
+  "ausci": {
+   "name": "Ausci",
+   "color": "#d4766a",
+   "culture": "gaulish"
+  },
+  "trusates": {
+   "name": "Tarusates",
+   "color": "#7a9a6a",
+   "culture": "gaulish"
+  },
+  "ligurians": {
+   "name": "Ligurians",
+   "color": "#7a3f33",
+   "culture": "gaulish"
+  },
+  "boii": {
+   "name": "Boii",
+   "color": "#9ccc70",
+   "culture": "gaulish"
+  },
+  "veneti": {
+   "name": "Venetii",
+   "color": "#7fd4c8",
+   "culture": "gaulish"
+  },
+  "sordones": {
+   "name": "Sordones",
+   "color": "#b8467d",
+   "culture": "gaulish"
+  },
+  "tarbelli": {
+   "name": "Tarbelli",
+   "color": "#8a5a3a",
+   "culture": "gaulish"
+  },
+  "lemovices": {
+   "name": "Lemovices",
+   "color": "#d1a93a",
+   "culture": "gaulish"
+  },
+  "cadurci": {
+   "name": "Cadurci",
+   "color": "#8fb8d8",
+   "culture": "gaulish"
+  },
+  "lacetanni": {
+   "name": "Lacetanni",
+   "color": "#9b4fa0",
+   "culture": "iberian"
+  },
+  "massyli": {
+   "name": "Massyli",
+   "color": "#e8b4c0"
+  },
+  "bastetani": {
+   "name": "Bastetani",
+   "color": "#d98a3d",
+   "culture": "iberian"
+  },
+  "contestani": {
+   "name": "Contestani",
+   "color": "#2f5d3a",
+   "culture": "iberian"
+  },
+  "edetani": {
+   "name": "Edetani",
+   "color": "#7d5bb5",
+   "culture": "iberian"
+  },
+  "insubres": {
+   "name": "Insubres",
+   "color": "#1f3a6e",
+   "culture": "gaulish"
+  },
+  "veragri": {
+   "name": "Veragri",
+   "color": "#9a6a66",
+   "culture": "gaulish"
+  },
+  "friniates": {
+   "name": "Friniates",
+   "color": "#5e55a8",
+   "culture": "gaulish"
+  },
+  "segusiavi": {
+   "name": "Segusiavi",
+   "color": "#e08a72",
+   "culture": "gaulish"
+  },
+  "lingones": {
+   "name": "Lingones",
+   "color": "#4a4a4f",
+   "culture": "gaulish"
+  },
+  "pictones": {
+   "name": "Pictones",
+   "color": "#8fb8e0",
+   "culture": "gaulish"
+  },
+  "namnetes": {
+   "name": "Namnetes",
+   "color": "#8aa08c",
+   "culture": "gaulish"
+  },
+  "osismii": {
+   "name": "Osismii",
+   "color": "#dd8fb0",
+   "culture": "gaulish"
+  },
+  "aedui": {
+   "name": "Aedui",
+   "color": "#a11f30",
+   "culture": "gaulish"
+  },
+  "celtiberi": {
+   "name": "Celtiberi",
+   "color": "#79cdd6",
+   "culture": "iberian"
+  },
+  "vaccaei": {
+   "name": "Vaccaei",
+   "color": "#1f4d2e",
+   "culture": "iberian"
+  },
+  "unclaimed": {
+   "name": "Unclaimed",
+   "color": "#c9c9c4"
+  },
+  "oretani": {
+   "name": "Oretani",
+   "color": "#a68a12",
+   "culture": "iberian"
+  },
+  "deitani": {
+   "name": "Deitani",
+   "color": "#8f5a5f",
+   "culture": "iberian"
+  },
+  "turmodigi": {
+   "name": "Turmodigi",
+   "color": "#7a66c9",
+   "culture": "iberian"
+  },
+  "cantabri": {
+   "name": "Cantabri",
+   "color": "#ef9e8a",
+   "culture": "iberian"
+  },
+  "callaeci": {
+   "name": "Callaeci",
+   "color": "#5d5d66",
+   "culture": "iberian"
+  },
+  "unelli": {
+   "name": "Unelli",
+   "color": "#a8cdee",
+   "culture": "gaulish"
+  },
+  "caletes": {
+   "name": "Caletes",
+   "color": "#2e6b40",
+   "culture": "gaulish"
+  },
+  "menapii": {
+   "name": "Menapii",
+   "color": "#ee9ecd",
+   "culture": "gaulish"
+  },
+  "dumnonii": {
+   "name": "Dumnonii",
+   "color": "#1d5230",
+   "culture": "gaulish"
+  },
+  "durotriges": {
+   "name": "Durotriges",
+   "color": "#8a5fb0",
+   "culture": "gaulish"
+  },
+  "cantiaci": {
+   "name": "Cantiaci",
+   "color": "#3f6fc4",
+   "culture": "gaulish"
+  },
+  "trinovantes": {
+   "name": "Trinovantes",
+   "color": "#e585a8",
+   "culture": "gaulish"
+  },
+  "dobunni": {
+   "name": "Dobunni",
+   "color": "#5f9e4f",
+   "culture": "gaulish"
+  },
+  "epirus": {
+   "name": "Epirus",
+   "color": "#e59433",
+   "culture": "greek"
+  },
+  "illyrians": {
+   "name": "Illyrians",
+   "color": "#4e8f52",
+   "culture": "gaulish"
+  },
+  "sparta": {
+   "name": "Sparta",
+   "color": "#7c1518",
+   "culture": "greek"
+  },
+  "mago": {
+   "name": "Mago",
+   "color": "#93714f",
+   "culture": "punic"
+  }
+ },
+ "owners": {
+  "R050": "massalia",
+  "R052": "massalia",
+  "R059": "massalia",
+  "R060": "massalia",
+  "R065": "massalia",
+  "R131": "syracuse",
+  "R096": "akra-leuke",
+  "R081": "roman_republic",
+  "R086": "roman_republic",
+  "R064": "etruscans",
+  "R067": "etruscans",
+  "R073": "etruscans",
+  "R075": "etruscans",
+  "R076": "roman_republic",
+  "R085": "samnites",
+  "R087": "samnites",
+  "R102": "italiote-league",
+  "R103": "italiote-league",
+  "R107": "italiote-league",
+  "R110": "italiote-league",
+  "R117": "mamertines",
+  "R095": "neapolis",
+  "R099": "lucani",
+  "R094": "messapi",
+  "R015": "arverni",
+  "R100": "carthage",
+  "R106": "carthage",
+  "R108": "carthage",
+  "R111": "carthage",
+  "R112": "carthage",
+  "R113": "carthage",
+  "R114": "carthage",
+  "R115": "carthage",
+  "R119": "carthage",
+  "R122": "carthage",
+  "R123": "carthage",
+  "R126": "carthage",
+  "R127": "carthage",
+  "R132": "carthage",
+  "R135": "carthage",
+  "R136": "carthage",
+  "R137": "carthage",
+  "R138": "carthage",
+  "R139": "carthage",
+  "R047": "saluvii",
+  "R034": "vocontii",
+  "R032": "cavares",
+  "R020": "allobriges",
+  "R025": "allobriges",
+  "R019": "helvii",
+  "R042": "volcae",
+  "R045": "volcae",
+  "R031": "veltanii",
+  "R036": "gabati",
+  "R026": "ruteni",
+  "R068": "celtici",
+  "R071": "celtici",
+  "R079": "cunetes",
+  "R082": "turdetani",
+  "R083": "turdetani",
+  "R092": "turdetani",
+  "R109": "mauretania",
+  "R128": "mauretania",
+  "R130": "mauretania",
+  "R039": "lusitani",
+  "R054": "lusitani",
+  "R070": "vettones",
+  "R029": "astures",
+  "R069": "lacetani",
+  "R072": "ilercavones",
+  "R044": "vascones",
+  "R056": "llergetae",
+  "R038": "convenae",
+  "R027": "ausci",
+  "R018": "trusates",
+  "R088": "carthage",
+  "R090": "carthage",
+  "R104": "carthage",
+  "R116": "carthage",
+  "R118": "carthage",
+  "R124": "carthage",
+  "R134": "carthage",
+  "R021": "arverni",
+  "R049": "ligurians",
+  "R041": "boii",
+  "R051": "boii",
+  "R055": "boii",
+  "R030": "veneti",
+  "R057": "sordones",
+  "R028": "tarbelli",
+  "R017": "lemovices",
+  "R023": "cadurci",
+  "R058": "lacetanni",
+  "R133": "massyli",
+  "R101": "bastetani",
+  "R089": "contestani",
+  "R077": "edetani",
+  "R037": "insubres",
+  "R024": "veragri",
+  "R063": "friniates",
+  "R016": "segusiavi",
+  "R012": "lingones",
+  "R013": "pictones",
+  "R010": "namnetes",
+  "R008": "osismii",
+  "R011": "aedui",
+  "R014": "aedui",
+  "R066": "celtiberi",
+  "R048": "vaccaei",
+  "R046": "unclaimed",
+  "R098": "unclaimed",
+  "R120": "unclaimed",
+  "R125": "unclaimed",
+  "R062": "unclaimed",
+  "R035": "unclaimed",
+  "R084": "oretani",
+  "R097": "deitani",
+  "R053": "turmodigi",
+  "R033": "cantabri",
+  "R022": "callaeci",
+  "R009": "unelli",
+  "R007": "caletes",
+  "R006": "menapii",
+  "R004": "dumnonii",
+  "R003": "durotriges",
+  "R005": "cantiaci",
+  "R002": "trinovantes",
+  "R001": "dobunni",
+  "R105": "epirus",
+  "R093": "illyrians",
+  "R080": "illyrians",
+  "R074": "illyrians",
+  "R061": "illyrians",
+  "R040": "illyrians",
+  "R129": "sparta",
+  "R091": "mago",
+  "R043": "unclaimed",
+  "R078": "unclaimed",
+  "R121": "unclaimed",
+  "R140": "unclaimed"
+ },
+ "explicitlyEmpty": []
+}
