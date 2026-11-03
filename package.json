@@ -1,0 +1,26 @@
+{
+  "name": "emporion",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "build": "pnpm -r build",
+    "lint": "pnpm -r lint",
+    "typecheck": "pnpm -r typecheck",
+    "test": "pnpm -r test",
+    "dev": "pnpm --filter @emporion/web dev",
+    "gate": "bash scripts/gate.sh",
+    "simulate": "pnpm --filter @emporion/engine simulate"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.5",
+    "@types/node": "^22.15.29",
+    "eslint": "^9.28.0",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "prettier": "^3.9.9",
+    "typescript": "^5.8.3",
+    "typescript-eslint": "^8.33.1",
+    "vitest": "^4.1.11"
+  },
+  "packageManager": "pnpm@10.11.0"
+}
