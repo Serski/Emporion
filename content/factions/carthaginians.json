@@ -1,0 +1,86 @@
+{
+  "id": "carthaginians",
+  "name": "Carthaginians",
+  "description": "The Punic thalassocracy: mercenaries train faster, merchants haul the heaviest loads, and war elephants anchor the army.",
+  "playable": true,
+  "color": "#7a4fa3",
+  "start": { "town": "carthage" },
+  "wall": { "name": "Casemate Walls", "bonusPerLevel": 0.026, "durability": 1.1 },
+  "cacheMultiplier": 1,
+  "merchant": { "capacity": 1100, "speed": 13 },
+  "trainTimeMultiplier": 0.92,
+  "units": [
+    {
+      "id": "libyan_spearman", "name": "Libyan Spearman", "plural": "Libyan Spearmen", "class": "infantry",
+      "description": "Steady African line infantry, good against horse and foot alike.",
+      "attack": 30, "defenseInfantry": 65, "defenseCavalry": 50, "speed": 6, "carry": 40, "upkeep": 1,
+      "cost": { "timber": 95, "stone": 80, "iron": 95, "grain": 45 }, "trainTime": 980, "building": ["barracks"]
+    },
+    {
+      "id": "balearic_slinger", "name": "Balearic Slinger", "plural": "Balearic Slingers", "class": "infantry",
+      "description": "Island mercenary with three slings. Cheap and deadly in numbers.",
+      "attack": 50, "defenseInfantry": 20, "defenseCavalry": 15, "speed": 7, "carry": 45, "upkeep": 1,
+      "cost": { "timber": 70, "stone": 90, "iron": 40, "grain": 40 }, "trainTime": 780, "building": ["barracks"],
+      "research": { "requires": [{ "building": "gymnasion", "level": 1 }], "cost": { "timber": 500, "stone": 640, "iron": 300, "grain": 360 }, "time": 5400 }
+    },
+    {
+      "id": "sacred_band", "name": "Sacred Band", "plural": "Sacred Band", "class": "infantry",
+      "description": "Citizen elite of Carthage. Expensive, superb on attack and defence.",
+      "attack": 85, "defenseInfantry": 60, "defenseCavalry": 40, "speed": 5, "carry": 35, "upkeep": 2,
+      "cost": { "timber": 230, "stone": 200, "iron": 270, "grain": 90 }, "trainTime": 2600, "building": ["barracks"],
+      "research": { "requires": [{ "building": "gymnasion", "level": 10 }, { "building": "armory", "level": 5 }], "cost": { "timber": 1500, "stone": 1300, "iron": 1800, "grain": 800 }, "time": 14000 }
+    },
+    {
+      "id": "punic_spy", "name": "Punic Spy", "plural": "Punic Spies", "class": "infantry", "role": "scout",
+      "description": "Trader's agent who counts granaries and garrisons.",
+      "attack": 0, "defenseInfantry": 22, "defenseCavalry": 18, "speed": 11, "carry": 0, "upkeep": 1,
+      "cost": { "timber": 90, "stone": 90, "iron": 45, "grain": 30 }, "trainTime": 820, "building": ["barracks"],
+      "research": { "requires": [{ "building": "gymnasion", "level": 3 }], "cost": { "timber": 600, "stone": 640, "iron": 320, "grain": 300 }, "time": 5200 },
+      "scouting": { "attack": 22, "defense": 26 }
+    },
+    {
+      "id": "numidian_horse", "name": "Numidian Horseman", "plural": "Numidian Horsemen", "class": "cavalry",
+      "description": "Bareback javelin rider from the desert fringe. Raids anywhere, holds nothing.",
+      "attack": 75, "defenseInfantry": 30, "defenseCavalry": 35, "speed": 18, "carry": 60, "upkeep": 2,
+      "cost": { "timber": 290, "stone": 210, "iron": 150, "grain": 90 }, "trainTime": 1950, "building": ["stables"],
+      "research": { "requires": [{ "building": "stables", "level": 1 }, { "building": "gymnasion", "level": 5 }], "cost": { "timber": 2000, "stone": 1600, "iron": 1100, "grain": 560 }, "time": 11000 }
+    },
+    {
+      "id": "war_elephant", "name": "War Elephant", "plural": "War Elephants", "class": "cavalry",
+      "description": "Forest elephant with a tower crew. Slow, hungry and terrifying.",
+      "attack": 180, "defenseInfantry": 110, "defenseCavalry": 130, "speed": 6, "carry": 120, "upkeep": 5,
+      "cost": { "timber": 900, "stone": 720, "iron": 760, "grain": 320 }, "trainTime": 5600, "building": ["stables"],
+      "research": { "requires": [{ "building": "stables", "level": 15 }, { "building": "gymnasion", "level": 15 }], "cost": { "timber": 5600, "stone": 4800, "iron": 5000, "grain": 2200 }, "time": 26000 }
+    },
+    {
+      "id": "punic_ram", "name": "Punic Ram", "plural": "Punic Rams", "class": "infantry", "role": "ram",
+      "description": "Siege tortoise from the engineers of Carthage.",
+      "attack": 55, "defenseInfantry": 45, "defenseCavalry": 55, "speed": 4, "carry": 0, "upkeep": 3,
+      "cost": { "timber": 820, "stone": 400, "iron": 450, "grain": 140 }, "trainTime": 4300, "building": ["siege_workshop"],
+      "research": { "requires": [{ "building": "siege_workshop", "level": 1 }, { "building": "gymnasion", "level": 10 }], "cost": { "timber": 4600, "stone": 2500, "iron": 2700, "grain": 900 }, "time": 15000 },
+      "siege": 1
+    },
+    {
+      "id": "ballista", "name": "Ballista", "plural": "Ballistae", "class": "infantry", "role": "catapult",
+      "description": "Heavy bolt- and stone-thrower. The strongest engine of the age.",
+      "attack": 85, "defenseInfantry": 35, "defenseCavalry": 25, "speed": 3, "carry": 0, "upkeep": 5,
+      "cost": { "timber": 940, "stone": 1180, "iron": 760, "grain": 170 }, "trainTime": 7200, "building": ["siege_workshop"],
+      "research": { "requires": [{ "building": "siege_workshop", "level": 10 }, { "building": "gymnasion", "level": 15 }], "cost": { "timber": 6000, "stone": 7400, "iron": 4200, "grain": 1100 }, "time": 24000 },
+      "siege": 1.1
+    },
+    {
+      "id": "suffete", "name": "Suffete", "plural": "Suffetes", "class": "infantry", "role": "chief",
+      "description": "Magistrate with a purse. Buys loyalty steadily rather than winning it.",
+      "attack": 45, "defenseInfantry": 50, "defenseCavalry": 35, "speed": 4, "carry": 0, "upkeep": 5,
+      "cost": { "timber": 25000, "stone": 20000, "iron": 22000, "grain": 16000 }, "trainTime": 51000, "building": ["oikist_house", "acropolis"],
+      "research": { "requires": [{ "building": "gymnasion", "level": 20 }, { "building": "muster_ground", "level": 10 }], "cost": { "timber": 14500, "stone": 12000, "iron": 13500, "grain": 10000 }, "time": 31000 },
+      "loyalty": { "min": 20, "max": 26 }
+    },
+    {
+      "id": "punic_colonist", "name": "Punic Colonist", "plural": "Punic Colonists", "class": "infantry", "role": "settler",
+      "description": "Settler from the metropolis. Three of them found a new town.",
+      "attack": 5, "defenseInfantry": 60, "defenseCavalry": 55, "speed": 5, "carry": 0, "upkeep": 1,
+      "cost": { "timber": 4500, "stone": 4300, "iron": 5300, "grain": 4400 }, "trainTime": 24500, "building": ["oikist_house", "acropolis"]
+    }
+  ]
+}

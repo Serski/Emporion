@@ -1,0 +1,21 @@
+{
+  "enabled": true,
+  "speed": 7,
+  "strength": { "base": 120, "perPoint": 70 },
+  "offensePerPoint": 0.0025,
+  "defensePerPoint": 0.0025,
+  "production": { "allPerPoint": 4, "singlePerPoint": 12 },
+  "pointsPerLevel": 4,
+  "startPoints": 4,
+  "maxLevel": 100,
+  "xpBase": 80,
+  "xpPerUpkeep": 1,
+  "healthRegenPerDay": 15,
+  "damageFactor": 1,
+  "revive": {
+    "cost": { "base": { "timber": 160, "stone": 170, "iron": 150, "grain": 80 }, "growth": 1.09, "round": 5 },
+    "time": { "zero": 3600, "base": 3600, "growth": 1.06, "round": 60 }
+  },
+  "oasisRadius": 4,
+  "oasisLoyaltyPerAttack": 34
+}

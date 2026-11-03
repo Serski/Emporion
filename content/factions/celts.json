@@ -1,0 +1,86 @@
+{
+  "id": "celts",
+  "name": "Celts",
+  "description": "Hill peoples of Gaul: fast horsemen and war chariots, deep hidden caches, the quickest merchants and lighter palisades.",
+  "playable": true,
+  "color": "#5c8a3c",
+  "start": { "town": "bibracte" },
+  "wall": { "name": "Palisade", "bonusPerLevel": 0.024, "durability": 0.9 },
+  "cacheMultiplier": 1.5,
+  "merchant": { "capacity": 600, "speed": 21 },
+  "trainTimeMultiplier": 1,
+  "units": [
+    {
+      "id": "gaesatus", "name": "Gaesatus", "plural": "Gaesatae", "class": "infantry",
+      "description": "Spear-armed warrior who fights for plunder. Cheap and eager.",
+      "attack": 50, "defenseInfantry": 15, "defenseCavalry": 20, "speed": 8, "carry": 55, "upkeep": 1,
+      "cost": { "timber": 80, "stone": 60, "iron": 55, "grain": 40 }, "trainTime": 760, "building": ["barracks"]
+    },
+    {
+      "id": "ambactus", "name": "Ambactus", "plural": "Ambacti", "class": "infantry",
+      "description": "Sworn retainer with a long shield and spear; sets a hedge against horses.",
+      "attack": 25, "defenseInfantry": 55, "defenseCavalry": 75, "speed": 6, "carry": 30, "upkeep": 1,
+      "cost": { "timber": 100, "stone": 135, "iron": 105, "grain": 50 }, "trainTime": 1300, "building": ["barracks"],
+      "research": { "requires": [{ "building": "gymnasion", "level": 1 }], "cost": { "timber": 640, "stone": 900, "iron": 560, "grain": 460 }, "time": 7000 }
+    },
+    {
+      "id": "soldurius", "name": "Soldurius", "plural": "Soldurii", "class": "infantry",
+      "description": "Oath-sworn champion who will not outlive his chief.",
+      "attack": 85, "defenseInfantry": 35, "defenseCavalry": 20, "speed": 6, "carry": 40, "upkeep": 1,
+      "cost": { "timber": 140, "stone": 105, "iron": 180, "grain": 60 }, "trainTime": 1600, "building": ["barracks"],
+      "research": { "requires": [{ "building": "gymnasion", "level": 3 }, { "building": "armory", "level": 1 }], "cost": { "timber": 980, "stone": 620, "iron": 1700, "grain": 560 }, "time": 8600 }
+    },
+    {
+      "id": "outrider", "name": "Outrider", "plural": "Outriders", "class": "cavalry", "role": "scout",
+      "description": "Rider who knows every ford and forest path.",
+      "attack": 0, "defenseInfantry": 12, "defenseCavalry": 14, "speed": 19, "carry": 0, "upkeep": 2,
+      "cost": { "timber": 105, "stone": 85, "iron": 60, "grain": 35 }, "trainTime": 1000, "building": ["stables"],
+      "research": { "requires": [{ "building": "gymnasion", "level": 5 }, { "building": "stables", "level": 1 }], "cost": { "timber": 860, "stone": 700, "iron": 340, "grain": 380 }, "time": 5800 },
+      "scouting": { "attack": 30, "defense": 18 }
+    },
+    {
+      "id": "epona_rider", "name": "Epona Rider", "plural": "Epona Riders", "class": "cavalry",
+      "description": "Raider under the horse goddess's sign. The fastest strike force on the map.",
+      "attack": 110, "defenseInfantry": 40, "defenseCavalry": 25, "speed": 16, "carry": 90, "upkeep": 3,
+      "cost": { "timber": 340, "stone": 270, "iron": 130, "grain": 90 }, "trainTime": 2250, "building": ["stables"],
+      "research": { "requires": [{ "building": "stables", "level": 3 }, { "building": "gymnasion", "level": 5 }], "cost": { "timber": 2300, "stone": 2000, "iron": 900, "grain": 560 }, "time": 12400 }
+    },
+    {
+      "id": "war_chariot", "name": "War Chariot", "plural": "War Chariots", "class": "cavalry",
+      "description": "Two-horse chariot with driver and warrior. Shatters infantry.",
+      "attack": 155, "defenseInfantry": 60, "defenseCavalry": 50, "speed": 12, "carry": 100, "upkeep": 3,
+      "cost": { "timber": 460, "stone": 490, "iron": 610, "grain": 160 }, "trainTime": 3200, "building": ["stables"],
+      "research": { "requires": [{ "building": "stables", "level": 10 }, { "building": "gymnasion", "level": 15 }], "cost": { "timber": 3400, "stone": 3700, "iron": 4100, "grain": 1300 }, "time": 17500 }
+    },
+    {
+      "id": "log_ram", "name": "Log Ram", "plural": "Log Rams", "class": "infantry", "role": "ram",
+      "description": "An oak trunk on rollers, swung by a war band.",
+      "attack": 50, "defenseInfantry": 40, "defenseCavalry": 65, "speed": 5, "carry": 0, "upkeep": 3,
+      "cost": { "timber": 700, "stone": 460, "iron": 350, "grain": 130 }, "trainTime": 4100, "building": ["siege_workshop"],
+      "research": { "requires": [{ "building": "siege_workshop", "level": 1 }, { "building": "gymnasion", "level": 10 }], "cost": { "timber": 4400, "stone": 2600, "iron": 2400, "grain": 950 }, "time": 14500 },
+      "siege": 1
+    },
+    {
+      "id": "firebrand", "name": "Firebrand", "plural": "Firebrands", "class": "infantry", "role": "catapult",
+      "description": "Torch-bearers who fire roofs and granaries. Faster than any engine, but weaker.",
+      "attack": 50, "defenseInfantry": 40, "defenseCavalry": 20, "speed": 6, "carry": 0, "upkeep": 3,
+      "cost": { "timber": 640, "stone": 560, "iron": 520, "grain": 220 }, "trainTime": 5200, "building": ["siege_workshop"],
+      "research": { "requires": [{ "building": "siege_workshop", "level": 10 }, { "building": "gymnasion", "level": 15 }], "cost": { "timber": 4100, "stone": 3600, "iron": 3300, "grain": 1500 }, "time": 21000 },
+      "siege": 0.6
+    },
+    {
+      "id": "vergobret", "name": "Vergobret", "plural": "Vergobrets", "class": "infantry", "role": "chief",
+      "description": "Elected magistrate whose word can turn a town. Erratic, sometimes brilliant.",
+      "attack": 30, "defenseInfantry": 40, "defenseCavalry": 55, "speed": 5, "carry": 0, "upkeep": 4,
+      "cost": { "timber": 22000, "stone": 17000, "iron": 19000, "grain": 15000 }, "trainTime": 48000, "building": ["oikist_house", "acropolis"],
+      "research": { "requires": [{ "building": "gymnasion", "level": 20 }, { "building": "muster_ground", "level": 10 }], "cost": { "timber": 13000, "stone": 10500, "iron": 12000, "grain": 9500 }, "time": 30000 },
+      "loyalty": { "min": 15, "max": 35 }
+    },
+    {
+      "id": "celtic_settler", "name": "Settler", "plural": "Settlers", "class": "infantry", "role": "settler",
+      "description": "Family with cattle and seed grain. Three of them found a new town.",
+      "attack": 15, "defenseInfantry": 50, "defenseCavalry": 60, "speed": 6, "carry": 0, "upkeep": 1,
+      "cost": { "timber": 4300, "stone": 4500, "iron": 5100, "grain": 4500 }, "trainTime": 23000, "building": ["oikist_house", "acropolis"]
+    }
+  ]
+}

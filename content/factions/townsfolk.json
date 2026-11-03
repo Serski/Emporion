@@ -1,0 +1,27 @@
+{
+  "id": "townsfolk",
+  "name": "Free Cities",
+  "description": "The historical cities of the western Mediterranean. Their militias guard rich storehouses.",
+  "playable": false,
+  "conquerable": false,
+  "color": "#9a8a6a",
+  "wall": { "name": "City Walls", "bonusPerLevel": 0.03, "durability": 1.2 },
+  "merchant": { "capacity": 1, "speed": 1 },
+  "units": [
+    {
+      "id": "city_spearman", "name": "City Spearman", "plural": "City Spearmen", "class": "infantry",
+      "attack": 30, "defenseInfantry": 55, "defenseCavalry": 45, "speed": 5, "carry": 30, "upkeep": 1,
+      "cost": { "timber": 100, "stone": 100, "iron": 100, "grain": 50 }, "trainTime": 1000
+    },
+    {
+      "id": "city_archer", "name": "City Archer", "plural": "City Archers", "class": "infantry",
+      "attack": 40, "defenseInfantry": 35, "defenseCavalry": 55, "speed": 6, "carry": 20, "upkeep": 1,
+      "cost": { "timber": 110, "stone": 90, "iron": 90, "grain": 50 }, "trainTime": 1000
+    },
+    {
+      "id": "city_horseman", "name": "City Horseman", "plural": "City Horsemen", "class": "cavalry",
+      "attack": 70, "defenseInfantry": 45, "defenseCavalry": 40, "speed": 12, "carry": 60, "upkeep": 2,
+      "cost": { "timber": 250, "stone": 200, "iron": 220, "grain": 90 }, "trainTime": 2000
+    }
+  ]
+}

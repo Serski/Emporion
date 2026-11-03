@@ -1,0 +1,18 @@
+{
+  "id": "wildlife",
+  "name": "Wildlife",
+  "description": "Animals that hold the oases until a hero clears them.",
+  "playable": false,
+  "conquerable": false,
+  "color": "#8a6a3a",
+  "wall": { "bonusPerLevel": 0, "durability": 1.0 },
+  "merchant": { "capacity": 1, "speed": 1 },
+  "units": [
+    { "id": "viper", "name": "Viper", "plural": "Vipers", "class": "infantry", "attack": 10, "defenseInfantry": 25, "defenseCavalry": 20, "speed": 20, "carry": 0, "upkeep": 1, "cost": { "timber": 1 }, "trainTime": 1 },
+    { "id": "boar", "name": "Boar", "plural": "Boars", "class": "infantry", "attack": 20, "defenseInfantry": 35, "defenseCavalry": 40, "speed": 20, "carry": 0, "upkeep": 1, "cost": { "timber": 1 }, "trainTime": 1 },
+    { "id": "wolf", "name": "Wolf", "plural": "Wolves", "class": "infantry", "attack": 30, "defenseInfantry": 40, "defenseCavalry": 30, "speed": 20, "carry": 0, "upkeep": 1, "cost": { "timber": 1 }, "trainTime": 1 },
+    { "id": "lynx", "name": "Lynx", "plural": "Lynxes", "class": "cavalry", "attack": 35, "defenseInfantry": 45, "defenseCavalry": 50, "speed": 20, "carry": 0, "upkeep": 2, "cost": { "timber": 1 }, "trainTime": 1 },
+    { "id": "bear", "name": "Bear", "plural": "Bears", "class": "infantry", "attack": 50, "defenseInfantry": 70, "defenseCavalry": 60, "speed": 20, "carry": 0, "upkeep": 2, "cost": { "timber": 1 }, "trainTime": 1 },
+    { "id": "aurochs", "name": "Aurochs", "plural": "Aurochs", "class": "cavalry", "attack": 60, "defenseInfantry": 110, "defenseCavalry": 100, "speed": 20, "carry": 0, "upkeep": 3, "cost": { "timber": 1 }, "trainTime": 1 }
+  ]
+}

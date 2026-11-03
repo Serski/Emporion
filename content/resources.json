@@ -1,0 +1,58 @@
+{
+  "resources": [
+    { "id": "timber", "name": "Wood", "icon": "🪵" },
+    { "id": "stone", "name": "Stone", "icon": "🪨" },
+    { "id": "iron", "name": "Iron", "icon": "⚒️" },
+    { "id": "grain", "name": "Wheat", "icon": "🌾", "food": true }
+  ],
+  "fields": [
+    {
+      "resource": "timber",
+      "name": "Timber Lot",
+      "description": "Woodcutters fell the hillside groves for beams, hulls and charcoal.",
+      "maxLevel": 10,
+      "maxLevelCapital": 15,
+      "production": { "zero": 3, "table": [7, 12, 19, 28, 40, 56, 77, 104, 138, 180, 230, 290, 360, 440, 530] },
+      "cost": { "base": { "timber": 45, "stone": 85, "iron": 55, "grain": 50 }, "growth": 1.6, "round": 5 },
+      "time": { "base": 240, "growth": 1.5, "round": 10 },
+      "pop": { "table": [2, 1, 1, 1, 1, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3] },
+      "culture": { "table": [1, 1, 1, 1, 2, 2, 2, 3, 3, 4, 4, 5, 5, 6, 7] }
+    },
+    {
+      "resource": "stone",
+      "name": "Quarry",
+      "description": "Masons cut limestone blocks for walls, temples and storehouses.",
+      "maxLevel": 10,
+      "maxLevelCapital": 15,
+      "production": { "zero": 3, "table": [7, 12, 19, 28, 40, 56, 77, 104, 138, 180, 230, 290, 360, 440, 530] },
+      "cost": { "base": { "timber": 85, "stone": 45, "iron": 70, "grain": 55 }, "growth": 1.6, "round": 5 },
+      "time": { "base": 230, "growth": 1.5, "round": 10 },
+      "pop": { "table": [2, 1, 1, 1, 1, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3] },
+      "culture": { "table": [1, 1, 1, 1, 2, 2, 2, 3, 3, 4, 4, 5, 5, 6, 7] }
+    },
+    {
+      "resource": "iron",
+      "name": "Iron Mine",
+      "description": "Miners follow the ore seams into the hills; smiths wait at the pithead.",
+      "maxLevel": 10,
+      "maxLevelCapital": 15,
+      "production": { "zero": 3, "table": [7, 12, 19, 28, 40, 56, 77, 104, 138, 180, 230, 290, 360, 440, 530] },
+      "cost": { "base": { "timber": 90, "stone": 75, "iron": 40, "grain": 50 }, "growth": 1.6, "round": 5 },
+      "time": { "base": 260, "growth": 1.5, "round": 10 },
+      "pop": { "table": [2, 1, 1, 1, 1, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3] },
+      "culture": { "table": [1, 1, 1, 1, 2, 2, 2, 3, 3, 4, 4, 5, 5, 6, 7] }
+    },
+    {
+      "resource": "grain",
+      "name": "Wheat Field",
+      "description": "Terraced fields of wheat and barley feed the town and its garrison.",
+      "maxLevel": 10,
+      "maxLevelCapital": 15,
+      "production": { "zero": 3, "table": [7, 12, 19, 28, 40, 56, 77, 104, 138, 180, 230, 290, 360, 440, 530] },
+      "cost": { "base": { "timber": 65, "stone": 80, "iron": 60, "grain": 25 }, "growth": 1.6, "round": 5 },
+      "time": { "base": 200, "growth": 1.5, "round": 10 },
+      "pop": { "table": [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2] },
+      "culture": { "table": [1, 1, 1, 1, 1, 2, 2, 2, 3, 3, 4, 4, 5, 5, 6] }
+    }
+  ]
+}

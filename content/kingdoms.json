@@ -1,0 +1,8 @@
+{
+  "enabled": true,
+  "found": { "minPopulation": 200, "treasuryLevel": 1 },
+  "influence": { "base": 3, "perPopulation": 0.008, "perTreasure": 0.4, "maxRadius": 14 },
+  "tribute": { "share": 0.08, "capHours": 24 },
+  "memberProductionBonus": 0.04,
+  "victoryPoints": { "perTreasure": 25, "perPopulation": 1 }
+}

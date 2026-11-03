@@ -1,0 +1,86 @@
+{
+  "id": "hellenes",
+  "name": "Hellenes",
+  "description": "Massaliote Greeks: the strongest walls on the coast, heavy hoplite defence and the best-travelled merchants.",
+  "playable": true,
+  "color": "#e0a33c",
+  "start": { "town": "massalia" },
+  "wall": { "name": "Stone Walls", "bonusPerLevel": 0.032, "durability": 1.0 },
+  "cacheMultiplier": 1,
+  "merchant": { "capacity": 800, "speed": 15 },
+  "trainTimeMultiplier": 1,
+  "units": [
+    {
+      "id": "peltast", "name": "Peltast", "plural": "Peltasts", "class": "infantry",
+      "description": "Light javelin skirmisher. Cheap, quick to train, the raider of the early game.",
+      "attack": 35, "defenseInfantry": 25, "defenseCavalry": 20, "speed": 8, "carry": 40, "upkeep": 1,
+      "cost": { "timber": 85, "stone": 65, "iron": 45, "grain": 35 }, "trainTime": 820, "building": ["barracks"]
+    },
+    {
+      "id": "hoplite", "name": "Hoplite", "plural": "Hoplites", "class": "infantry",
+      "description": "Bronze-shielded citizen spearman. The wall behind the wall.",
+      "attack": 40, "defenseInfantry": 80, "defenseCavalry": 60, "speed": 5, "carry": 30, "upkeep": 1,
+      "cost": { "timber": 120, "stone": 110, "iron": 165, "grain": 45 }, "trainTime": 1380, "building": ["barracks"],
+      "research": { "requires": [{ "building": "gymnasion", "level": 1 }], "cost": { "timber": 720, "stone": 640, "iron": 1400, "grain": 560 }, "time": 7200 }
+    },
+    {
+      "id": "epilektos", "name": "Epilektos", "plural": "Epilektoi", "class": "infantry",
+      "description": "Picked men of the phalanx, armed to break other lines.",
+      "attack": 75, "defenseInfantry": 45, "defenseCavalry": 35, "speed": 6, "carry": 35, "upkeep": 1,
+      "cost": { "timber": 160, "stone": 140, "iron": 170, "grain": 55 }, "trainTime": 1650, "building": ["barracks"],
+      "research": { "requires": [{ "building": "gymnasion", "level": 5 }, { "building": "armory", "level": 1 }], "cost": { "timber": 1000, "stone": 760, "iron": 1800, "grain": 620 }, "time": 9000 }
+    },
+    {
+      "id": "skopos", "name": "Skopos", "plural": "Skopoi", "class": "cavalry", "role": "scout",
+      "description": "Mounted lookout. Spies on towns and counters enemy scouts.",
+      "attack": 0, "defenseInfantry": 15, "defenseCavalry": 15, "speed": 15, "carry": 0, "upkeep": 2,
+      "cost": { "timber": 120, "stone": 95, "iron": 50, "grain": 40 }, "trainTime": 1100, "building": ["stables"],
+      "research": { "requires": [{ "building": "gymnasion", "level": 5 }, { "building": "stables", "level": 1 }], "cost": { "timber": 900, "stone": 720, "iron": 380, "grain": 400 }, "time": 6000 },
+      "scouting": { "attack": 28, "defense": 22 }
+    },
+    {
+      "id": "hippeus", "name": "Hippeus", "plural": "Hippeis", "class": "cavalry",
+      "description": "Light horseman of the landed families. Fast, and carries off a good haul.",
+      "attack": 95, "defenseInfantry": 40, "defenseCavalry": 30, "speed": 13, "carry": 80, "upkeep": 2,
+      "cost": { "timber": 340, "stone": 230, "iron": 190, "grain": 85 }, "trainTime": 2150, "building": ["stables"],
+      "research": { "requires": [{ "building": "stables", "level": 1 }, { "building": "gymnasion", "level": 5 }], "cost": { "timber": 2200, "stone": 1850, "iron": 1100, "grain": 540 }, "time": 12000 }
+    },
+    {
+      "id": "hetairos", "name": "Hetairos", "plural": "Hetairoi", "class": "cavalry",
+      "description": "Heavy companion cavalry. Hits hard and holds its ground.",
+      "attack": 135, "defenseInfantry": 85, "defenseCavalry": 70, "speed": 11, "carry": 60, "upkeep": 3,
+      "cost": { "timber": 560, "stone": 590, "iron": 620, "grain": 150 }, "trainTime": 3300, "building": ["stables"],
+      "research": { "requires": [{ "building": "stables", "level": 10 }, { "building": "gymnasion", "level": 15 }], "cost": { "timber": 3600, "stone": 3900, "iron": 4300, "grain": 1250 }, "time": 18000 }
+    },
+    {
+      "id": "krios", "name": "Krios", "plural": "Krioi", "class": "infantry", "role": "ram",
+      "description": "Bronze-headed battering ram under a shed. Brings down walls.",
+      "attack": 45, "defenseInfantry": 25, "defenseCavalry": 60, "speed": 4, "carry": 0, "upkeep": 3,
+      "cost": { "timber": 760, "stone": 420, "iron": 380, "grain": 110 }, "trainTime": 4300, "building": ["siege_workshop"],
+      "research": { "requires": [{ "building": "siege_workshop", "level": 1 }, { "building": "gymnasion", "level": 10 }], "cost": { "timber": 4700, "stone": 2500, "iron": 2700, "grain": 950 }, "time": 15000 },
+      "siege": 1
+    },
+    {
+      "id": "lithobolos", "name": "Lithobolos", "plural": "Lithoboloi", "class": "infantry", "role": "catapult",
+      "description": "Torsion stone-thrower. Batters buildings level by level.",
+      "attack": 80, "defenseInfantry": 45, "defenseCavalry": 20, "speed": 3, "carry": 0, "upkeep": 5,
+      "cost": { "timber": 880, "stone": 1220, "iron": 700, "grain": 130 }, "trainTime": 7400, "building": ["siege_workshop"],
+      "research": { "requires": [{ "building": "siege_workshop", "level": 10 }, { "building": "gymnasion", "level": 15 }], "cost": { "timber": 6100, "stone": 7600, "iron": 4000, "grain": 1150 }, "time": 24000 },
+      "siege": 1
+    },
+    {
+      "id": "proxenos", "name": "Proxenos", "plural": "Proxenoi", "class": "infantry", "role": "chief",
+      "description": "Envoy and persuader. Each one that survives a won attack lowers the town's loyalty.",
+      "attack": 35, "defenseInfantry": 45, "defenseCavalry": 45, "speed": 4, "carry": 0, "upkeep": 4,
+      "cost": { "timber": 26000, "stone": 23500, "iron": 27000, "grain": 19000 }, "trainTime": 52000, "building": ["oikist_house", "acropolis"],
+      "research": { "requires": [{ "building": "gymnasion", "level": 20 }, { "building": "muster_ground", "level": 10 }], "cost": { "timber": 14500, "stone": 13000, "iron": 15500, "grain": 9500 }, "time": 32000 },
+      "loyalty": { "min": 18, "max": 28 }
+    },
+    {
+      "id": "apoikos", "name": "Apoikos", "plural": "Apoikoi", "class": "infantry", "role": "settler",
+      "description": "Colonist family. Three of them found a new town on empty land.",
+      "attack": 10, "defenseInfantry": 55, "defenseCavalry": 45, "speed": 5, "carry": 0, "upkeep": 1,
+      "cost": { "timber": 4700, "stone": 4400, "iron": 5100, "grain": 4600 }, "trainTime": 24000, "building": ["oikist_house", "acropolis"]
+    }
+  ]
+}

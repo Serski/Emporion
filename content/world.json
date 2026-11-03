@@ -1,0 +1,93 @@
+{
+  "defaults": { "name": "Emporion", "speed": 1, "npcCamps": 90 },
+  "village": {
+    "slots": 22,
+    "fieldCount": 18,
+    "start": {
+      "buildings": [{ "slot": 0, "id": "prytaneion", "level": 1 }],
+      "resources": { "timber": 800, "stone": 800, "iron": 800, "grain": 800 }
+    },
+    "baseStorage": 1000,
+    "baseDefense": 10,
+    "popUpkeep": 1,
+    "baseLoyaltyRegen": 0.5
+  },
+  "buildQueues": [{ "id": "main", "accepts": ["field", "building"], "size": 2 }],
+  "protection": { "hours": 80, "minHours": 6 },
+  "culture": { "villageCost": { "base": 400, "exponent": 2, "round": 50 } },
+  "expansion": {
+    "settlersNeeded": 3,
+    "settlersPerSlot": 3,
+    "chiefsPerSlot": 1,
+    "foundingCost": { "timber": 800, "stone": 800, "iron": 800, "grain": 800 },
+    "loyaltyAfterConquest": 25
+  },
+  "combat": {
+    "lossExponent": 1.5,
+    "raidLossExponent": 1.5,
+    "scoutLossExponent": 1.5,
+    "armoryBonusPerLevel": 0.015,
+    "morale": { "exponent": 0.25, "min": 0.6 },
+    "durability": { "base": 2, "growth": 1.12, "round": 0.01 },
+    "twoTargetsMinCatapults": 25
+  },
+  "armory": { "maxLevel": 20, "costMultiplier": 2.5, "costGrowth": 1.2, "timeBase": 3000, "timeGrowth": 1.17 },
+  "mapgen": {
+    "terrain": {
+      "P": { "valley": 84, "oasis": 10, "wild": 6 },
+      "H": { "valley": 70, "oasis": 13, "wild": 17 },
+      "M": { "valley": 32, "oasis": 10, "wild": 58 }
+    },
+    "layouts": [
+      { "id": "f4446", "name": "4-4-4-6", "fields": { "timber": 4, "stone": 4, "iron": 4, "grain": 6 }, "weight": 30, "start": true },
+      { "id": "f3456", "name": "3-4-5-6", "fields": { "timber": 3, "stone": 4, "iron": 5, "grain": 6 }, "weight": 6, "terrain": { "M": 2.5, "H": 1.5 } },
+      { "id": "f3546", "name": "3-5-4-6", "fields": { "timber": 3, "stone": 5, "iron": 4, "grain": 6 }, "weight": 6, "terrain": { "M": 2.5, "H": 1.5 } },
+      { "id": "f4356", "name": "4-3-5-6", "fields": { "timber": 4, "stone": 3, "iron": 5, "grain": 6 }, "weight": 6, "terrain": { "M": 2, "H": 1.3 } },
+      { "id": "f4536", "name": "4-5-3-6", "fields": { "timber": 4, "stone": 5, "iron": 3, "grain": 6 }, "weight": 6, "terrain": { "H": 1.5 } },
+      { "id": "f5346", "name": "5-3-4-6", "fields": { "timber": 5, "stone": 3, "iron": 4, "grain": 6 }, "weight": 6, "terrain": { "P": 1.3 } },
+      { "id": "f5436", "name": "5-4-3-6", "fields": { "timber": 5, "stone": 4, "iron": 3, "grain": 6 }, "weight": 6, "terrain": { "P": 1.3 } },
+      { "id": "f4437", "name": "4-4-3-7", "fields": { "timber": 4, "stone": 4, "iron": 3, "grain": 7 }, "weight": 4, "terrain": { "P": 1.6, "M": 0.4 } },
+      { "id": "f4347", "name": "4-3-4-7", "fields": { "timber": 4, "stone": 3, "iron": 4, "grain": 7 }, "weight": 4, "terrain": { "P": 1.6, "M": 0.4 } },
+      { "id": "f3447", "name": "3-4-4-7", "fields": { "timber": 3, "stone": 4, "iron": 4, "grain": 7 }, "weight": 4, "terrain": { "P": 1.6, "M": 0.4 } },
+      { "id": "f3339", "name": "3-3-3-9", "fields": { "timber": 3, "stone": 3, "iron": 3, "grain": 9 }, "weight": 3, "terrain": { "P": 2, "H": 0.5, "M": 0.1 } },
+      { "id": "f22212", "name": "2-2-2-12", "fields": { "timber": 2, "stone": 2, "iron": 2, "grain": 12 }, "weight": 1, "terrain": { "P": 2.5, "H": 0.3, "M": 0 } }
+    ],
+    "oases": [
+      { "id": "grove", "name": "Sacred Grove", "bonus": { "timber": 0.2 }, "weight": 16, "terrain": { "M": 0.6 }, "animals": { "boar": [3, 9], "wolf": [1, 4] } },
+      { "id": "grove_spring", "name": "Grove and Spring", "bonus": { "timber": 0.2, "grain": 0.2 }, "weight": 6, "animals": { "boar": [4, 10], "wolf": [2, 6], "lynx": [0, 2] } },
+      { "id": "cliffs", "name": "Limestone Cliffs", "bonus": { "stone": 0.2 }, "weight": 16, "terrain": { "H": 1.5, "M": 1.5 }, "animals": { "viper": [4, 12], "wolf": [1, 4] } },
+      { "id": "cliffs_spring", "name": "Cliffs and Spring", "bonus": { "stone": 0.2, "grain": 0.2 }, "weight": 6, "animals": { "viper": [5, 12], "bear": [0, 2] } },
+      { "id": "ore", "name": "Ore Outcrop", "bonus": { "iron": 0.2 }, "weight": 16, "terrain": { "M": 2 }, "animals": { "wolf": [2, 7], "bear": [0, 3] } },
+      { "id": "ore_spring", "name": "Ore and Spring", "bonus": { "iron": 0.2, "grain": 0.2 }, "weight": 6, "animals": { "wolf": [3, 8], "bear": [1, 3] } },
+      { "id": "spring", "name": "Spring Meadow", "bonus": { "grain": 0.2 }, "weight": 18, "terrain": { "P": 1.5 }, "animals": { "boar": [2, 6], "aurochs": [0, 2] } },
+      { "id": "delta", "name": "River Delta", "bonus": { "grain": 0.4 }, "weight": 6, "terrain": { "P": 2, "M": 0.2 }, "animals": { "boar": [3, 8], "aurochs": [2, 5], "bear": [0, 2] } }
+    ],
+    "oasisRegenHours": 48,
+    "minSpacing": 2,
+    "seaTravelMultiplier": 1.5,
+    "startArea": { "base": 3, "perPlayer": 1.5 }
+  },
+  "npc": {
+    "camps": {
+      "playerName": "Outlaws",
+      "factionId": "outlaws",
+      "regenHours": 36,
+      "tiers": [
+        { "tier": 1, "name": "Brigand Hideout", "weight": 6, "troops": { "brigand": 14, "pirate": 4 }, "walls": 0, "fieldLevel": 2, "storageLevel": 2, "treasures": 0 },
+        { "tier": 2, "name": "Pirate Cove", "weight": 3, "troops": { "brigand": 40, "pirate": 30, "raider_captain": 6 }, "walls": 3, "fieldLevel": 4, "storageLevel": 5, "treasures": 1 },
+        { "tier": 3, "name": "Robber Fortress", "weight": 1, "troops": { "brigand": 120, "pirate": 90, "raider_captain": 30 }, "walls": 8, "fieldLevel": 7, "storageLevel": 9, "treasures": 3 }
+      ],
+      "raids": { "enabled": true, "intervalHours": 8, "chance": 0.12, "radius": 10, "share": 0.35, "minStrength": 0.8 }
+    },
+    "towns": {
+      "playerName": "Free Cities",
+      "factionId": "townsfolk",
+      "regenHours": 24,
+      "garrisonPer1000": { "city_spearman": 8, "city_archer": 4, "city_horseman": 1.5 },
+      "wallsPerStat": 4,
+      "fieldLevel": { "base": 3, "per10000": 1.5, "max": 10 },
+      "storageLevel": { "base": 5, "per10000": 2, "max": 20 },
+      "treasuresPer10000": 1
+    }
+  }
+}
