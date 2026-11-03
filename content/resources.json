@@ -1,9 +1,9 @@
 {
   "resources": [
-    { "id": "timber", "name": "Wood", "icon": "🪵" },
-    { "id": "stone", "name": "Stone", "icon": "🪨" },
-    { "id": "iron", "name": "Iron", "icon": "⚒️" },
-    { "id": "grain", "name": "Wheat", "icon": "🌾", "food": true }
+    { "id": "timber", "name": "Wood", "icon": "WOOD.webp" },
+    { "id": "stone", "name": "Stone", "icon": "STONE.webp" },
+    { "id": "iron", "name": "Iron", "icon": "IRON.webp" },
+    { "id": "grain", "name": "Wheat", "icon": "WHEAT.webp", "food": true }
   ],
   "fields": [
     {
