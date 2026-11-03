@@ -256,7 +256,7 @@ def main() -> None:
     region_list = [
         {
             "id": p["id"],
-            "name": names.get(p["id"], p["id"]),
+            "name": names.get(p["id"], ""),
             "type": p["type"],
             "polity": owners.get(p["id"]),
         }

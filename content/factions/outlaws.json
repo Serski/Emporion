@@ -9,17 +9,17 @@
   "merchant": { "capacity": 1, "speed": 1 },
   "units": [
     {
-      "id": "brigand", "name": "Brigand", "plural": "Brigands", "class": "infantry",
+      "id": "brigand", "name": "Brigand", "icon": "BAND_THRACIAN.webp", "plural": "Brigands", "class": "infantry",
       "attack": 30, "defenseInfantry": 35, "defenseCavalry": 30, "speed": 6, "carry": 40, "upkeep": 1,
       "cost": { "timber": 100, "stone": 100, "iron": 100, "grain": 50 }, "trainTime": 1000
     },
     {
-      "id": "pirate", "name": "Pirate", "plural": "Pirates", "class": "infantry",
+      "id": "pirate", "name": "Pirate", "icon": "BAND_ILLYRIAN.webp", "plural": "Pirates", "class": "infantry",
       "attack": 50, "defenseInfantry": 25, "defenseCavalry": 30, "speed": 7, "carry": 60, "upkeep": 1,
       "cost": { "timber": 120, "stone": 100, "iron": 120, "grain": 50 }, "trainTime": 1200
     },
     {
-      "id": "raider_captain", "name": "Raider Captain", "plural": "Raider Captains", "class": "cavalry",
+      "id": "raider_captain", "name": "Raider Captain", "icon": "BAND_LUCANIAN.webp", "plural": "Raider Captains", "class": "cavalry",
       "attack": 90, "defenseInfantry": 60, "defenseCavalry": 50, "speed": 12, "carry": 80, "upkeep": 2,
       "cost": { "timber": 300, "stone": 250, "iron": 300, "grain": 100 }, "trainTime": 2400
     }

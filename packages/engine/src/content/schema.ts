@@ -162,6 +162,7 @@ export const unitSchema = z
     name: z.string(),
     plural: z.string().optional(),
     description: z.string().optional(),
+    icon: z.string().optional(), // art file under the client's assets/, as in MASSALIA's units.json
     class: z.enum(["infantry", "cavalry"]),
     role: z.enum(["scout", "ram", "catapult", "chief", "settler"]).optional(),
     attack: nonNeg,

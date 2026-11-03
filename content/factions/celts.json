@@ -11,20 +11,20 @@
   "trainTimeMultiplier": 1,
   "units": [
     {
-      "id": "gaesatus", "name": "Gaesatus", "plural": "Gaesatae", "class": "infantry",
+      "id": "gaesatus", "name": "Gaesatus", "icon": "BAND_VOLCAE.webp", "plural": "Gaesatae", "class": "infantry",
       "description": "Spear-armed warrior who fights for plunder. Cheap and eager.",
       "attack": 50, "defenseInfantry": 15, "defenseCavalry": 20, "speed": 8, "carry": 55, "upkeep": 1,
       "cost": { "timber": 80, "stone": 60, "iron": 55, "grain": 40 }, "trainTime": 760, "building": ["barracks"]
     },
     {
-      "id": "ambactus", "name": "Ambactus", "plural": "Ambacti", "class": "infantry",
+      "id": "ambactus", "name": "Ambactus", "icon": "BAND_SALLUVII.webp", "plural": "Ambacti", "class": "infantry",
       "description": "Sworn retainer with a long shield and spear; sets a hedge against horses.",
       "attack": 25, "defenseInfantry": 55, "defenseCavalry": 75, "speed": 6, "carry": 30, "upkeep": 1,
       "cost": { "timber": 100, "stone": 135, "iron": 105, "grain": 50 }, "trainTime": 1300, "building": ["barracks"],
       "research": { "requires": [{ "building": "gymnasion", "level": 1 }], "cost": { "timber": 640, "stone": 900, "iron": 560, "grain": 460 }, "time": 7000 }
     },
     {
-      "id": "soldurius", "name": "Soldurius", "plural": "Soldurii", "class": "infantry",
+      "id": "soldurius", "name": "Soldurius", "icon": "BAND_LIGURIAN.webp", "plural": "Soldurii", "class": "infantry",
       "description": "Oath-sworn champion who will not outlive his chief.",
       "attack": 85, "defenseInfantry": 35, "defenseCavalry": 20, "speed": 6, "carry": 40, "upkeep": 1,
       "cost": { "timber": 140, "stone": 105, "iron": 180, "grain": 60 }, "trainTime": 1600, "building": ["barracks"],
@@ -39,7 +39,7 @@
       "scouting": { "attack": 30, "defense": 18 }
     },
     {
-      "id": "epona_rider", "name": "Epona Rider", "plural": "Epona Riders", "class": "cavalry",
+      "id": "epona_rider", "name": "Epona Rider", "icon": "BAND_GALLIC_HORSE.webp", "plural": "Epona Riders", "class": "cavalry",
       "description": "Raider under the horse goddess's sign. The fastest strike force on the map.",
       "attack": 110, "defenseInfantry": 40, "defenseCavalry": 25, "speed": 16, "carry": 90, "upkeep": 3,
       "cost": { "timber": 340, "stone": 270, "iron": 130, "grain": 90 }, "trainTime": 2250, "building": ["stables"],
@@ -69,7 +69,7 @@
       "siege": 0.6
     },
     {
-      "id": "vergobret", "name": "Vergobret", "plural": "Vergobrets", "class": "infantry", "role": "chief",
+      "id": "vergobret", "name": "Vergobret", "icon": "DYNATOI_CLEAR.webp", "plural": "Vergobrets", "class": "infantry", "role": "chief",
       "description": "Elected magistrate whose word can turn a town. Erratic, sometimes brilliant.",
       "attack": 30, "defenseInfantry": 40, "defenseCavalry": 55, "speed": 5, "carry": 0, "upkeep": 4,
       "cost": { "timber": 22000, "stone": 17000, "iron": 19000, "grain": 15000 }, "trainTime": 48000, "building": ["oikist_house", "acropolis"],
@@ -77,7 +77,7 @@
       "loyalty": { "min": 15, "max": 35 }
     },
     {
-      "id": "celtic_settler", "name": "Settler", "plural": "Settlers", "class": "infantry", "role": "settler",
+      "id": "celtic_settler", "name": "Settler", "icon": "FREEMAN_CLEAR.webp", "plural": "Settlers", "class": "infantry", "role": "settler",
       "description": "Family with cattle and seed grain. Three of them found a new town.",
       "attack": 15, "defenseInfantry": 50, "defenseCavalry": 60, "speed": 6, "carry": 0, "upkeep": 1,
       "cost": { "timber": 4300, "stone": 4500, "iron": 5100, "grain": 4500 }, "trainTime": 23000, "building": ["oikist_house", "acropolis"]

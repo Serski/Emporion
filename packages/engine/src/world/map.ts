@@ -145,7 +145,7 @@ export function tileInfo(content: Content, seed: number, tile: number): TileInfo
     terrain: content.map.terrain[tile] ?? "F",
     kind: tileKind(content, seed, tile),
     regionId: region?.id ?? null,
-    regionName: region?.name ?? null,
+    regionName: region?.name || null,
     polity: region?.polity ?? null,
     layout: tileLayout(content, seed, tile),
     oasis: tileOasis(content, seed, tile),
