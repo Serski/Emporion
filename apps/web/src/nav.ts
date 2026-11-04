@@ -1,9 +1,10 @@
 import { createContext, useContext } from "react";
 import type { MissionKind } from "@emporion/engine";
 
-// Three views fill the screen, as in Travian Kingdoms: the fields around the
-// town, the town centre and the world map. Everything else opens as a window.
-export const VIEWS = ["fields", "town", "map"] as const;
+// Three views fill the screen, as in Travian Kingdoms: the world map (the
+// main one, where the game opens), the resource fields around the town and
+// the town centre. Everything else opens as a window.
+export const VIEWS = ["map", "fields", "town"] as const;
 export type View = (typeof VIEWS)[number];
 
 export type HeroTab = "profile" | "day" | "household" | "hero" | "family" | "lineage";

@@ -11,7 +11,7 @@ import { ModalHost } from "./windows/ModalHost";
 
 function viewFromHash(): View {
   const h = window.location.hash.replace(/^#/, "");
-  return (VIEWS as readonly string[]).includes(h) ? (h as View) : "fields";
+  return (VIEWS as readonly string[]).includes(h) ? (h as View) : "map";
 }
 
 export function App({ initial, onSession }: { initial: Session | null; onSession: (s: Session | null) => void }) {

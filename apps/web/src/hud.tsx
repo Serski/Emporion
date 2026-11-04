@@ -142,10 +142,12 @@ export function VillageSwitcher() {
 
 // --- top centre: the three views and the stores ---------------------------------------
 
+// The map is the main view and comes first; then the town's resource fields
+// and its buildings.
 const VIEW_META: { id: View; label: string; img: string }[] = [
-  { id: "fields", label: "Fields", img: "v-fields" },
-  { id: "town", label: "Town", img: "v-town" },
   { id: "map", label: "Map", img: "v-map" },
+  { id: "fields", label: "Resources", img: "v-fields" },
+  { id: "town", label: "Town", img: "v-town" },
 ];
 
 export function ViewSwitch() {
