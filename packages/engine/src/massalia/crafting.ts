@@ -11,27 +11,30 @@ import { addGoods, freePeople, goodsOf } from "./house.js";
 import { statOf } from "./profile.js";
 
 // ---------------------------------------------------------------------------
-// Crafts and the altar. A recipe takes goods from the house's stores and
-// resources from the town that works it, keeps its people busy while it runs,
-// and lays the product in the stores when it is ready (MASSALIA's slipway:
-// buildings.json craft, services/buildings.ts craft). Harbor recipes share the
-// Harbor's slips; household work (the physician's) has its own bench.
+// Crafts and the altar. A recipe is worked at a building in one of the
+// house's towns: hulls and naval supplies at the Shipyard's slips, remedies and
+// poisons at the Salon. It takes goods from the house's stores and resources
+// from that town, keeps its people busy while it runs, and lays the product in
+// the stores when it is ready (MASSALIA's slipway: buildings.json craft,
+// services/buildings.ts craft). A building has a place for one craft at each
+// level its slots list.
 //
-// The altar (MASSALIA's Barracks altar, battle.json): one beast burned at the
-// Barracks blesses every man the house fields for a while. One blessing at a
-// time; it cannot be replaced while it burns.
+// The altar (MASSALIA's altar, battle.json) stands in the Sanctuary: one beast
+// burned there blesses every man the house fields for a while, and it takes no
+// offering unless the house retains a priest. One blessing at a time; it
+// cannot be replaced while it burns.
 // ---------------------------------------------------------------------------
 
-export function craftSlots(content: Content, p: Player, state: GameState, kind: "harbor" | "household", villageId?: string | null): number {
-  const cfg = content.massalia.crafting.slots;
-  if (kind === "household") return cfg.household;
+export function craftSlots(state: GameState, content: Content, buildingId: string, villageId: string | null | undefined): number {
+  const levels = content.massalia.crafting.slots[buildingId] ?? [];
   const v = villageId ? state.villages[villageId] : undefined;
-  const level = v ? buildingLevel(v, "harbor") : 0;
-  return cfg.harbor.filter((l) => level >= l).length;
+  const level = v ? buildingLevel(v, buildingId) : 0;
+  return levels.filter((l) => level >= l).length;
 }
 
-function slotKind(content: Content, recipeId: string): "harbor" | "household" {
-  return content.recipes[recipeId]?.building ? "harbor" : "household";
+// Crafts running at a building in a town.
+export function craftsAt(content: Content, p: Player, buildingId: string, villageId: string): number {
+  return p.crafts.filter((j) => j.villageId === villageId && content.recipes[j.recipeId]?.building === buildingId).length;
 }
 
 export function craftDurationMs(state: GameState, content: Content, recipeId: string): Ms {
@@ -41,21 +44,14 @@ export function craftDurationMs(state: GameState, content: Content, recipeId: st
 export function craftCheck(state: GameState, content: Content, p: Player, recipeId: string, villageId: string | null): Result {
   const r = content.recipes[recipeId];
   if (!r) return fail("not_found", "There is no such craft.");
-  const kind = slotKind(content, recipeId);
-  if (r.building) {
-    const v = villageId ? state.villages[villageId] : undefined;
-    if (!v || v.ownerId !== p.id) return fail("not_found", "That is not one of your towns.");
-    const lvl = buildingLevel(v, r.building);
-    const bname = content.buildings[r.building]?.name ?? r.building;
-    if (lvl < (r.level ?? 1)) return fail("requirements", `${r.name} needs a ${bname} at level ${r.level ?? 1} in ${v.name}.`);
-    const running = p.crafts.filter((j) => j.villageId === v.id && slotKind(content, j.recipeId) === kind).length;
-    if (running >= craftSlots(content, p, state, kind, v.id)) return fail("busy", `Every slip in ${v.name} is taken. Raise the ${bname} for another.`);
-    for (const [res, n] of Object.entries(r.resources)) {
-      if ((v.resources[res] ?? 0) + 1e-6 < n) return fail("insufficient", `${r.name} needs ${n} ${content.resources.find((x) => x.id === res)?.name.toLowerCase() ?? res} in ${v.name}.`);
-    }
-  } else {
-    const running = p.crafts.filter((j) => slotKind(content, j.recipeId) === kind).length;
-    if (running >= craftSlots(content, p, state, kind)) return fail("busy", "Your household is already at work on a craft.");
+  const v = villageId ? state.villages[villageId] : undefined;
+  if (!v || v.ownerId !== p.id) return fail("not_found", "That is not one of your towns.");
+  const lvl = buildingLevel(v, r.building);
+  const bname = content.buildings[r.building]?.name ?? r.building;
+  if (lvl < (r.level ?? 1)) return fail("requirements", `${r.name} is made at a ${bname}${(r.level ?? 1) > 1 ? ` of level ${r.level}` : ""} in ${v.name}.`);
+  if (craftsAt(content, p, r.building, v.id) >= craftSlots(state, content, r.building, v.id)) return fail("busy", `Every place at the ${bname} in ${v.name} is at work. Raise the ${bname} for another.`);
+  for (const [res, n] of Object.entries(r.resources)) {
+    if ((v.resources[res] ?? 0) + 1e-6 < n) return fail("insufficient", `${r.name} needs ${n} ${content.resources.find((x) => x.id === res)?.name.toLowerCase() ?? res} in ${v.name}.`);
   }
   for (const [who, n] of Object.entries(r.people)) {
     const def = content.people[who];
@@ -71,9 +67,9 @@ export function craft(state: GameState, content: Content, playerId: string, reci
   const p = state.players[playerId];
   if (!p) return fail("not_found", "No such player.");
   const r = content.recipes[recipeId];
-  const v = r?.building && villageId ? state.villages[villageId] : undefined;
-  if (v) touch(state, content, v, at);
-  const check = craftCheck(state, content, p, recipeId, r?.building ? villageId : null);
+  const v = villageId ? state.villages[villageId] : undefined;
+  if (v && v.ownerId === p.id) touch(state, content, v, at);
+  const check = craftCheck(state, content, p, recipeId, villageId);
   if (!check.ok) return check;
   if (v) for (const [res, n] of Object.entries(r!.resources)) v.resources[res] = (v.resources[res] ?? 0) - n;
   for (const [g, n] of Object.entries(r!.goods)) addGoods(p, g, -n);
@@ -114,10 +110,8 @@ export function altarBoost(p: Player | undefined, at: Ms): number {
   return altarLit(p, at)?.boost ?? 0;
 }
 
-export function altarDurationMs(state: GameState, content: Content, p: Player): Ms {
-  let f = 1;
-  for (const [id, n] of Object.entries(p.people)) if (n > 0) f = Math.max(f, content.people[id]?.altarDuration ?? 1);
-  return Math.round(content.massalia.crafting.altar.seasons * seasonMs(state, content) * f);
+export function altarDurationMs(state: GameState, content: Content): Ms {
+  return Math.round(content.massalia.crafting.altar.seasons * seasonMs(state, content));
 }
 
 export function sacrifice(state: GameState, content: Content, playerId: string, villageId: string, good: string, at: Ms): Result<{ altar: Altar }> {
@@ -129,10 +123,11 @@ export function sacrifice(state: GameState, content: Content, playerId: string, 
   const v = state.villages[villageId];
   if (!v || v.ownerId !== p.id) return fail("not_found", "That is not one of your towns.");
   if (buildingLevel(v, cfg.building) <= 0) return fail("requirements", `The altar stands in the ${content.buildings[cfg.building]?.name ?? cfg.building}. Build one in ${v.name}.`);
+  if ((p.people[cfg.needs] ?? 0) < 1) return fail("requirements", `The altar takes no offering without a ${content.people[cfg.needs]?.name.toLowerCase() ?? cfg.needs}. Hire one at the Agora.`);
   if (altarLit(p, at)) return fail("busy", "The altar still smokes from the last offering.");
   if (goodsOf(p, good) < 1) return fail("insufficient", `You have no ${content.goods[good]?.name.toLowerCase()} for this. The agora sells them.`);
   addGoods(p, good, -1);
   const boost = offering.boost * (1 + statOf(content, p, "devotion") * content.massalia.profile.effects.devotionAltar);
-  p.altar = { good, boost, from: at, until: at + altarDurationMs(state, content, p) };
+  p.altar = { good, boost, from: at, until: at + altarDurationMs(state, content) };
   return ok({ altar: p.altar });
 }

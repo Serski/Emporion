@@ -3587,3 +3587,65 @@ button.box:hover {
     grid-column: 1 / -1;
   }
 }
+
+/* --- holdings: the house's farms, mines and pans -------------------------------------------- */
+
+/* A building MASSALIA painted none for shows its good, like a field card. */
+.site__art.site__art--icon {
+  inset: 10% 20% 28%;
+  width: 60%;
+  height: 62%;
+  object-fit: contain;
+  filter: drop-shadow(0 6px 8px rgba(0, 0, 0, 0.5));
+}
+.site:has(.site__art--icon) {
+  background:
+    radial-gradient(circle at 50% 36%, rgba(214, 135, 63, 0.22), transparent 62%),
+    linear-gradient(160deg, var(--panel-3), var(--panel-2));
+}
+.build-option__art--icon {
+  object-fit: contain;
+  padding: 8px;
+  background: radial-gradient(circle at 50% 40%, rgba(214, 135, 63, 0.2), var(--panel-2) 70%);
+}
+.holding {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+  padding: 10px 12px;
+  border: 1px solid var(--rule);
+  background: var(--panel-2);
+}
+.holding__text {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.holding-list {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.holding-list li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 14px;
+  padding: 8px 10px;
+  border: 1px solid var(--rule);
+  background: var(--panel-2);
+}
+.holding-list li.is-idle {
+  border-color: color-mix(in srgb, var(--warn) 45%, var(--rule));
+}
+.holding-list li.is-idle > span:last-child {
+  color: var(--warn);
+}
+.holding-list__name {
+  font-family: var(--font-display);
+  font-weight: 600;
+}

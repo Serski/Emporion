@@ -1,7 +1,7 @@
 import { slotViews } from "@emporion/engine";
 import { content } from "../content";
 import { useNav } from "../nav";
-import { art, useSession } from "../ui";
+import { buildingArt, useSession } from "../ui";
 
 // The town centre: twenty building sites inside the walls, each showing its
 // building in MASSALIA's painted manner with a level badge. As in Travian
@@ -29,7 +29,13 @@ export function TownView() {
         onClick={() => nav.open({ kind: "slot", slot: slotIndex })}
         title={b ? `${b.def.name}, level ${b.level}` : def ? `${def.name}: not built yet` : "Empty building site"}
       >
-        {b ? <img className="site__art" src={art(`b-${b.def.id}`)} alt="" loading="lazy" /> : <span className="site__plus" aria-hidden>+</span>}
+        {b ? (
+          <img className={`site__art${buildingArt(b.def.id).icon ? " site__art--icon" : ""}`} src={buildingArt(b.def.id).src} alt="" loading="lazy" />
+        ) : (
+          <span className="site__plus" aria-hidden>
+            +
+          </span>
+        )}
         <span className="site__name">{b ? b.def.name : def ? def.name : "Building site"}</span>
         {b && (
           <span className="site__badge">

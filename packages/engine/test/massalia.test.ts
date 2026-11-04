@@ -165,7 +165,7 @@ describe("people", () => {
     expect(player(g, pid).purse).toBe(400 - 100 - 120);
     g.advance(nextSeason(g, T0));
     expect(player(g, pid).purse).toBe(180 - 6 - 3);
-    expect(player(g, pid).goods.herbal).toBe(4);
+    expect(player(g, pid).goods.herbal ?? 0).toBe(0); // herbs grow at a Sanctuary, not with the priest alone
   });
 });
 
@@ -210,11 +210,13 @@ describe("the day", () => {
 });
 
 describe("crafts", () => {
-  it("builds naval supplies at the Harbor with a freeman, who is busy until it is done", () => {
+  it("builds naval supplies at the Shipyard with a freeman, who is busy until it is done", () => {
     const g = newGame();
     const { pid, vid } = join(g);
     withAgora(g, vid);
-    setBuilding(g, vid, "harbor", 1);
+    setBuilding(g, vid, "harbor", 3);
+    expect(g.craft(pid, "naval-supplies", vid, T0).ok).toBe(false); // a port alone builds nothing
+    setBuilding(g, vid, "shipyard", 1);
     expect(g.craft(pid, "naval-supplies", vid, T0).ok).toBe(false); // no freeman
     g.hire(pid, vid, "freeman", 1, T0);
     const job = g.craft(pid, "naval-supplies", vid, T0);
@@ -226,16 +228,22 @@ describe("crafts", () => {
     expect(player(g, pid).crafts).toHaveLength(0);
   });
 
-  it("lets a physician mix poison from herbs and wine", () => {
+  it("lets the hetaira mix poison at her Salon from herbs and wine", () => {
     const g = newGame();
     const { pid, vid } = join(g);
     withAgora(g, vid);
     const p = player(g, pid);
     p.purse = 500;
-    g.hire(pid, vid, "physician", 1, T0);
     p.goods.herbal = 3;
     p.goods.wine = 1;
-    expect(g.craft(pid, "poison", null, T0).ok).toBe(true);
+    g.hire(pid, vid, "physician", 1, T0);
+    expect(g.craft(pid, "poison", vid, T0).ok).toBe(false); // no Salon
+    setBuilding(g, vid, "salon", 1);
+    const noHetaira = g.craft(pid, "poison", vid, T0);
+    expect(noHetaira.ok).toBe(false); // a physician does not mix poison
+    if (!noHetaira.ok) expect(noHetaira.message).toMatch(/hetaira/);
+    g.hire(pid, vid, "hetaira", 1, T0);
+    expect(g.craft(pid, "poison", vid, T0).ok).toBe(true);
     g.advance(T0 + 12 * HOUR + 1);
     expect(p.goods.poison).toBe(1);
     expect(p.goods.herbal ?? 0).toBe(0);
@@ -267,13 +275,20 @@ describe("the Harbor", () => {
 });
 
 describe("the altar", () => {
-  it("burns a bull at the Barracks for +6% to every man for two seasons, one blessing at a time", () => {
+  it("burns a bull at the Sanctuary, with a priest, for +6% to every man for two seasons, one blessing at a time", () => {
     const g = newGame();
     const { pid, vid } = join(g);
     const p = player(g, pid);
     p.goods.bull = 2;
-    expect(g.sacrifice(pid, vid, "bull", T0).ok).toBe(false); // no Barracks
+    p.purse = 500;
     setBuilding(g, vid, "barracks", 1);
+    expect(g.sacrifice(pid, vid, "bull", T0).ok).toBe(false); // the altar is not in the Barracks
+    setBuilding(g, vid, "sanctuary", 1);
+    const noPriest = g.sacrifice(pid, vid, "bull", T0);
+    expect(noPriest.ok).toBe(false);
+    if (!noPriest.ok) expect(noPriest.message).toMatch(/priest/);
+    withAgora(g, vid);
+    g.hire(pid, vid, "priest", 1, T0);
     expect(g.sacrifice(pid, vid, "bull", T0).ok).toBe(true);
     expect(g.sacrifice(pid, vid, "chicken", T0).ok).toBe(false);
     expect(altarBoost(p, T0 + HOUR)).toBeCloseTo(0.06, 9);
@@ -318,6 +333,10 @@ describe("the sea", () => {
     const route = seaRoute(g.content, tileIndex(g.content, home.x, home.y), tileIndex(g.content, post.x, post.y));
     expect(route.crossesSea).toBe(true);
     const order = { playerId: pid, fromVillageId: vid, toTile: tileIndex(g.content, post.x, post.y), mission: "reinforce" as const, troops: { hoplite: 10 } };
+    const noPort = g.send(order, T0);
+    expect(noPort.ok).toBe(false);
+    if (!noPort.ok) expect(noPort.message).toMatch(/port/);
+    setBuilding(g, vid, "harbor", 1);
     const noShips = g.send(order, T0);
     expect(noShips.ok).toBe(false);
     if (!noShips.ok) expect(noShips.message).toMatch(/hulls/);
@@ -340,6 +359,7 @@ describe("the sea", () => {
     const { pid } = join(g);
     const post = island(g, pid);
     setBuilding(g, post.id, "muster_ground", 1);
+    setBuilding(g, post.id, "harbor", 1);
     feed(g, post.id);
     post.troops = { hoplite: 20 };
     const massalia = Object.values(g.state.villages).find((v) => v.npc?.townId === "massalia")!;

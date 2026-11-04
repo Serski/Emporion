@@ -64,6 +64,7 @@ export interface Player {
   // MASSALIA's house economy and character sheet.
   purse: number; // drachmae
   goods: Record<string, number>; // the house's stores of goods (hulls at sea are not counted)
+  goodsCarry: Record<string, number>; // fractions of goods the holdings have yielded, carried to the next season
   people: Record<string, number>; // hired people by type
   profile: Profile | null; // stats, composure, ladders and the day (null for NPC owners)
   crafts: CraftJob[];

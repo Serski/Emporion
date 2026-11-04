@@ -11,6 +11,7 @@ import { inForeignTerritory } from "../world/territory.js";
 import { heroAlive } from "../social/hero.js";
 import { touch } from "../village/timeline.js";
 import {
+  buildingLevel,
   cultureForVillages,
   expansionSlots,
   factionOf,
@@ -174,10 +175,12 @@ export function sendTroops(state: GameState, content: Content, order: SendOrder,
   const speed = slowestSpeed(content, troops, withHero ? content.hero.speed : null);
   const arriveAt = now + marchMs(state, content, v, fromTile, order.toTile, speed);
 
-  // Over open sea the troops need hulls (MASSALIA's ships).
+  // Over open sea the troops sail from a port, in hulls (MASSALIA's ships).
   let ships: Record<string, number> | undefined;
   const route = seaRoute(content, fromTile, order.toTile);
   if (route.crossesSea && player.kind !== "npc") {
+    const port = content.massalia.ships.port;
+    if (buildingLevel(v, port) <= 0) return fail("requirements", `The crossing runs over open sea, and troops sail only from a port: build a ${content.buildings[port]?.name ?? port} in ${v.name}.`);
     const space = troopSpace(content, troops, withHero);
     const tv = target.kind === "village" ? target.village! : null;
     const escort = (order.mission === "attack" || order.mission === "raid") && !!tv && navalStrength(content, harbourFleet(state, content, tv)) > 0;

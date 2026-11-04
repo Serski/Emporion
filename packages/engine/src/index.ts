@@ -34,6 +34,7 @@ export * from "./ai/bot.js";
 export * from "./views.js";
 export * from "./game.js";
 export * from "./massalia/crafting.js";
+export * from "./massalia/holdings.js";
 export * from "./massalia/house.js";
 export * from "./massalia/intrigue.js";
 export * from "./massalia/market.js";

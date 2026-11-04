@@ -1,7 +1,8 @@
 import type { Content } from "../content/load.js";
 import type { GameState, Ms, Player, Stall } from "../core/types.js";
 import { calendarAt } from "../world/calendar.js";
-import { altarDurationMs, altarLit, craftCheck, craftDurationMs, craftSlots } from "./crafting.js";
+import { altarDurationMs, altarLit, craftCheck, craftDurationMs, craftSlots, craftsAt } from "./crafting.js";
+import { holdingYield, holdingsOf, seasonOfYear } from "./holdings.js";
 import { busyPeople, goodsOf, upkeepPerSeason } from "./house.js";
 import { assassinationOdds, plotCheck, poisonOdds } from "./intrigue.js";
 import { goodName, isResource, openStalls, priceOf } from "./market.js";
@@ -39,10 +40,13 @@ export interface HouseView {
   posture: "guard" | "hunt";
   day: DayView | null;
   crafts: { id: string; recipeId: string; name: string; villageName: string | null; startAt: Ms; readyAt: Ms }[];
-  recipes: { id: string; name: string; building: string | null; level: number; hours: number; durationMs: Ms; people: Record<string, number>; resources: Record<string, number>; goods: Record<string, number>; output: Record<string, number> }[];
-  householdSlots: number;
+  recipes: { id: string; name: string; building: string; level: number; hours: number; durationMs: Ms; people: Record<string, number>; resources: Record<string, number>; goods: Record<string, number>; output: Record<string, number> }[];
+  // The holdings in staffing order, with what each yields this season.
+  holdings: { villageId: string; villageName: string; buildingId: string; name: string; level: number; staff: Record<string, number>; staffed: boolean; yields: Record<string, number> }[];
   altar: { good: string; boost: number; until: Ms } | null;
   altarDurationMs: Ms;
+  altarBuilding: string;
+  altarNeeds: { id: string; name: string; have: boolean };
   offerings: { good: string; name: string; boost: number; have: number }[];
   ships: { id: string; name: string; role: string; range: number; troopSpace: number; naval: number; inPort: number; atSea: number }[];
 }
@@ -104,23 +108,36 @@ export function houseView(state: GameState, content: Content, p: Player, at: Ms)
     posture: prof?.posture ?? "guard",
     day: dayView(state, content, p, at),
     crafts: p.crafts.map((j) => ({ id: j.id, recipeId: j.recipeId, name: content.recipes[j.recipeId]?.name ?? j.recipeId, villageName: j.villageId ? (state.villages[j.villageId]?.name ?? null) : null, startAt: j.startAt, readyAt: j.readyAt })),
-    recipes: cfg.crafting.recipes.map((r) => ({ id: r.id, name: r.name, building: r.building ?? null, level: r.level ?? 0, hours: r.hours, durationMs: craftDurationMs(state, content, r.id), people: r.people, resources: r.resources, goods: r.goods, output: r.output })),
-    householdSlots: craftSlots(content, p, state, "household"),
+    recipes: cfg.crafting.recipes.map((r) => ({ id: r.id, name: r.name, building: r.building, level: r.level ?? 1, hours: r.hours, durationMs: craftDurationMs(state, content, r.id), people: r.people, resources: r.resources, goods: r.goods, output: r.output })),
+    holdings: holdingsOf(state, content, p).map((h) => ({
+      villageId: h.villageId,
+      villageName: h.villageName,
+      buildingId: h.buildingId,
+      name: h.name,
+      level: h.level,
+      staff: h.staff,
+      staffed: h.staffed,
+      yields: holdingYield(content, content.buildings[h.buildingId]!, h.level, seasonOfYear(state, content, at)),
+    })),
     altar: (() => {
       const a = altarLit(p, at);
       return a ? { good: a.good, boost: a.boost, until: a.until } : null;
     })(),
-    altarDurationMs: altarDurationMs(state, content, p),
+    altarDurationMs: altarDurationMs(state, content),
+    altarBuilding: cfg.crafting.altar.building,
+    altarNeeds: { id: cfg.crafting.altar.needs, name: content.people[cfg.crafting.altar.needs]?.name ?? cfg.crafting.altar.needs, have: (p.people[cfg.crafting.altar.needs] ?? 0) > 0 },
     offerings: cfg.crafting.altar.offerings.map((o) => ({ good: o.good, name: content.goods[o.good]?.name ?? o.good, boost: o.boost, have: goodsOf(p, o.good) })),
     ships: Object.values(content.ships).map((s) => ({ id: s.id, name: s.name, role: s.role, range: s.range, troopSpace: s.troopSpace, naval: s.naval, inPort: goodsOf(p, s.id), atSea: atSea[s.id] ?? 0 })),
   };
 }
 
-// Which of the house's crafts can start in a town now, and why not.
-export function craftOptions(state: GameState, content: Content, p: Player, villageId: string | null, building: string | null) {
+// Which of the crafts worked at a building can start in a town now, and why not.
+export function craftOptions(state: GameState, content: Content, p: Player, villageId: string, building: string) {
+  const slots = craftSlots(state, content, building, villageId);
+  const running = craftsAt(content, p, building, villageId);
   return content.massalia.crafting.recipes
-    .filter((r) => (building ? r.building === building : !r.building))
-    .map((r) => ({ id: r.id, name: r.name, check: craftCheck(state, content, p, r.id, r.building ? villageId : null), slots: craftSlots(content, p, state, r.building ? "harbor" : "household", villageId) }));
+    .filter((r) => r.building === building)
+    .map((r) => ({ id: r.id, name: r.name, check: craftCheck(state, content, p, r.id, villageId), slots, running }));
 }
 
 export interface MarketRow {

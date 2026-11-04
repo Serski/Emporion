@@ -11,9 +11,9 @@
   "goods": [
     { "id": "wine", "name": "Wine", "icon": "WINE.webp", "group": "goods", "category": "agricultural", "sell": 5, "buy": 2 },
     { "id": "oliveoil", "name": "Olive Oil", "icon": "OLIVE_OIL.webp", "group": "goods", "category": "agricultural", "sell": 6, "buy": 3 },
-    { "id": "chicken", "name": "Chicken", "icon": "CHICKEN.webp", "group": "goods", "category": "yearround", "sell": 3, "buy": 1 },
-    { "id": "bull", "name": "Bull", "icon": "BULL.webp", "group": "goods", "category": "agricultural", "sell": 25, "buy": 12 },
-    { "id": "horse", "name": "Horse", "icon": "HORSE.webp", "group": "goods", "category": "agricultural", "sell": 30, "buy": 15 },
+    { "id": "chicken", "name": "Chicken", "plural": "Chickens", "icon": "CHICKEN.webp", "group": "goods", "category": "yearround", "sell": 3, "buy": 1 },
+    { "id": "bull", "name": "Bull", "plural": "Bulls", "icon": "BULL.webp", "group": "goods", "category": "agricultural", "sell": 25, "buy": 12 },
+    { "id": "horse", "name": "Horse", "plural": "Horses", "icon": "HORSE.webp", "group": "goods", "category": "agricultural", "sell": 30, "buy": 15 },
     { "id": "herbal", "name": "Herbs", "icon": "HERBS.webp", "group": "goods", "category": "yearround", "sell": 5, "buy": 2 },
     { "id": "remedy", "name": "Remedy", "icon": "REMEDY.webp", "group": "goods", "category": "yearround", "sell": 40, "buy": 15 },
     { "id": "poison", "name": "Poison", "icon": "POISON.webp", "group": "goods", "category": "yearround", "sell": 120, "buy": 40 },
@@ -24,8 +24,8 @@
     { "id": "marble", "name": "Marble", "icon": "MARBLE.webp", "group": "materials", "category": "yearround", "sell": 12, "buy": 6 },
     { "id": "tin", "name": "Tin", "icon": "TIN.webp", "group": "materials", "category": "yearround", "sell": 12, "buy": 6 },
     { "id": "naval-supplies", "name": "Naval Supplies", "icon": "NAVAL_SUPPLIES.webp", "group": "naval", "category": "yearround", "sell": 14, "buy": 7 },
-    { "id": "trade-ship", "name": "Pentekonter", "icon": "PENTEKONTER.webp", "group": "naval", "category": "agricultural", "sell": 90, "buy": 36 },
-    { "id": "galley", "name": "Trireme", "icon": "TRIREME.webp", "group": "naval", "category": "agricultural", "sell": 180, "buy": 72 }
+    { "id": "trade-ship", "name": "Pentekonter", "plural": "Pentekonters", "icon": "PENTEKONTER.webp", "group": "naval", "category": "agricultural", "sell": 90, "buy": 36 },
+    { "id": "galley", "name": "Trireme", "plural": "Triremes", "icon": "TRIREME.webp", "group": "naval", "category": "agricultural", "sell": 180, "buy": 72 }
   ],
   "seasonal": {
     "agricultural": [1.25, 1.05, 0.85, 0.95],

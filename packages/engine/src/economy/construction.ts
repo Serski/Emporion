@@ -8,7 +8,7 @@ import { fail, ok, type Fail, type Result } from "../core/result.js";
 import { scaledMs } from "../core/time.js";
 import type { BuildJob, GameState, Ms, Resources, Village } from "../core/types.js";
 import { touch } from "../village/timeline.js";
-import { isCoastal, tileIndex } from "../world/map.js";
+import { isCoastal, tileDeposit, tileIndex } from "../world/map.js";
 import { buildingCount, buildingLevel, buildTimeFactor, maxFieldLevel, villageRates } from "../village/stats.js";
 
 // ---------------------------------------------------------------------------
@@ -79,6 +79,9 @@ export function constructionBlocker(state: GameState, content: Content, v: Villa
   if (def.factions && owner && !def.factions.includes(owner.factionId)) return fail("requirements", `Your people cannot build a ${def.name}.`);
   if (def.capitalOnly && !v.isCapital) return fail("requirements", `${def.name} can only stand in your capital.`);
   if (def.coastal && !isCoastal(content, tileIndex(content, v.x, v.y))) return fail("requirements", `${def.name} needs a town on the sea.`);
+  if (def.deposit && tileDeposit(content, state.settings.seed, tileIndex(content, v.x, v.y))?.id !== def.deposit) {
+    return fail("requirements", `${def.name} needs ${content.deposits[def.deposit]?.name.toLowerCase() ?? def.deposit} on the town's hex.`);
+  }
   if (def.notInCapital && v.isCapital) return fail("requirements", `${def.name} cannot stand in your capital.`);
   const planned = (id: string) => buildingCount(v, id) + v.buildQueue.filter((j) => j.kind === "building" && j.buildingId === id && !v.buildings[j.index]).length;
   for (const other of def.exclusiveWith ?? []) {

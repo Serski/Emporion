@@ -1,6 +1,7 @@
 {
   "_note": "MASSALIA's hulls (content/military/ships.json). A march whose straight line crosses open sea needs hulls for every man; range counts the sea zones crossed. A town's own ships can drive off a landing (MASSALIA's naval check).",
   "supplyGood": "naval-supplies",
+  "port": "harbor",
   "ships": [
     {
       "id": "trade-ship",

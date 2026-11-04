@@ -15,6 +15,13 @@ export function useSession(): Session {
 }
 
 export const art = (name: string) => `art/${name}.webp`;
+
+// A building's picture: MASSALIA's painting of it, or the art of its good when
+// MASSALIA painted none (mines, salt works, the sheep farm).
+export function buildingArt(id: string): { src: string; icon: boolean } {
+  const def = content.buildings[id];
+  return def?.icon ? { src: asset(def.icon), icon: true } : { src: art(`b-${id}`), icon: false };
+}
 export const portraitUrl = (stem: string) => `portraits/${stem}.webp`;
 
 export function ResIcon({ id, size = 20 }: { id: string; size?: number }) {
@@ -32,6 +39,14 @@ export function GoodIcon({ id, size = 24 }: { id: string; size?: number }) {
 
 export function goodLabel(id: string): string {
   return content.goods[id]?.name ?? content.resources.find((r) => r.id === id)?.name ?? id;
+}
+
+// "1 bull", "6 chickens", "2.6 wool": a count with the good's name.
+export function goodCount(id: string, n: number): string {
+  const shown = Number.isInteger(n) ? String(n) : n >= 10 ? String(Math.round(n)) : n.toFixed(1).replace(/\.0$/, "");
+  const g = content.goods[id];
+  const name = n === 1 || !g?.plural ? goodLabel(id) : g.plural;
+  return `${shown} ${name.toLowerCase()}`;
 }
 
 // A whole-number stepper: − [n] +.

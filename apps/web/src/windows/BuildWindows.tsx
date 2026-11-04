@@ -12,10 +12,10 @@ import {
 import { duration, int, pct } from "../format";
 import { useNav } from "../nav";
 import { asset, content } from "../content";
-import { Cost, Modal, art, useSession } from "../ui";
+import { Cost, Modal, art, buildingArt, useSession } from "../ui";
 import { ArmoryPanel, MusterPanel, ResearchPanel, TrainPanel } from "./MilitaryPanels";
 import { ExpansionPanel, FestivalPanel, HeroonPanel, MarketPanel, TreasuryPanel } from "./CivicPanels";
-import { AgoraPanel, AltarPanel, ShipyardPanel } from "./MassaliaPanels";
+import { AgoraPanel, AltarPanel, CraftPanel, HoldingPanel, PortPanel } from "./MassaliaPanels";
 
 // How long until the stock covers `cost` at current net production, or why never.
 function waitFor(v: Village, cost: Resources, net: Resources, capacity: Resources): string | null {
@@ -186,12 +186,13 @@ export function BuildingWindow({ slot, onClose }: { slot: number; onClose: () =>
       title={def.name}
       eyebrow={`Level ${level}${plan.fromLevel > level ? ` · building to ${plan.fromLevel}` : ""}`}
       onClose={onClose}
-      image={art(`b-${def.id}`)}
+      image={buildingArt(def.id).src}
       banner={BANNERS[def.id] ? art(BANNERS[def.id]!) : undefined}
-      wide={trains || !!e.rallyPoint || !!e.research || !!e.armory || !!e.merchants || content.massalia.crafting.recipes.some((r) => r.building === def.id)}
+      wide={trains || !!e.rallyPoint || !!e.research || !!e.armory || !!e.merchants || !!e.goods || content.massalia.crafting.recipes.some((r) => r.building === def.id)}
     >
       <p className="lede">{def.description}</p>
       <Effects def={def} level={level} />
+      {e.goods && level === 0 && <HoldingPanel buildingId={def.id} level={0} />}
       <UpgradeBlock plan={plan} onRun={() => s.run((g, t) => g.upgradeBuilding(s.active, v.id, slot, t), `${def.name} is being raised.`)} />
       {level > 0 && (
         <>
@@ -202,8 +203,10 @@ export function BuildingWindow({ slot, onClose }: { slot: number; onClose: () =>
           {e.rallyPoint && <MusterPanel />}
           {def.id === content.massalia.market.building && <AgoraPanel />}
           {e.merchants && <MarketPanel />}
+          {e.goods && <HoldingPanel buildingId={def.id} level={level} />}
           {def.id === content.massalia.crafting.altar.building && <AltarPanel />}
-          {content.massalia.crafting.recipes.some((r) => r.building === def.id) && <ShipyardPanel buildingId={def.id} />}
+          {content.massalia.crafting.recipes.some((r) => r.building === def.id) && <CraftPanel buildingId={def.id} />}
+          {def.id === content.massalia.ships.port && <PortPanel />}
           {e.festivals && <FestivalPanel />}
           {e.expansionSlots && <ExpansionPanel />}
           {e.oasisSlots && <HeroonPanel />}
@@ -251,7 +254,7 @@ export function ConstructWindow({ slot, onClose }: { slot: number; onClose: () =
       <ul className="build-list">
         {shown.map((o) => (
           <li key={o.def.id} className={`build-option${o.available ? "" : " is-locked"}`}>
-            <img className="build-option__art" src={art(`b-${o.def.id}`)} alt="" width={72} height={72} loading="lazy" />
+            <img className={`build-option__art${buildingArt(o.def.id).icon ? " build-option__art--icon" : ""}`} src={buildingArt(o.def.id).src} alt="" width={72} height={72} loading="lazy" />
             <div className="build-option__text">
               <h3 className="build-option__name">{o.def.name}</h3>
               <p className="small">{o.def.description}</p>

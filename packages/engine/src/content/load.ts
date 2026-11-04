@@ -295,19 +295,29 @@ export function parseContent(raw: ContentBundle): Content {
     recipes[r.id] = r;
     for (const g of [...Object.keys(r.output), ...Object.keys(r.goods)]) if (!isGood(g)) fail(`craft ${r.id}: unknown good ${g}`);
     checkRes(r.resources, `craft ${r.id}`);
-    if (r.building && !buildings[r.building]) fail(`craft ${r.id}: unknown building ${r.building}`);
+    if (!buildings[r.building]) fail(`craft ${r.id}: unknown building ${r.building}`);
+    else if (!crafting.slots[r.building]) fail(`craft ${r.id}: the ${r.building} has no craft slots`);
     for (const k of Object.keys(r.people)) if (!people[k]) fail(`craft ${r.id}: unknown person ${k}`);
   }
+  for (const id of Object.keys(crafting.slots)) if (!buildings[id]) fail(`craft slots: unknown building ${id}`);
   if (!buildings[crafting.altar.building]) fail(`altar: unknown building ${crafting.altar.building}`);
+  if (!people[crafting.altar.needs]) fail(`altar: unknown person ${crafting.altar.needs}`);
   for (const o of crafting.altar.offerings) if (!isGood(o.good)) fail(`altar: unknown good ${o.good}`);
 
-  // What the valleys may hold.
+  // Holdings and the deposits they stand on.
   const deposits: Record<string, DepositDef> = {};
   for (const d of world.mapgen.deposits) {
     if (deposits[d.id]) fail(`deposit: duplicate ${d.id}`);
     deposits[d.id] = d;
     if (!isGood(d.good)) fail(`deposit ${d.id}: unknown good ${d.good}`);
     for (const pol of d.polities ?? []) if (!map.polities[pol]) fail(`deposit ${d.id}: unknown state ${pol}`);
+  }
+  for (const b of bundle.buildings.buildings) {
+    if (b.deposit && !deposits[b.deposit]) fail(`building ${b.id}: unknown deposit ${b.deposit}`);
+    const g = b.effects.goods;
+    if (!g) continue;
+    for (const k of Object.keys(g.yields)) if (!isGood(k)) fail(`building ${b.id}: yields unknown good ${k}`);
+    for (const k of Object.keys(g.staff)) if (!people[k]) fail(`building ${b.id}: staffed by unknown person ${k}`);
   }
 
   const ships: Record<string, ShipDef> = {};
@@ -316,6 +326,7 @@ export function parseContent(raw: ContentBundle): Content {
     if (!isGood(sh.id)) fail(`ship ${sh.id} is not a market good`);
   }
   if (!isGood(shipsFile.supplyGood)) fail(`ships: supply good ${shipsFile.supplyGood} is not a market good`);
+  if (!buildings[shipsFile.port]) fail(`ships: unknown port building ${shipsFile.port}`);
   for (const id of Object.values(shipsFile.townFleet)) if (!ships[id]) fail(`ships: town fleet names unknown ship ${id}`);
   for (const u of Object.keys(shipsFile.unitSpace)) if (!units[u]) fail(`ships: unknown unit ${u}`);
   if (!isGood(intrigue.poison.good)) fail(`intrigue: unknown good ${intrigue.poison.good}`);

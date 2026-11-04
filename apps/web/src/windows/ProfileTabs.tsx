@@ -1,9 +1,9 @@
-import { craftOptions, familyView, heroView, houseView, type RoutineOption } from "@emporion/engine";
+import { familyView, heroView, houseView, type RoutineOption } from "@emporion/engine";
 import { content } from "../content";
 import { duration, int, pct } from "../format";
 import { Icon } from "../icons";
 import { useNav } from "../nav";
-import { Bar, Countdown, GoodIcon, Portrait, art, factionName, goodLabel, useSession } from "../ui";
+import { Bar, Countdown, GoodIcon, Portrait, art, factionName, goodCount, goodLabel, useSession } from "../ui";
 
 const STAT_NAME: Record<string, string> = Object.fromEntries(content.massalia.profile.stats.map((s) => [s.id, s.name]));
 
@@ -196,8 +196,6 @@ export function HouseholdTab() {
   const now = s.now();
   const house = houseView(s.state, content, s.player, now);
   const retained = house.people.filter((p) => p.have > 0);
-  const household = craftOptions(s.state, content, s.player, null, null);
-  const benchJobs = house.crafts.filter((c) => !content.recipes[c.recipeId]?.building);
   return (
     <>
       <div className="purse-line">
@@ -217,7 +215,7 @@ export function HouseholdTab() {
           </button>
         </div>
         {retained.length === 0 ? (
-          <p className="muted small">You keep no one yet. Slaves work the fields, freemen build ships, a physician guards against poison, a priest keeps the altar.</p>
+          <p className="muted small">You keep no one yet. Slaves work the holdings, freemen build ships, a physician cures poison, a priest serves the altar and a hetaira keeps the salon.</p>
         ) : (
           <ul className="troops">
             {retained.map((p) => (
@@ -231,37 +229,49 @@ export function HouseholdTab() {
         )}
       </section>
       <section className="subpanel">
-        <h3 className="subpanel__title">The physician's bench</h3>
-        {benchJobs.map((j) => (
-          <div key={j.id} className="craft-job">
-            <span>{j.name}</span>
-            <Bar value={now - j.startAt} max={j.readyAt - j.startAt} />
-            <Countdown to={j.readyAt} now={now} />
-          </div>
-        ))}
-        <ul className="recipe-list">
-          {household.map((o) => {
-            const r = house.recipes.find((x) => x.id === o.id)!;
-            return (
-              <li key={o.id} className="recipe">
-                <GoodIcon id={o.id} size={36} />
-                <div className="recipe__text">
-                  <div className="recipe__name">{r.name}</div>
-                  <div className="small muted">
-                    {Object.entries(r.goods)
-                      .map(([g, n]) => `${n} ${goodLabel(g)}`)
-                      .join(" · ")}{" "}
-                    · {duration(r.durationMs)} · needs a physician
-                  </div>
-                  {!o.check.ok && <div className="small muted">{o.check.message}</div>}
-                </div>
-                <button className="btn btn--buy btn--small" disabled={!o.check.ok} onClick={() => s.run((g, t) => g.craft(s.active, o.id, null, t), `${r.name} is being mixed.`)}>
-                  Craft
-                </button>
+        <h3 className="subpanel__title">Holdings</h3>
+        {house.holdings.length === 0 ? (
+          <p className="muted small">
+            No holdings yet. A Poultry Yard, a Bull Farm or a Sheep Farm stands anywhere; a Vineyard, an Olive Press or a mine only where the hex holds vines, olives or
+            ore; Salt Works by the sea. A slave works each, and the Sanctuary needs your priest.
+          </p>
+        ) : (
+          <ul className="holding-list">
+            {house.holdings.map((h) => (
+              <li key={`${h.villageId}-${h.buildingId}`} className={h.staffed ? "" : "is-idle"}>
+                <span className="holding-list__name">
+                  {h.name} <span className="muted small">· {h.villageName} · level {h.level}</span>
+                </span>
+                <span className="small">
+                  {h.staffed
+                    ? Object.entries(h.yields)
+                        .map(([g, n]) => goodCount(g, n))
+                        .join(" · ") + " a season"
+                    : `Idle: needs ${Object.entries(h.staff)
+                        .map(([who, n]) => `${n} ${n === 1 ? content.people[who]?.name.toLowerCase() : content.people[who]?.plural.toLowerCase()}`)
+                        .join(" and ")}`}
+                </span>
               </li>
-            );
-          })}
-        </ul>
+            ))}
+          </ul>
+        )}
+      </section>
+      <section className="subpanel">
+        <h3 className="subpanel__title">Crafts under way</h3>
+        {house.crafts.length === 0 ? (
+          <p className="muted small">Nothing on the slips or in the cabinet. Ships and naval supplies are made at a Shipyard; your hetaira mixes remedies and poisons at her Salon.</p>
+        ) : (
+          house.crafts.map((j) => (
+            <div key={j.id} className="craft-job">
+              <span>
+                {j.name}
+                {j.villageName ? <span className="muted small"> · {j.villageName}</span> : null}
+              </span>
+              <Bar value={now - j.startAt} max={j.readyAt - j.startAt} />
+              <Countdown to={j.readyAt} now={now} />
+            </div>
+          ))
+        )}
       </section>
       <section className="subpanel">
         <h3 className="subpanel__title">The altar</h3>
@@ -270,7 +280,10 @@ export function HouseholdTab() {
             The altar smokes · +{pct(house.altar.boost)} to every man you field · <Countdown to={house.altar.until} now={now} />
           </p>
         ) : (
-          <p className="small muted">Cold. Burn a bull or a chicken at a Barracks to steady every man you field for {duration(house.altarDurationMs)}.</p>
+          <p className="small muted">
+            Cold. Burn a bull or a chicken at the {content.buildings[house.altarBuilding]?.name ?? "altar"} to steady every man you field for {duration(house.altarDurationMs)}
+            {house.altarNeeds.have ? "." : `; it takes no offering without a ${house.altarNeeds.name.toLowerCase()}.`}
+          </p>
         )}
       </section>
       <section className="subpanel">
@@ -286,7 +299,7 @@ export function HouseholdTab() {
             </li>
           ))}
         </ul>
-        <p className="muted small">A march over open sea needs hulls for every man and a naval supply per hull. Pentekonters carry 20; Triremes carry 4 and drive off fleets.</p>
+        <p className="muted small">A march over open sea sails from a town with a Harbor, needs hulls for every man and burns a naval supply per hull. Pentekonters carry the men; Triremes escort them and drive off fleets.</p>
       </section>
     </>
   );

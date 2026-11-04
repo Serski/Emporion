@@ -123,6 +123,15 @@ export const effectsSchema = z
     heroRevive: curveSchema.optional(), // multiplier on hero revive time
     treasures: curveSchema.optional(), // treasure capacity
     wall: z.boolean().optional(), // the village wall: the owner's faction sets its bonus
+    // A holding (MASSALIA's estates and farms): goods for the house at each turn of
+    // the season, base × growth^(level − 1), while the house has the staff for it.
+    goods: z
+      .object({
+        yields: z.record(z.string(), pos),
+        staff: z.record(idSchema, posInt).default({}),
+      })
+      .strict()
+      .optional(),
   })
   .strict();
 
@@ -141,6 +150,8 @@ export const buildingSchema = z
     requires: z.array(requirementSchema).default([]),
     capitalOnly: z.boolean().optional(),
     coastal: z.boolean().optional(), // only a town on the sea may raise it
+    deposit: idSchema.optional(), // only a town whose hex holds this deposit may raise it
+    icon: z.string().optional(), // art under the client's assets/ when there is no painting
 
     notInCapital: z.boolean().optional(),
     onePerPlayer: z.boolean().optional(),
@@ -557,6 +568,7 @@ export const marketSchema = z
         .object({
           id: goodIdSchema,
           name: z.string(),
+          plural: z.string().optional(), // for goods counted one by one
           icon: z.string().optional(),
           group: z.enum(["goods", "materials", "naval"]),
           category: goodCategorySchema,
@@ -592,8 +604,6 @@ export const peopleSchema = z
           about: z.string(),
           production: resourceMapSchema.optional(), // per hour at speed 1, in the capital
           culturePerDay: nonNeg.optional(),
-          herbsPerSeason: nonNeg.optional(),
-          altarDuration: pos.optional(),
           heroXpBonus: nonNeg.optional(),
           revealsAttacks: z.boolean().optional(),
         })
@@ -665,7 +675,7 @@ export const craftingSchema = z
           id: goodIdSchema,
           name: z.string(),
           output: z.record(goodIdSchema, posInt),
-          building: idSchema.optional(),
+          building: idSchema, // the building whose slots work it
           level: posInt.optional(),
           people: z.record(idSchema, posInt),
           resources: resourceMapSchema,
@@ -674,10 +684,20 @@ export const craftingSchema = z
         })
         .strict(),
     ),
-    slots: z.object({ harbor: z.array(posInt).min(1), household: posInt }).strict(),
+    // per building: the levels at which it gains a slot for one craft at a time
+    slots: z.record(idSchema, z.array(posInt).min(1)),
+    // MASSALIA's yields: base × growth^(level − 1), times the season's
+    // production factor for the good's category (Winter, Spring, Summer, Autumn)
+    holdings: z
+      .object({
+        growth: pos,
+        production: z.record(z.enum(["agricultural", "yearround"]), z.array(pos).length(4)),
+      })
+      .strict(),
     altar: z
       .object({
         building: idSchema,
+        needs: idSchema, // the person the house must retain to make an offering
         seasons: pos,
         offerings: z.array(z.object({ good: goodIdSchema, boost: pos }).strict()).min(1),
       })
@@ -689,6 +709,7 @@ export const shipsSchema = z
   .object({
     _note: z.string().optional(),
     supplyGood: goodIdSchema,
+    port: idSchema, // a march over open sea sails from a town with this building
     ships: z.array(
       z
         .object({

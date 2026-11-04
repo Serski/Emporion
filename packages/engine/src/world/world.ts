@@ -97,6 +97,7 @@ function makePlayer(state: GameState, content: Content, name: string, factionId:
     kingdomId: null,
     purse: kind === "npc" ? 0 : content.massalia.market.currency.start,
     goods: {},
+    goodsCarry: {},
     people: {},
     profile: kind === "npc" ? null : createProfile(content, factionId),
     crafts: [],

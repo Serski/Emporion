@@ -76,6 +76,7 @@ function makeStatePlayer(state: GameState, content: Content, polityId: string, a
     kingdomId: null,
     purse: 0,
     goods: {},
+    goodsCarry: {},
     people: {},
     profile: null,
     crafts: [],

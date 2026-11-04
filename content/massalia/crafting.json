@@ -1,15 +1,20 @@
 {
-  "_note": "MASSALIA crafts its two hulls at the Shipbuilder's slipway (buildings.json craft); here at the Harbor, which only a coastal town may raise. Naval supplies (a slipway yield in MASSALIA), remedies and poisons (agora goods in MASSALIA) are crafted here as EMPORION's own recipes. Resources are a town's stores; goods are the house's. People named under 'people' are busy while the job runs.",
+  "_note": "MASSALIA crafts its two hulls at the Shipbuilder's slipway (buildings.json craft); here at the Shipyard, which only a coastal town with a Harbor may raise. Naval supplies (a slipway yield in MASSALIA), remedies and poisons (agora goods in MASSALIA) are crafted here as EMPORION's own recipes: supplies at the Shipyard, remedies and poisons at the hetaira's Salon. Resources are a town's stores; goods are the house's. People named under 'people' are busy while the job runs. Holdings yield as MASSALIA's buildings do: base × 1.8^(level − 1), times the season's production factor (buildings.json seasonal.coefficients). The altar stands in the Sanctuary and needs a priest.",
   "recipes": [
-    { "id": "naval-supplies", "name": "Naval Supplies", "output": { "naval-supplies": 1 }, "building": "harbor", "level": 1, "people": { "freeman": 1 }, "resources": { "timber": 200, "iron": 100 }, "goods": {}, "hours": 4 },
-    { "id": "trade-ship", "name": "Pentekonter", "output": { "trade-ship": 1 }, "building": "harbor", "level": 5, "people": { "freeman": 2 }, "resources": { "timber": 500 }, "goods": { "naval-supplies": 2, "leather": 1 }, "hours": 24 },
-    { "id": "galley", "name": "Trireme", "output": { "galley": 1 }, "building": "harbor", "level": 10, "people": { "freeman": 3 }, "resources": { "timber": 800, "iron": 300 }, "goods": { "naval-supplies": 3 }, "hours": 24 },
-    { "id": "remedy", "name": "Remedy", "output": { "remedy": 1 }, "people": { "physician": 1 }, "resources": {}, "goods": { "herbal": 2, "oliveoil": 1 }, "hours": 6 },
-    { "id": "poison", "name": "Poison", "output": { "poison": 1 }, "people": { "physician": 1 }, "resources": {}, "goods": { "herbal": 3, "wine": 1 }, "hours": 12 }
+    { "id": "naval-supplies", "name": "Naval Supplies", "output": { "naval-supplies": 1 }, "building": "shipyard", "level": 1, "people": { "freeman": 1 }, "resources": { "timber": 200, "iron": 100 }, "goods": {}, "hours": 4 },
+    { "id": "trade-ship", "name": "Pentekonter", "output": { "trade-ship": 1 }, "building": "shipyard", "level": 5, "people": { "freeman": 2 }, "resources": { "timber": 500 }, "goods": { "naval-supplies": 2, "leather": 1 }, "hours": 24 },
+    { "id": "galley", "name": "Trireme", "output": { "galley": 1 }, "building": "shipyard", "level": 10, "people": { "freeman": 3 }, "resources": { "timber": 800, "iron": 300 }, "goods": { "naval-supplies": 3 }, "hours": 24 },
+    { "id": "remedy", "name": "Remedy", "output": { "remedy": 1 }, "building": "salon", "level": 1, "people": { "hetaira": 1 }, "resources": {}, "goods": { "herbal": 2, "oliveoil": 1 }, "hours": 6 },
+    { "id": "poison", "name": "Poison", "output": { "poison": 1 }, "building": "salon", "level": 1, "people": { "hetaira": 1 }, "resources": {}, "goods": { "herbal": 3, "wine": 1 }, "hours": 12 }
   ],
-  "slots": { "harbor": [1, 10, 20], "household": 1 },
+  "slots": { "shipyard": [1, 10, 20], "salon": [1, 10] },
+  "holdings": {
+    "growth": 1.8,
+    "production": { "agricultural": [0.65, 1.1, 1.25, 1.0], "yearround": [0.95, 1.0, 1.05, 1.0] }
+  },
   "altar": {
-    "building": "barracks",
+    "building": "sanctuary",
+    "needs": "priest",
     "seasons": 2,
     "offerings": [
       { "good": "bull", "boost": 0.06 },

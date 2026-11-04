@@ -5,6 +5,7 @@ import type { GameState, Ms, Player, Resources, Village } from "../core/types.js
 import { buildingLevel } from "../village/stats.js";
 import { touch } from "../village/timeline.js";
 import { calendarAt } from "../world/calendar.js";
+import { reapHoldings } from "./holdings.js";
 import { changeComposure, createProfile } from "./profile.js";
 
 // ---------------------------------------------------------------------------
@@ -127,10 +128,7 @@ export function runSeason(state: GameState, content: Content, at: Ms): void {
   for (const p of Object.values(state.players)) {
     if (p.kind === "npc") continue;
     p.purse = Math.max(0, p.purse - upkeepPerSeason(content, p));
-    for (const [id, n] of Object.entries(p.people)) {
-      const herbs = content.people[id]?.herbsPerSeason ?? 0;
-      if (herbs > 0) addGoods(p, "herbal", herbs * n);
-    }
+    reapHoldings(state, content, p, at);
     changeComposure(state, content, p, at, content.massalia.profile.composure.recoveryPerSeason);
   }
   scheduleSeason(state, content, at);
@@ -144,6 +142,7 @@ export function ensureMassalia(state: GameState, content: Content, at: Ms): void
   for (const p of Object.values(state.players)) {
     p.purse ??= p.kind === "npc" ? 0 : content.massalia.market.currency.start;
     p.goods ??= {};
+    p.goodsCarry ??= {};
     p.people ??= {};
     if (p.profile === undefined) p.profile = p.kind === "npc" ? null : createProfile(content, p.factionId);
     p.crafts ??= [];
