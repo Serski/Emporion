@@ -4,7 +4,7 @@ import { int, pct } from "../format";
 import { useNav } from "../nav";
 import { useState } from "react";
 import { plotView } from "@emporion/engine";
-import { Modal, ResIcon, TroopList, art, factionName, useSession } from "../ui";
+import { GoodIcon, Modal, ResIcon, TroopList, art, factionName, useSession } from "../ui";
 
 const TERRAIN: Record<string, string> = { P: "Plain", H: "Hills", M: "Mountains", S: "Open sea", L: "Lake", F: "Beyond the known world" };
 
@@ -98,6 +98,19 @@ export function TileWindow({ tile, onClose }: { tile: number; onClose: () => voi
                   <ResIcon id={r} size={16} /> {info.layout!.fields[r] ?? 0}
                 </span>
               ))}
+            </span>
+          </li>
+        )}
+        {info.deposit && (
+          <li>
+            <span>Deposit</span>
+            <span className="state-line">
+              <GoodIcon id={info.deposit.good} size={22} />
+              {info.deposit.name}
+              {(() => {
+                const b = content.buildingList.find((x) => x.deposit === info.deposit!.id);
+                return b ? <span className="muted small"> · a town here may raise a {b.name}</span> : null;
+              })()}
             </span>
           </li>
         )}

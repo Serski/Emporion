@@ -10,12 +10,13 @@ import {
   statePerHex,
   territoryMap,
   tileDetails,
+  tileDeposit,
   tileIndex,
   tileKind,
   type GameState,
   type TileKind,
 } from "@emporion/engine";
-import { content } from "../content";
+import { asset, content } from "../content";
 import { Icon } from "../icons";
 import { useNav } from "../nav";
 import { ResIcon, factionColor, useSession } from "../ui";
@@ -248,6 +249,35 @@ function drawStates(ctx: CanvasRenderingContext2D, f: Frame) {
   ctx.restore();
 }
 
+// Deposits: the good's picture on each free valley that holds one.
+const depositImages = new Map<string, HTMLImageElement>();
+function depositImage(good: string): HTMLImageElement | null {
+  let img = depositImages.get(good);
+  if (!img) {
+    const icon = content.goods[good]?.icon;
+    if (!icon) return null;
+    img = new Image();
+    img.onload = () => terrainListeners.forEach((f) => f());
+    img.src = asset(icon);
+    depositImages.set(good, img);
+  }
+  return img.complete && img.naturalWidth > 0 ? img : null;
+}
+
+function drawDeposits(ctx: CanvasRenderingContext2D, f: Frame, state: GameState) {
+  if (f.zoom < 14) return;
+  const size = f.zoom * 0.46;
+  const seed = state.settings.seed;
+  for (const t of f.visible) {
+    if (state.occupancy[t]) continue;
+    const d = tileDeposit(content, seed, t);
+    if (!d) continue;
+    const img = depositImage(d.good);
+    if (!img) continue;
+    ctx.drawImage(img, f.sx(centreX(t)) + f.zoom * 0.08, f.sy(centreY(t)) - f.zoom * 0.46, size, size);
+  }
+}
+
 type Claims = ReturnType<typeof territoryMap>;
 const claimGroups = new WeakMap<Claims, Map<number, number[]>>();
 function claimedByOwner(t: Claims): Map<number, number[]> {
@@ -415,6 +445,8 @@ function draw(ctx: CanvasRenderingContext2D, wpx: number, hpx: number, view: Vie
     }
     ctx.stroke();
   }
+
+  drawDeposits(ctx, f, state);
 
   if (zoom < 10) {
     // Zoomed out: the states' names, larger for larger states.
@@ -724,7 +756,7 @@ export function MapView() {
       return { title: d.village.name, sub: `${label} · ${d.village.population} people`, layout: null };
     }
     if (d.info.oasis) return { title: d.info.oasis.name, sub: d.oasis?.ownerVillageName ? `Held by ${d.oasis.ownerVillageName}` : (claim ?? "Unclaimed oasis"), layout: null };
-    if (d.info.kind === "valley") return { title: "Free valley", sub: [land, d.info.regionName, claim].filter(Boolean).join(" · ") || null, layout: d.info.layout?.fields ?? null };
+    if (d.info.kind === "valley") return { title: d.info.deposit ? `Free valley · ${d.info.deposit.name}` : "Free valley", sub: [land, d.info.regionName, claim].filter(Boolean).join(" · ") || null, layout: d.info.layout?.fields ?? null };
     const names: Record<string, string> = { water: "Open water", fog: "Beyond the known world", wild: "Wild land", town: "City" };
     return { title: names[d.info.kind] ?? "Land", sub: [land, d.info.regionName, claim].filter(Boolean).join(" · ") || null, layout: null };
   })();
