@@ -1,9 +1,9 @@
 {
   "_note": "MASSALIA's hireable people (content/people/pops.json) plus the philosopher, hetaira and priest, which are classes in MASSALIA and hires here. Upkeep is drachmae per season (MASSALIA charges per day; a MASSALIA day is a season). Food is wheat per hour at speed 1 in the capital, like troops.",
   "people": [
-    { "id": "slave", "name": "Slave", "plural": "Slaves", "icon": "SLAVE_CLEAR.webp", "hire": 30, "sellBack": 25, "upkeep": 0, "food": 4, "dismiss": "Sell", "about": "Works the capital's fields: +25 wheat an hour.", "production": { "grain": 25 } },
+    { "id": "slave", "name": "Slave", "plural": "Slaves", "icon": "SLAVE_CLEAR.webp", "hire": 30, "sellBack": 25, "upkeep": 0, "food": 4, "dismiss": "Sell", "about": "Works the capital's fields.", "production": { "grain": 25 } },
     { "id": "freeman", "name": "Freeman", "plural": "Freemen", "icon": "FREEMAN_CLEAR.webp", "hire": 20, "sellBack": 0, "upkeep": 2, "food": 0, "dismiss": "Dismiss", "about": "Shipwrights and craftsmen: the Harbor's work needs them." },
-    { "id": "citizen", "name": "Citizen", "plural": "Citizens", "icon": "CITIZEN_CLEAR.webp", "hire": 50, "sellBack": 0, "upkeep": 3, "food": 0, "dismiss": "Release", "about": "Votes, worships and fills the theatre: +4 culture a day in the capital.", "culturePerDay": 4 },
+    { "id": "citizen", "name": "Citizen", "plural": "Citizens", "icon": "CITIZEN_CLEAR.webp", "hire": 50, "sellBack": 0, "upkeep": 3, "food": 0, "dismiss": "Release", "about": "Votes, worships and fills the theatre.", "culturePerDay": 4 },
     { "id": "physician", "name": "Physician", "plural": "Physicians", "icon": "PHYSICIAN_CLEAR.webp", "hire": 100, "sellBack": 0, "upkeep": 2, "food": 4, "max": 1, "dismiss": "Dismiss", "about": "Guards your household against poison, cures it, and mixes remedies and poisons." },
     { "id": "bodyguard", "name": "Bodyguard", "plural": "Bodyguards", "icon": "BODYGUARD_CLEAR.webp", "hire": 60, "sellBack": 0, "upkeep": 3, "food": 8, "dismiss": "Dismiss", "about": "Stands between the head of your house and an assassin's knife." },
     { "id": "spymaster", "name": "Spymaster", "plural": "Spymasters", "icon": "SPYMASTER_CLEAR.webp", "hire": 150, "sellBack": 0, "upkeep": 4, "food": 4, "max": 1, "dismiss": "Dismiss", "about": "Guards the house against plots, or hunts for openings in a rival's." },

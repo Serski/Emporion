@@ -28,7 +28,8 @@ export interface HouseView {
   currency: { name: string; short: string };
   season: { index: number; name: string; nextAt: Ms };
   goods: { id: string; name: string; icon: string | null; group: string; have: number }[];
-  people: { id: string; name: string; plural: string; icon: string | null; portrait: string | null; about: string; have: number; busy: number; hire: number; sellBack: number; upkeep: number; food: number; max: number | null; dismiss: string }[];
+  // Rates are per hour (production, food) or per day (culture) at the world's speed.
+  people: { id: string; name: string; plural: string; icon: string | null; portrait: string | null; about: string; have: number; busy: number; hire: number; sellBack: number; upkeep: number; food: number; production: Record<string, number>; culturePerDay: number; max: number | null; dismiss: string }[];
   upkeepPerSeason: number;
   stats: StatView[];
   composure: number;
@@ -86,6 +87,8 @@ export function houseView(state: GameState, content: Content, p: Player, at: Ms)
       sellBack: d.sellBack,
       upkeep: d.upkeep,
       food: d.food * state.settings.speed,
+      production: Object.fromEntries(Object.entries(d.production ?? {}).map(([r, n]) => [r, n * state.settings.speed])),
+      culturePerDay: (d.culturePerDay ?? 0) * state.settings.speed,
       max: d.max ?? null,
       dismiss: d.dismiss,
     })),
