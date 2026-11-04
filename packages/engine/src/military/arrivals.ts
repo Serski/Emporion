@@ -227,7 +227,7 @@ function resolveAttack(state: GameState, content: Content, m: Movement, at: Ms):
   }
 
   // A landing from the sea is driven off when the town's ships outweigh the
-  // escort (MASSALIA: pentekonters count 1, triremes 5).
+  // escort (MASSALIA's naval check, each hull weighted by its naval strength).
   if (tv && m.ships && (m.seaZones ?? 0) > 0) {
     const theirs = navalStrength(content, harbourFleet(state, content, tv));
     const ours = navalStrength(content, m.ships);
@@ -235,7 +235,12 @@ function resolveAttack(state: GameState, content: Content, m: Movement, at: Ms):
       sendHome(state, content, { ...homeArgs(m), troops: m.troops, hero: m.hero, mission: m.kind }, at);
       addReport(state, at, "battle", `The landing at ${label} was driven off`, [m.ownerId], {
         type: "simple",
-        lines: [`The ships of ${tv.name} (naval strength ${theirs}) outweighed your escort (${ours}), and your troops turned back without a fight.`, "Each Trireme counts five and each Pentekonter one. Bring more warships."],
+        lines: [
+          `The ships of ${tv.name} (naval strength ${theirs}) outweighed your escort (${ours}), and your troops turned back without a fight.`,
+          `${Object.values(content.ships)
+            .map((s) => `A ${s.name} counts ${s.naval}`)
+            .join(", ")}. Bring more warships.`,
+        ],
         tile: m.toTile,
       });
       const defender = state.players[tv.ownerId];
