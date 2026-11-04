@@ -168,7 +168,8 @@ for (let t = 0; t < W * H; t++) {
     if (n === null || STATE_OF[n] !== st) STATE_RIMS.push({ tile: t, dir: d, state: st });
   }
 }
-// A state's name sits on its largest region.
+// A state's name sits on its largest region. Largest states first, so
+// their names win where labels would overlap.
 const STATE_LABELS = STATE_IDS.map((id, i) => {
   const byRegion = new Map<number, number[]>();
   for (const t of STATE_HEXES[i]!) {
@@ -181,8 +182,10 @@ const STATE_LABELS = STATE_IDS.map((id, i) => {
   if (best.length === 0) return null;
   const x = best.reduce((a, t) => a + centreX(t), 0) / best.length;
   const y = best.reduce((a, t) => a + centreY(t), 0) / best.length;
-  return { id, name: content.map.polities[id]?.name ?? id, x, y, n: STATE_HEXES[i]!.length };
-}).filter((l): l is NonNullable<typeof l> => !!l);
+  return { id, name: (content.map.polities[id]?.name ?? id).toUpperCase(), x, y, n: STATE_HEXES[i]!.length };
+})
+  .filter((l): l is NonNullable<typeof l> => !!l)
+  .sort((a, b) => b.n - a.n);
 
 let stateWash: HTMLCanvasElement | null = null;
 function stateOverlay(): HTMLCanvasElement {
@@ -417,6 +420,7 @@ function draw(ctx: CanvasRenderingContext2D, wpx: number, hpx: number, view: Vie
     // Zoomed out: the states' names, larger for larger states.
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
+    const placed: { x0: number; y0: number; x1: number; y1: number }[] = [];
     for (const l of STATE_LABELS) {
       if (l.n < 40 && zoom < 8) continue;
       const px = sx(l.x);
@@ -424,11 +428,16 @@ function draw(ctx: CanvasRenderingContext2D, wpx: number, hpx: number, view: Vie
       if (px < -120 || py < -30 || px > wpx + 120 || py > hpx + 30) continue;
       const size = Math.max(10, Math.min(20, Math.sqrt(l.n) * 0.7));
       ctx.font = `700 ${size}px "Cinzel", Georgia, serif`;
+      // Skip a name that would run into one already written.
+      const half = ctx.measureText(l.name).width / 2 + 4;
+      const box = { x0: px - half, y0: py - size / 2 - 2, x1: px + half, y1: py + size / 2 + 2 };
+      if (placed.some((b) => box.x0 < b.x1 && box.x1 > b.x0 && box.y0 < b.y1 && box.y1 > b.y0)) continue;
+      placed.push(box);
       ctx.lineWidth = 3.5;
       ctx.strokeStyle = "rgba(244, 234, 210, 0.75)";
-      ctx.strokeText(l.name.toUpperCase(), px, py);
+      ctx.strokeText(l.name, px, py);
       ctx.fillStyle = "rgba(48, 30, 18, 0.9)";
-      ctx.fillText(l.name.toUpperCase(), px, py);
+      ctx.fillText(l.name, px, py);
     }
   } else if (zoom <= 16) {
     ctx.font = `600 ${zoom <= 12 ? 11 : 12}px "Cinzel", Georgia, serif`;
