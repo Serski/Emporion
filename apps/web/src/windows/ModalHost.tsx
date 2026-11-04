@@ -4,6 +4,7 @@ import { useSession } from "../ui";
 import { BuildingWindow, ConstructWindow, FieldWindow } from "./BuildWindows";
 import { HeroWindow } from "./HeroWindow";
 import { KingdomWindow } from "./KingdomWindow";
+import { AgoraWindow } from "./AgoraWindow";
 import { PlayersWindow } from "./PlayersWindow";
 import { ReportWindow } from "./ReportWindow";
 import { ReportsWindow } from "./ReportsWindow";
@@ -40,10 +41,12 @@ export function ModalHost({ modal }: { modal: ModalState }) {
     case "stats":
       return <StatsWindow onClose={nav.close} />;
     case "hero":
-      return <HeroWindow key={modal.tab ?? "hero"} tab={modal.tab} onClose={nav.close} />;
+      return <HeroWindow key={modal.tab ?? "profile"} tab={modal.tab} onClose={nav.close} />;
     case "kingdom":
       return <KingdomWindow onClose={nav.close} />;
     case "troops":
       return <TroopsWindow onClose={nav.close} />;
+    case "market":
+      return <AgoraWindow key={modal.tab ?? "goods"} tab={modal.tab} onClose={nav.close} />;
   }
 }

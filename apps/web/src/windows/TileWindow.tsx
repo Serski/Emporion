@@ -2,7 +2,9 @@ import { distance, tileDetails, tileIndex, travelDistance, type MissionKind } fr
 import { content } from "../content";
 import { int, pct } from "../format";
 import { useNav } from "../nav";
-import { Modal, ResIcon, TroopList, factionName, useSession } from "../ui";
+import { useState } from "react";
+import { plotView } from "@emporion/engine";
+import { Modal, ResIcon, TroopList, art, factionName, useSession } from "../ui";
 
 const TERRAIN: Record<string, string> = { P: "Plain", H: "Hills", M: "Mountains", S: "Open sea", L: "Lake", F: "Beyond the known world" };
 
@@ -40,6 +42,15 @@ export function TileWindow({ tile, onClose }: { tile: number; onClose: () => voi
           {steps} hex{steps === 1 ? "" : "es"} from {v.name}
           {dist > steps + 0.05 ? `, marched as ${dist.toFixed(1)} with the sea legs` : ""}
         </li>
+        {d.state && (
+          <li>
+            <span>State</span>
+            <span className="state-line">
+              <img className="crest" src={art(`crests/${d.state.id}`)} alt="" width={22} height={22} />
+              Land of the {d.state.name}
+            </span>
+          </li>
+        )}
         {kingdom && (
           <li>
             <span>Kingdom</span>
@@ -67,6 +78,15 @@ export function TileWindow({ tile, onClose }: { tile: number; onClose: () => voi
               <span>Population</span>
               {int(d.village.population)}
             </li>
+            {d.fleet && (
+              <li>
+                <span>Fleet</span>
+                {Object.entries(d.fleet)
+                  .filter(([, n]) => n > 0)
+                  .map(([id, n]) => `${n} ${content.ships[id]?.name}${n === 1 ? "" : "s"}`)
+                  .join(" · ")}
+              </li>
+            )}
           </>
         )}
         {info.layout && !d.village && (
@@ -111,6 +131,7 @@ export function TileWindow({ tile, onClose }: { tile: number; onClose: () => voi
           {s.state.players[d.territory.ownerId]?.kind === "npc" ? "No one may found a town here." : `Only ${d.territory.ownerName} may found a town here.`}
         </p>
       )}
+      {d.village && d.village.kind === "player" && !mine && <PlotPanel targetId={d.village.ownerId} />}
       <div className="actions">
         {mine && (
           <button
@@ -179,5 +200,51 @@ export function TileWindow({ tile, onClose }: { tile: number; onClose: () => voi
         </button>
       </div>
     </Modal>
+  );
+}
+
+// MASSALIA's plots against a rival house's head: poison and the knife.
+function PlotPanel({ targetId }: { targetId: string }) {
+  const s = useSession();
+  const now = s.now();
+  const [confirm, setConfirm] = useState<"poison" | "assassinate" | null>(null);
+  const target = s.state.players[targetId];
+  if (!target?.profile || !target.house) return null;
+  const view = plotView(s.state, content, s.player, target, now);
+  const head = target.house.head.name;
+  return (
+    <section className="subpanel">
+      <h3 className="subpanel__title">Plot against {head}</h3>
+      {!view.check.ok && <p className="small muted">{view.check.message}</p>}
+      {confirm ? (
+        <div className="inline-form">
+          <span>
+            {confirm === "poison" ? `Send a dose to ${head}? It is spent whatever happens.` : `Pay ${view.assassinCost} drachmae for a knife? It is spent whatever happens.`}
+          </span>
+          <button
+            className="btn btn--danger btn--small"
+            onClick={() => {
+              s.run((g, t) => (confirm === "poison" ? g.poison(s.active, targetId, t) : g.assassinate(s.active, targetId, t)), "It is done. Watch your reports.");
+              setConfirm(null);
+            }}
+          >
+            Confirm
+          </button>
+          <button className="btn btn--ghost btn--small" onClick={() => setConfirm(null)}>
+            Cancel
+          </button>
+        </div>
+      ) : (
+        <div className="actions">
+          <button className="btn btn--small" disabled={!view.check.ok || view.havePoison < 1} title={view.havePoison < 1 ? "You have no poison" : undefined} onClick={() => setConfirm("poison")}>
+            Poison · {Math.round(view.poison.chance * 100)}%
+          </button>
+          <button className="btn btn--small" disabled={!view.check.ok || s.player.purse < view.assassinCost} onClick={() => setConfirm("assassinate")}>
+            Assassinate · {view.assassinCost} dr · {Math.round(view.assassination.chance * 100)}%
+          </button>
+        </div>
+      )}
+      <p className="muted small">Your intelligence and a hunting spymaster raise the odds; their wits, a physician, bodyguards and a guarding spymaster lower them.</p>
+    </section>
   );
 }

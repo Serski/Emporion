@@ -6,7 +6,8 @@ import type { MissionKind } from "@emporion/engine";
 export const VIEWS = ["fields", "town", "map"] as const;
 export type View = (typeof VIEWS)[number];
 
-export type HeroTab = "hero" | "family" | "lineage";
+export type HeroTab = "profile" | "day" | "household" | "hero" | "family" | "lineage";
+export type MarketTab = "goods" | "people" | "stalls";
 
 export type ModalState =
   | { kind: "field"; index: number }
@@ -21,6 +22,7 @@ export type ModalState =
   | { kind: "hero"; tab?: HeroTab }
   | { kind: "kingdom" }
   | { kind: "troops" }
+  | { kind: "market"; tab?: MarketTab }
   | null;
 
 export interface Nav {

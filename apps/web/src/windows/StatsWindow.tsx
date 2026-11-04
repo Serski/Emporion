@@ -5,7 +5,7 @@ import { int } from "../format";
 import { Modal, Portrait, Tabs, art, factionColor, factionName, useSession } from "../ui";
 
 type Main = "players" | "kingdoms" | "houses";
-type Sort = "population" | "offense" | "defense" | "looted" | "heroes";
+type Sort = "population" | "offense" | "defense" | "looted" | "heroes" | "wealth" | "prestige";
 
 const SORTS: { id: Sort; label: string; column: string; value: (r: RankingRow) => number }[] = [
   { id: "population", label: "Population", column: "Population", value: (r) => r.population },
@@ -13,6 +13,8 @@ const SORTS: { id: Sort; label: string; column: string; value: (r: RankingRow) =
   { id: "defense", label: "Defenders", column: "Defence points", value: (r) => r.defense },
   { id: "looted", label: "Plunder", column: "Resources looted", value: (r) => r.looted },
   { id: "heroes", label: "Heroes", column: "Experience", value: (r) => r.heroLevel * 1e9 + r.heroXp },
+  { id: "wealth", label: "Wealth", column: "Drachmae", value: (r) => r.purse },
+  { id: "prestige", label: "Prestige", column: "Prestige", value: (r) => r.prestige },
 ];
 
 const ordinal = (n: number) => (n === 1 ? "first" : n === 2 ? "second" : n === 3 ? "third" : `${n}th`);

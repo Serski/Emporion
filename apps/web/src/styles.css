@@ -3160,6 +3160,7 @@ input[type="range"] {
   }
   .topbar__boxes {
     margin-left: 0;
+    flex-wrap: wrap;
   }
   .topbar__player {
     margin-left: auto;
@@ -3467,5 +3468,381 @@ input[type="range"] {
   .send-units li .link {
     grid-column: 2 / -1;
     justify-self: end;
+  }
+}
+
+/* --- the MASSALIA pack: purse, agora, profile, day, crafts, altar ------------------- */
+
+.purse-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 16px;
+  padding: 8px 12px;
+  border: 1px solid var(--rule);
+  background: var(--panel-2);
+}
+.purse {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--flame);
+}
+.purse strong {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  color: var(--cream);
+  font-variant-numeric: tabular-nums;
+}
+button.box {
+  color: var(--cream);
+  text-align: left;
+  cursor: pointer;
+}
+button.box:hover {
+  border-color: var(--bronze);
+}
+.box--purse {
+  color: var(--flame);
+}
+.box--purse .box__label {
+  color: var(--cream);
+}
+.stepper {
+  display: inline-flex;
+  align-items: stretch;
+}
+.stepper input[type="number"] {
+  width: 64px;
+  text-align: center;
+  border-left: 0;
+  border-right: 0;
+}
+.sq-btn--small {
+  width: 28px;
+  height: auto;
+  min-height: 28px;
+  font-size: 0.95rem;
+}
+.trade-list,
+.people-list,
+.recipe-list,
+.routine-list,
+.trait-list,
+.ladders {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.trade-row,
+.person-row,
+.recipe {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  border: 1px solid var(--rule);
+  background: var(--panel-2);
+}
+.trade-row__text,
+.person-row__text,
+.recipe__text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.trade-row__name,
+.person-row__name,
+.recipe__name,
+.offering__name {
+  font-family: var(--font-display);
+  font-size: 0.9rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+.trade-row__name .muted,
+.person-row__name .muted {
+  font-family: var(--font-body);
+  font-weight: 400;
+  letter-spacing: 0;
+}
+.trade-row__act,
+.person-row__act {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+}
+.person-row__icon {
+  object-fit: cover;
+  border: 1px solid var(--bronze);
+  border-radius: 50%;
+  background: var(--panel-3);
+}
+.stall-form {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) repeat(2, minmax(0, 1fr));
+  align-items: end;
+  gap: 10px 14px;
+}
+@media (max-width: 640px) {
+  .stall-form {
+    grid-template-columns: 1fr;
+  }
+}
+.stall-form__go {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+}
+.sheet-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 18px 22px;
+}
+.sheet-head__text {
+  flex: 1 1 260px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+.sheet-head__name {
+  font-size: 1.4rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.composure {
+  display: grid;
+  grid-template-columns: auto minmax(80px, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  margin-top: 6px;
+}
+.composure .bar {
+  height: 8px;
+}
+.composure__n {
+  font-variant-numeric: tabular-nums;
+  font-size: 0.86rem;
+}
+.banner-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 14px;
+}
+.stat-tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 8px;
+}
+.stat-tile {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-areas: "icon value" "icon name" "meta meta" "about about";
+  column-gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--rule);
+  background: var(--panel-2);
+}
+.stat-tile__icon {
+  grid-area: icon;
+  object-fit: contain;
+}
+.stat-tile__value {
+  grid-area: value;
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+.stat-tile__value small {
+  font-size: 0.72rem;
+  color: var(--dim);
+}
+.stat-tile__name {
+  grid-area: name;
+  font-family: var(--font-display);
+  font-size: 0.64rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--flame);
+}
+.stat-tile > .small.muted {
+  grid-area: meta;
+  margin-top: 6px;
+}
+.stat-tile__about {
+  grid-area: about;
+  margin: 4px 0 0;
+  color: var(--muted);
+}
+.trait {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 12px;
+  padding: 7px 12px;
+  border: 1px solid var(--rule);
+  background: var(--panel-2);
+}
+.trait--asset {
+  border-color: color-mix(in srgb, var(--good) 35%, var(--rule));
+}
+.trait--flaw {
+  border-color: var(--danger-edge);
+}
+.trait__name {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+.trait__mods {
+  display: inline-flex;
+  gap: 4px;
+  margin-left: auto;
+}
+.tchip--bad {
+  border-color: var(--danger-edge);
+  color: var(--danger);
+}
+.ladder {
+  display: grid;
+  grid-template-columns: minmax(140px, auto) minmax(80px, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+}
+.ladder__name {
+  font-family: var(--font-display);
+  font-size: 0.84rem;
+  font-weight: 700;
+}
+.ladder__name .muted {
+  font-family: var(--font-body);
+  font-weight: 400;
+}
+.routine {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 6px 14px;
+  padding: 10px 12px;
+  border: 1px solid var(--rule);
+  background: var(--panel-2);
+}
+.routine.is-locked {
+  opacity: 0.75;
+}
+.routine__text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+.routine__name {
+  font-family: var(--font-display);
+  font-size: 0.92rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+.routine__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.routine__why {
+  grid-column: 1 / -1;
+  margin: 0;
+}
+.chip-effect {
+  padding: 0 8px;
+  border: 1px solid var(--rule);
+  font-size: 0.8rem;
+  line-height: 1.6;
+  font-variant-numeric: tabular-nums;
+}
+.chip-effect--good {
+  border-color: color-mix(in srgb, var(--good) 45%, transparent);
+  color: var(--good);
+}
+.chip-effect--bad {
+  border-color: var(--danger-edge);
+  color: var(--danger);
+}
+.chip-effect--plain {
+  color: var(--muted);
+}
+.craft-job {
+  display: grid;
+  grid-template-columns: minmax(0, auto) minmax(80px, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 0;
+  font-size: 0.9rem;
+}
+.offerings {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 8px;
+}
+.offering {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 6px 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--rule);
+  background: var(--panel-2);
+}
+.offering .btn {
+  grid-column: 1 / -1;
+}
+.state-line {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.crest {
+  object-fit: contain;
+}
+
+@media (max-width: 640px) {
+  .trade-row,
+  .person-row,
+  .recipe {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+  .trade-row__act,
+  .person-row__act,
+  .recipe > .btn {
+    grid-column: 1 / -1;
+    justify-content: flex-start;
+  }
+  .ladder {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+  .routine {
+    grid-template-columns: 1fr;
+  }
+  .craft-job {
+    grid-template-columns: 1fr auto;
+  }
+  .craft-job .bar {
+    grid-column: 1 / -1;
   }
 }

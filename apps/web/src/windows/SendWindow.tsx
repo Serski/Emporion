@@ -1,7 +1,13 @@
 import { useMemo, useState } from "react";
 import {
+  assembleFleet,
   distance,
+  harbourFleet,
   marchMs,
+  navalStrength,
+  seaRoute,
+  suppliesFor,
+  troopSpace,
   merchantsNeeded,
   rallyPoint,
   slowestSpeed,
@@ -70,6 +76,18 @@ export function SendWindow({ tile, mission, onClose }: { tile?: number; mission?
     [],
   );
   const units = content.factions[s.player.factionId]!.units.filter((u) => (v.troops[u.id] ?? 0) > 0);
+
+  // Over open sea the troops need hulls (picked as MASSALIA's assembleFleet does).
+  const route = toTile !== null ? seaRoute(content, fromTile, toTile) : null;
+  const sea = (() => {
+    if (!route?.crossesSea || !any) return null;
+    const space = troopSpace(content, troops, withHero && heroHere);
+    const tv = details?.village ? s.state.villages[details.village.id] : undefined;
+    const escort = (kind === "attack" || kind === "raid") && !!tv && navalStrength(content, harbourFleet(s.state, content, tv)) > 0;
+    const picked = assembleFleet(content, s.player, space, route.zones, escort);
+    const theirs = tv ? navalStrength(content, harbourFleet(s.state, content, tv)) : 0;
+    return { space, zones: route.zones, picked, theirs };
+  })();
 
   const send = () => {
     if (toTile === null) return s.notify("Enter target coordinates, for example 80|60.", "error");
@@ -166,6 +184,23 @@ export function SendWindow({ tile, mission, onClose }: { tile?: number; mission?
                 </select>
               </label>
             ))}
+          {sea && (
+            <div className={`note${sea.picked.ok ? "" : " note--warn"}`}>
+              <strong>By sea</strong> · crosses {sea.zones} sea{sea.zones === 1 ? "" : "s"} · room needed for {sea.space} men.{" "}
+              {sea.picked.ok ? (
+                <>
+                  Sails with{" "}
+                  {Object.entries(sea.picked.ships)
+                    .map(([id, n]) => `${n} ${content.ships[id]?.name}${n === 1 ? "" : "s"}`)
+                    .join(" and ")}
+                  , burning {suppliesFor(content, sea.picked.ships)} naval suppl{suppliesFor(content, sea.picked.ships) === 1 ? "y" : "ies"}.
+                  {sea.theirs > 0 && ` The town's ships count ${sea.theirs}; your escort ${navalStrength(content, sea.picked.ships)}${navalStrength(content, sea.picked.ships) < sea.theirs ? ": the landing would be driven off." : "."}`}
+                </>
+              ) : (
+                sea.picked.message
+              )}
+            </div>
+          )}
           <div className="send-summary">
             {dist !== null && steps !== null && (
               <span>

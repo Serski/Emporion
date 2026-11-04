@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { familyView, heroView, type HeroPoints, type PersonView } from "@emporion/engine";
+import { dayView, familyView, heroView, type HeroPoints, type PersonView } from "@emporion/engine";
 import { content } from "../content";
 import { at, duration, int, pct } from "../format";
 import { heroStatus } from "../hud";
 import { useNav, type HeroTab } from "../nav";
 import { Bar, Cost, Countdown, Modal, Portrait, ResIcon, Stat, Tabs, art, useSession } from "../ui";
+import { DayTab, HouseholdTab, ProfileTab } from "./ProfileTabs";
 
 const ATTRS: { id: keyof HeroPoints; label: string; explain: (n: number) => string }[] = [
   { id: "strength", label: "Fighting strength", explain: (n) => `${int(content.hero.strength.base + content.hero.strength.perPoint * n)} attack and defence of their own` },
@@ -15,23 +16,33 @@ const ATTRS: { id: keyof HeroPoints; label: string; explain: (n: number) => stri
 
 const KIND: Record<string, string> = { founder: "Founder", blood: "Blood heir", adopted: "Adopted heir", regent: "Regent", forced: "Adopted by the house" };
 
+// The Profile: MASSALIA's character sheet, the day, the household, then the
+// hero (Travian Kingdoms' hero), the family and the lineage.
 export function HeroWindow({ tab: initial, onClose }: { tab?: HeroTab; onClose: () => void }) {
   const s = useSession();
-  const [tab, setTab] = useState<HeroTab>(initial ?? "hero");
+  const [tab, setTab] = useState<HeroTab>(initial ?? "profile");
   const now = s.now();
   const h = heroView(s.state, content, s.player, now);
   const fam = familyView(s.state, content, s.player, now);
+  const day = dayView(s.state, content, s.player, now);
   if (!h) return null;
+  const titles: Record<HeroTab, string> = { profile: h.name, day: "Your day", household: fam?.name ?? "Household", hero: h.name, family: fam?.name ?? "Family", lineage: fam?.name ?? "Lineage" };
+  const eyebrows: Record<HeroTab, string> = {
+    profile: `Profile · ${fam?.name ?? s.player.name}`,
+    day: `${fam?.date ?? ""} · one day a season`,
+    household: "Purse, people, crafts and fleet",
+    hero: `Hero · ${heroStatus(h.status)}`,
+    family: `${fam?.date ?? ""} · generation ${fam?.generation ?? 1}`,
+    lineage: `${fam?.date ?? ""} · generation ${fam?.generation ?? 1}`,
+  };
+  const banners: Partial<Record<HeroTab, string>> = { profile: art("banner-court"), day: art("banner-dionysia"), household: art("banner-ledger"), family: art("banner-family"), lineage: art("banner-court") };
   return (
-    <Modal
-      title={tab === "hero" ? h.name : (fam?.name ?? "Family")}
-      eyebrow={tab === "hero" ? `Hero · ${heroStatus(h.status)}` : `${fam?.date ?? ""} · generation ${fam?.generation ?? 1}`}
-      onClose={onClose}
-      wide
-      banner={tab === "family" ? art("banner-family") : tab === "lineage" ? art("banner-court") : undefined}
-    >
+    <Modal title={titles[tab]} eyebrow={eyebrows[tab]} onClose={onClose} wide banner={banners[tab]}>
       <Tabs
         tabs={[
+          { id: "profile", label: "Profile" },
+          { id: "day", label: "Your day", badge: day && !day.withdrawn && day.picked < day.picksPerSeason ? 1 : undefined },
+          { id: "household", label: "Household" },
           { id: "hero", label: "Hero", badge: h.unspent || undefined },
           { id: "family", label: "Family", badge: fam && !fam.spouse && fam.candidates.length ? 1 : undefined },
           { id: "lineage", label: "Lineage" },
@@ -39,6 +50,9 @@ export function HeroWindow({ tab: initial, onClose }: { tab?: HeroTab; onClose: 
         value={tab}
         onChange={setTab}
       />
+      {tab === "profile" && <ProfileTab />}
+      {tab === "day" && <DayTab />}
+      {tab === "household" && <HouseholdTab />}
       {tab === "hero" && <HeroTabBody />}
       {tab === "family" && <FamilyTabBody />}
       {tab === "lineage" && <LineageTabBody />}

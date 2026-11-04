@@ -23,6 +23,33 @@ export function ResIcon({ id, size = 20 }: { id: string; size?: number }) {
   return <span className="res-icon res-icon--text">{def?.name[0] ?? "?"}</span>;
 }
 
+// A MASSALIA good, or one of a town's four resources.
+export function GoodIcon({ id, size = 24 }: { id: string; size?: number }) {
+  const g = content.goods[id];
+  if (g?.icon) return <img className="res-icon" src={asset(g.icon)} width={size} height={size} alt={g.name} title={g.name} />;
+  return <ResIcon id={id} size={size} />;
+}
+
+export function goodLabel(id: string): string {
+  return content.goods[id]?.name ?? content.resources.find((r) => r.id === id)?.name ?? id;
+}
+
+// A whole-number stepper: − [n] +.
+export function Stepper({ value, min = 0, max, onChange, id, label }: { value: number; min?: number; max: number; onChange: (n: number) => void; id: string; label: string }) {
+  const clamp = (n: number) => Math.max(min, Math.min(max, Math.floor(Number.isFinite(n) ? n : min)));
+  return (
+    <span className="stepper">
+      <button type="button" className="sq-btn sq-btn--small" onClick={() => onChange(clamp(value - 1))} disabled={value <= min} aria-label={`One less ${label}`}>
+        −
+      </button>
+      <input id={id} type="number" inputMode="numeric" min={min} max={max} value={value} aria-label={label} onChange={(e) => onChange(clamp(Number(e.target.value)))} />
+      <button type="button" className="sq-btn sq-btn--small" onClick={() => onChange(clamp(value + 1))} disabled={value >= max} aria-label={`One more ${label}`}>
+        +
+      </button>
+    </span>
+  );
+}
+
 export function UnitIcon({ id, size = 40 }: { id: string; size?: number }) {
   const unit = content.units[id];
   if (unit?.icon) return <img className="unit-icon" src={asset(unit.icon)} width={size} height={size} alt="" />;

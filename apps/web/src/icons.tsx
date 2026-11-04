@@ -60,6 +60,20 @@ const paths: Record<string, ReactNode> = {
   home: <path d="M3 11 12 4l9 7M6 9v11h12V9" />,
   oasis: <path d="M12 21V11M12 11c-3-5-7-5-9-3 3 0 6 1 9 3zM12 11c3-5 7-5 9-3-3 0-6 1-9 3zM12 11c-1-4 1-7 4-8-1 3-2 5-4 8z" />,
   flame: <path d="M12 21c-4 0-6-3-6-6 0-4 4-6 4-10 3 2 4 5 4 7 1-1 2-2 2-4 2 2 2 5 2 7 0 3-2 6-6 6z" />,
+  scales: <path d="M12 3v18M7 21h10M4 7h16M4 7l-2.5 6a3 3 0 0 0 5 0zM20 7l-2.5 6a3 3 0 0 0 5 0zM12 3l-1 2h2z" />,
+  ship: <path d="M3 15h18l-3 5H6zM12 15V3M12 4l6 9h-6M12 6l-5 7h5" />,
+  profile: (
+    <>
+      <circle cx="12" cy="8" r="4" />
+      <path d="M5 21c0-4 3-7 7-7s7 3 7 7M9 4.5l3-2.5 3 2.5" />
+    </>
+  ),
+  coin: (
+    <>
+      <circle cx="12" cy="12" r="8" />
+      <path d="M9 12a3 3 0 1 0 6 0 3 3 0 1 0-6 0M12 4v2M12 18v2" />
+    </>
+  ),
 };
 
 export function Icon({ name, size = 20 }: { name: keyof typeof paths | string; size?: number }) {

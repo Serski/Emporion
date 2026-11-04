@@ -11,9 +11,9 @@ const MATCH: Record<Filter, (r: Report) => boolean> = {
   all: () => true,
   battle: (r) => r.kind === "battle",
   scout: (r) => r.kind === "scout",
-  trade: (r) => r.kind === "trade" || r.kind === "reinforcement",
-  family: (r) => r.kind === "family" || r.kind === "hero",
-  other: (r) => !["battle", "scout", "trade", "reinforcement", "family", "hero"].includes(r.kind),
+  trade: (r) => r.kind === "trade" || r.kind === "reinforcement" || r.kind === "market",
+  family: (r) => r.kind === "family" || r.kind === "hero" || r.kind === "intrigue",
+  other: (r) => !["battle", "scout", "trade", "reinforcement", "family", "hero", "market", "intrigue"].includes(r.kind),
 };
 
 function outcome(r: Report, me: string): { label: string; tone: "won" | "lost" | "neutral" } {

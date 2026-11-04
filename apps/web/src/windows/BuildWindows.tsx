@@ -15,6 +15,7 @@ import { asset, content } from "../content";
 import { Cost, Modal, art, useSession } from "../ui";
 import { ArmoryPanel, MusterPanel, ResearchPanel, TrainPanel } from "./MilitaryPanels";
 import { ExpansionPanel, FestivalPanel, HeroonPanel, MarketPanel, TreasuryPanel } from "./CivicPanels";
+import { AgoraPanel, AltarPanel, ShipyardPanel } from "./MassaliaPanels";
 
 // How long until the stock covers `cost` at current net production, or why never.
 function waitFor(v: Village, cost: Resources, net: Resources, capacity: Resources): string | null {
@@ -187,7 +188,7 @@ export function BuildingWindow({ slot, onClose }: { slot: number; onClose: () =>
       onClose={onClose}
       image={art(`b-${def.id}`)}
       banner={BANNERS[def.id] ? art(BANNERS[def.id]!) : undefined}
-      wide={trains || !!e.rallyPoint || !!e.research || !!e.armory || !!e.merchants}
+      wide={trains || !!e.rallyPoint || !!e.research || !!e.armory || !!e.merchants || content.massalia.crafting.recipes.some((r) => r.building === def.id)}
     >
       <p className="lede">{def.description}</p>
       <Effects def={def} level={level} />
@@ -199,7 +200,10 @@ export function BuildingWindow({ slot, onClose }: { slot: number; onClose: () =>
           {e.research && <ResearchPanel />}
           {e.armory && <ArmoryPanel />}
           {e.rallyPoint && <MusterPanel />}
+          {def.id === content.massalia.market.building && <AgoraPanel />}
           {e.merchants && <MarketPanel />}
+          {def.id === content.massalia.crafting.altar.building && <AltarPanel />}
+          {content.massalia.crafting.recipes.some((r) => r.building === def.id) && <ShipyardPanel buildingId={def.id} />}
           {e.festivals && <FestivalPanel />}
           {e.expansionSlots && <ExpansionPanel />}
           {e.oasisSlots && <HeroonPanel />}

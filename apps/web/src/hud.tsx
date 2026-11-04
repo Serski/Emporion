@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import {
   calendarAt,
+  dayView,
   heroView,
   movementsFor,
   playerSummary,
@@ -57,6 +58,14 @@ export function TopBar() {
         </button>
       </div>
       <div className="topbar__boxes">
+        <button className="box box--purse" onClick={() => nav.open({ kind: "market" })} title="Your purse · open the Agora">
+          <Icon name="coin" size={18} />
+          <span className="box__num">{int(s.player.purse)}</span>
+          <span className="box__label">
+            Drachmae
+            <small>the Agora</small>
+          </span>
+        </button>
         {s.player.protectedUntil > now && (
           <div className="box box--shield" title="Other players cannot attack or raid you while this lasts. Outlaws and animals still can.">
             <Icon name="lock" size={18} />
@@ -206,7 +215,7 @@ export function HeroBadge() {
   const h = heroView(s.state, content, s.player, now);
   if (!h) return null;
   return (
-    <button className={`hero-badge${h.alive ? "" : " is-fallen"}`} onClick={() => nav.open({ kind: "hero" })} title={`${h.name}, ${heroStatus(h.status)}`}>
+    <button className={`hero-badge${h.alive ? "" : " is-fallen"}`} onClick={() => nav.open({ kind: "hero", tab: "profile" })} title={`${h.name}, ${heroStatus(h.status)} · open the Profile`}>
       <span className="hero-badge__face">
         <Portrait stem={h.portrait} size={86} dim={!h.alive} />
         <span className="hero-badge__level">{h.level}</span>
@@ -231,10 +240,14 @@ export function ToolRail() {
   const nav = useNav();
   const unread = Object.values(s.state.reports).filter((r) => r.unread.includes(s.active)).length;
   const incoming = movementsFor(s.state, content, s.active).filter((m) => m.hostile).length;
+  const day = dayView(s.state, content, s.player, s.now());
+  const dayOpen = !!day && !day.withdrawn && day.picked < day.picksPerSeason;
   const tools: { id: string; label: string; icon: string; badge?: number; open: () => void }[] = [
     { id: "troops", label: "Troops", icon: "troops", badge: incoming, open: () => nav.open({ kind: "troops" }) },
     { id: "reports", label: "Reports", icon: "reports", badge: unread, open: () => nav.open({ kind: "reports" }) },
     { id: "stats", label: "Standings", icon: "stats", open: () => nav.open({ kind: "stats" }) },
+    { id: "market", label: "Market", icon: "scales", open: () => nav.open({ kind: "market" }) },
+    { id: "profile", label: "Profile", icon: "profile", badge: dayOpen ? 1 : undefined, open: () => nav.open({ kind: "hero", tab: dayOpen ? "day" : "profile" }) },
     { id: "kingdom", label: "Kingdom", icon: "kingdom", open: () => nav.open({ kind: "kingdom" }) },
     { id: "family", label: "Family", icon: "family", open: () => nav.open({ kind: "hero", tab: "family" }) },
     { id: "players", label: "Players", icon: "people", open: () => nav.open({ kind: "players" }) },
