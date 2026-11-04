@@ -16,6 +16,5 @@
     "cost": { "base": { "timber": 160, "stone": 170, "iron": 150, "grain": 80 }, "growth": 1.09, "round": 5 },
     "time": { "zero": 3600, "base": 3600, "growth": 1.06, "round": 60 }
   },
-  "oasisRadius": 4,
   "oasisLoyaltyPerAttack": 34
 }

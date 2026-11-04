@@ -221,7 +221,6 @@ export const heroSchema = z
     healthRegenPerDay: nonNeg,
     damageFactor: nonNeg, // health lost = side's loss fraction · 100 · factor
     revive: z.object({ cost: costCurveSchema, time: curveSchema }).strict(),
-    oasisRadius: pos, // an annexed oasis must lie within this distance of the village
     oasisLoyaltyPerAttack: pos, // loyalty a winning hero takes from an owned oasis
   })
   .strict();

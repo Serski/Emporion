@@ -102,7 +102,7 @@ export function HeroonPanel() {
         </button>
       </div>
       <p>
-        Oasis slots used: {sum.oases.used} of {sum.oases.slots}. Win an attack on an oasis within {content.hero.oasisRadius} fields with your hero in the army to annex it.
+        Oasis slots used: {sum.oases.used} of {sum.oases.slots}. Win an attack with your hero in the army on an oasis inside {v.name}'s territory (within {content.world.territory.townRadius} fields) to annex it.
       </p>
       {v.oases.length > 0 && (
         <ul className="bullets">
