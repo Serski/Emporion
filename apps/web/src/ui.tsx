@@ -207,3 +207,22 @@ export function factionName(id: string) {
 export function factionColor(id: string) {
   return content.factions[id]?.color ?? "#888";
 }
+
+// An image as a CSS background, by absolute URL so it resolves the same from
+// an inline style in dev and from a built page in any folder.
+export const backdrop = (url: string) => ({ backgroundImage: `url("${new URL(url, document.baseURI).href}")` });
+
+// The lion of MASSALIA beside the wordmark, as on its front page and lobby.
+export function BrandLockup({ label, onClick }: { label?: string; onClick?: () => void }) {
+  return (
+    <button className="brand-lockup" type="button" onClick={onClick}>
+      <span className="brand-mark" aria-hidden="true">
+        <img src={art("lion")} alt="" />
+      </span>
+      <span className="brand-lockup__text">
+        <span>EMPORION</span>
+        {label && <small className="brand-lockup__label">{label}</small>}
+      </span>
+    </button>
+  );
+}

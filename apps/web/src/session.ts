@@ -22,6 +22,7 @@ export interface Clock {
 
 export interface SaveFile {
   v: 2;
+  name?: string; // the world's name in the lobby; saves before the lobby have none
   state: GameState;
   clock: Clock;
   active: string;
@@ -30,8 +31,11 @@ export interface SaveFile {
 }
 
 export interface NewGameOptions {
+  worldName: string;
   playerName: string;
   factionId: string;
+  startAge: number;
+  portrait: string;
   speed: number;
   rivals: number;
   npcRaids: boolean;
@@ -56,6 +60,7 @@ export class Session {
   private saveTimer: ReturnType<typeof setTimeout> | null = null;
 
   constructor(
+    public name: string,
     readonly game: Game,
     public clock: Clock,
     public active: string,
@@ -71,14 +76,14 @@ export class Session {
       npcRaids: opts.npcRaids,
       seed: Math.floor(Math.random() * 2 ** 31),
     });
-    const me = game.join({ name: opts.playerName.trim() || "Protis", factionId: opts.factionId, at: start });
+    const me = game.join({ name: opts.playerName.trim() || "Protis", factionId: opts.factionId, startAge: opts.startAge, portrait: opts.portrait, at: start });
     const factions = content.factionList.filter((f) => f.playable).map((f) => f.id);
     for (let i = 0; i < opts.rivals; i++) {
       const factionId = factions[i % factions.length]!;
       const name = RIVALS[factionId]?.[Math.floor(i / factions.length)] ?? `Rival ${i + 1}`;
       game.join({ name, factionId, kind: "ai", at: start });
     }
-    const s = new Session(game, { game: start, real: Date.now(), warp: 1, paused: false }, me.player.id, [me.player.id], { [me.player.id]: me.village.id });
+    const s = new Session(opts.worldName, game, { game: start, real: Date.now(), warp: 1, paused: false }, me.player.id, [me.player.id], { [me.player.id]: me.village.id });
     s.save();
     return s;
   }
@@ -101,7 +106,7 @@ export class Session {
     // at one real hour so a forgotten tab does not skip a week of game time.
     const away = Math.min(Date.now() - save.clock.real, 3_600_000);
     const clock = { ...save.clock, game: save.clock.paused ? save.clock.game : save.clock.game + away * save.clock.warp, real: Date.now() };
-    return new Session(game, clock, save.active, save.humans, save.village ?? {});
+    return new Session(save.name ?? "Emporion I", game, clock, save.active, save.humans, save.village ?? {});
   }
 
   static clearSave() {
@@ -220,7 +225,7 @@ export class Session {
   }
 
   toSave(): SaveFile {
-    return { v: 2, state: this.state, clock: { ...this.clock, game: this.now(), real: Date.now() }, active: this.active, humans: this.humans, village: this.village };
+    return { v: 2, name: this.name, state: this.state, clock: { ...this.clock, game: this.now(), real: Date.now() }, active: this.active, humans: this.humans, village: this.village };
   }
 
   saveSoon() {

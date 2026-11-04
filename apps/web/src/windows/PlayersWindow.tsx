@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { content } from "../content";
+import { goTo } from "../route";
 import { Modal, factionName, useSession } from "../ui";
 
 // Everyone playing on this screen. A second human makes hot-seat play
@@ -58,24 +59,29 @@ export function PlayersWindow({ onClose }: { onClose: () => void }) {
         <p className="small muted">The game saves itself in this browser every few seconds.</p>
         {confirm ? (
           <div className="inline-form">
-            <span>Delete this world and start again?</span>
+            <span>Leave this world for a new one? It goes into the hall of fame.</span>
             <button
               className="btn btn--danger"
               onClick={() => {
                 onClose();
-                window.dispatchEvent(new CustomEvent("emporion:new-world"));
+                goTo("/create");
               }}
             >
-              Delete and start over
+              Found a new house
             </button>
             <button className="btn btn--ghost" onClick={() => setConfirm(false)}>
               Keep playing
             </button>
           </div>
         ) : (
-          <button className="btn btn--ghost" onClick={() => setConfirm(true)}>
-            New world…
-          </button>
+          <div className="actions">
+            <button className="btn btn--ghost" onClick={() => goTo("/lobby")}>
+              To the lobby
+            </button>
+            <button className="btn btn--ghost" onClick={() => setConfirm(true)}>
+              New world…
+            </button>
+          </div>
         )}
       </div>
     </Modal>

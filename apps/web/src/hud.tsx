@@ -13,6 +13,7 @@ import { asset, content } from "./content";
 import { duration, gameDate, int, signed } from "./format";
 import { Icon } from "./icons";
 import { useNav, type View } from "./nav";
+import { goTo } from "./route";
 import { Bar, Countdown, Portrait, ResIcon, art, factionName, useSession } from "./ui";
 
 const WARPS = [1, 10, 100, 1000];
@@ -34,9 +35,13 @@ export function TopBar() {
   return (
     <header className="topbar">
       <div className="topbar__brand">
-        <img className="coin" src={art("lion")} alt="" width={44} height={44} />
+        <button className="topbar__home" type="button" onClick={() => goTo("/lobby")} title="Back to the lobby" aria-label="Back to the lobby">
+          <img className="coin" src={art("lion")} alt="" width={44} height={44} />
+        </button>
         <div className="topbar__title">
-          <span className="wordmark">Emporion</span>
+          <button className="topbar__home wordmark" type="button" onClick={() => goTo("/lobby")} title="Back to the lobby">
+            Emporion
+          </button>
           <div className="topbar__date" title="Season and year on MASSALIA's calendar">
             <span className={`pulse${s.clock.paused ? " is-paused" : ""}`} aria-hidden />
             <span className="topbar__season">{cal.label}</span>

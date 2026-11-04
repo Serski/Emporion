@@ -1,60 +1,94 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { Creation } from "./front/Creation";
+import { Landing } from "./front/Landing";
+import { Lobby } from "./front/Lobby";
 import { BuilderSlots, HeroBadge, HomeTroops, Marches, QuickBar, ResourceBanner, ToastHost, ToolRail, TopBar, VillageSwitcher, ViewSwitch } from "./hud";
-import { NavContext, VIEWS, type ModalState, type Nav, type View } from "./nav";
+import { NavContext, type ModalState, type Nav, type View } from "./nav";
+import { endWorld, startWorld, worldName, worldsPlayed } from "./record";
+import { goGame, goTo, isBareUrl, routeOf, type Route } from "./route";
 import { Session } from "./session";
 import { SessionContext } from "./ui";
 import { FieldsView } from "./views/FieldsView";
 import { TownView } from "./views/TownView";
 import { MapBackdrop, MapView } from "./views/MapView";
-import { NewGame } from "./views/NewGame";
 import { ModalHost } from "./windows/ModalHost";
 
-function viewFromHash(): View {
-  const h = window.location.hash.replace(/^#/, "");
-  return (VIEWS as readonly string[]).includes(h) ? (h as View) : "map";
-}
-
+// The pages around the game, as MASSALIA has them: the front page, the lobby,
+// founding a house, and the game itself. A returning player (a save in this
+// browser) who opens the bare address goes to the lobby, as MASSALIA (and
+// Travian) send a signed-in player.
 export function App({ initial, onSession }: { initial: Session | null; onSession: (s: Session | null) => void }) {
   const [session, setSession] = useState<Session | null>(initial);
+  const [route, setRoute] = useState<Route>(() => (initial && isBareUrl() ? { page: "lobby", view: "worlds" } : routeOf(window.location.hash)));
   useEffect(() => {
     onSession(session);
   }, [session, onSession]);
 
-  if (!session) {
+  useEffect(() => {
+    if (initial && isBareUrl()) window.history.replaceState(null, "", "#/lobby");
+    const onHash = () => setRoute(routeOf(window.location.hash));
+    window.addEventListener("hashchange", onHash);
+    return () => window.removeEventListener("hashchange", onHash);
+  }, [initial]);
+
+  // The game without a world falls back to the front page.
+  const lost = route.page === "game" && !session;
+  useEffect(() => {
+    if (lost) goTo("/");
+  }, [lost]);
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [route.page]);
+
+  if (route.page === "game" && session) {
     return (
-      <NewGame
-        onStart={(opts) => {
+      <SessionContext.Provider value={session}>
+        <GameShell session={session} view={route.view} />
+      </SessionContext.Provider>
+    );
+  }
+  if (route.page === "create") {
+    return (
+      <Creation
+        worldName={worldName(worldsPlayed(!!session) + 1)}
+        replacing={!!session}
+        onComplete={(opts) => {
+          if (session) endWorld(session);
           Session.clearSave();
-          setSession(Session.create(opts));
+          setSession(Session.create({ ...opts, worldName: startWorld(!!session) }));
+          goGame("map");
         }}
       />
     );
   }
-  return (
-    <SessionContext.Provider value={session}>
-      <GameShell
-        onNewWorld={() => {
+  if (route.page === "lobby") {
+    return (
+      <Lobby
+        view={route.view}
+        session={session}
+        onAbandon={() => {
           Session.clearSave();
           setSession(null);
+          goTo("/lobby");
         }}
-        session={session}
+        onLoad={(s) => {
+          s.save();
+          setSession(s);
+          goTo("/lobby");
+        }}
       />
-    </SessionContext.Provider>
-  );
+    );
+  }
+  return <Landing returning={!!session} />;
 }
 
 // The Travian Kingdoms arrangement: the view fills the screen; the stores,
 // the three views, the hero, the tools, the marches and the builders sit on
 // top of it at the edges.
-function GameShell({ session, onNewWorld }: { session: Session; onNewWorld: () => void }) {
-  const [view, setView] = useState<View>(viewFromHash);
+function GameShell({ session, view }: { session: Session; view: View }) {
   const [modal, setModal] = useState<ModalState>(null);
   const [mapFocus, setMapFocus] = useState<number | null>(null);
-
-  // The new-game form may have been scrolled; the game opens at the top.
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, []);
 
   useEffect(() => {
     session.tick();
@@ -66,25 +100,12 @@ function GameShell({ session, onNewWorld }: { session: Session; onNewWorld: () =
       clearInterval(id);
       window.removeEventListener("beforeunload", save);
       document.removeEventListener("visibilitychange", save);
+      // Leaving for the lobby or the front page keeps the world as it stands.
+      session.save();
     };
   }, [session]);
 
-  useEffect(() => {
-    const onNew = () => onNewWorld();
-    window.addEventListener("emporion:new-world", onNew);
-    return () => window.removeEventListener("emporion:new-world", onNew);
-  }, [onNewWorld]);
-
-  useEffect(() => {
-    const onHash = () => setView(viewFromHash());
-    window.addEventListener("hashchange", onHash);
-    return () => window.removeEventListener("hashchange", onHash);
-  }, []);
-
-  const go = useCallback((v: View) => {
-    setView(v);
-    if (window.location.hash !== `#${v}`) window.location.hash = v;
-  }, []);
+  const go = useCallback((v: View) => goGame(v), []);
   const close = useCallback(() => setModal(null), []);
   const nav: Nav = useMemo(
     () => ({
