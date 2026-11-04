@@ -26,6 +26,8 @@ pnpm simulate -- 30 3                      # AI governors, 30 days at speed 3
 pnpm gate                                  # the green light: build, lint, typecheck, test
 ```
 
+Every push to `main` runs the gate on GitHub and, if it passes, publishes the client at https://serski.github.io/Emporion/ (`.github/workflows/pages.yml`). A red gate means the old version stays up.
+
 `pnpm --filter @emporion/engine exec tsx scripts/make-save.ts out.json` writes a save with a town ready to raid; load it into the client's `localStorage["emporion.save.v2"]` to test the UI quickly.
 
 ## Where things are
