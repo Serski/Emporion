@@ -6,7 +6,7 @@ EMPORION was built to MASSALIA's conventions so the two can merge: TypeScript en
 
 | MASSALIA | EMPORION |
 | --- | --- |
-| `apps/web/public/map2/world2.json`, `terrain2.webp`, `names2.json`, `politics2.json`, `townstats.json` | copied into `tools/map/sources/`; `build_tiles.py` turns them into the tile grid. Rebuild after MASSALIA's PSD changes. |
+| `apps/web/public/map2/world2.json`, `terrain2.webp`, `names2.json`, `politics2.json`, `townstats.json` | copied into `tools/map/sources/`; `build_tiles.py` turns them into the hex grid. Rebuild after MASSALIA's PSD changes. |
 | goods `timber`, `stone`, `iron`, `grain` (Wood, Stone, Iron, Wheat) | the four resources, same ids |
 | unit art (`PELTAST.webp`, `HOPLITE.webp`, `HIPPEIS.webp`, `BAND_*.webp`, goods icons) | `apps/web/public/assets/`, referenced by `icon` in content as in `units.json` |
 | Cinzel + Spectral, night-bronze palette, Greek-key band, banners | the client's theme tokens and band in `apps/web/src/styles.css`; banners and building paintings in `apps/web/public/art/` |
@@ -26,7 +26,7 @@ EMPORION was built to MASSALIA's conventions so the two can merge: TypeScript en
 | Market, vendor bands, player listings (`market.ts`) | the Agora (`economy`, `sendResources`) | A vendor or exchange module can sit beside the merchants; prices belong in content. |
 | Oligarchy, elections, League, Koinon, government (`oligarchy.ts`, `league*.ts`, `koinon.ts`) | `social/kingdoms.ts` | Kingdoms are the simplest political layer (king, governors, tribute, influence, victory points); MASSALIA's institutions can replace or extend it. |
 | Round-based battle with missiles, melee, morale and pursuit (`battle.ts`) | `setBattleResolver()` in `military/arrivals.ts` | The resolver takes stacks (unit, count, armory level), heroes, wall and morale and returns the winner and both loss rates. Wrap MASSALIA's `resolveBattle` behind that interface. |
-| Ships, pentekonters, triremes, coastal regions (`ships.json`) | `mapgen.seaTravelMultiplier`, `TileInfo.coastal`, the Harbor | Naval units would set their own sea speed, and ports can require coastal tiles. |
+| Ships, pentekonters, triremes, coastal regions (`ships.json`) | `mapgen.seaTravelMultiplier`, `TileInfo.coastal`, the Harbor | Naval units would set their own sea speed, and ports can require coastal hexes. |
 | Raids on towns, strikes, holdings | the free cities (village `kind: "town"`) and outlaw camps | Their garrisons come from population (`npc.towns`), never from MASSALIA's server-side military numbers. |
 
 ## A server

@@ -1,8 +1,8 @@
 # EMPORION
 
-*Working title.* A browser strategy game in the tradition of the tile-map empire builders: towns with resource fields and buildings, timed construction and training, armies marching across a square-tile world, raids, sieges, conquest and colonies, borders around every town, a hero, oases, outlaw camps and kingdoms.
+*Working title.* A browser strategy game in the tradition of the tile-map empire builders: towns with resource fields and buildings, timed construction and training, armies marching across a world of hexagons, raids, sieges, conquest and colonies, borders around every town, a hero, oases, outlaw camps and kingdoms.
 
-The world is MASSALIA's: the 33,124-tile grid is derived from MASSALIA's hand-drawn world 2 map (its terrain art, its 175 regions and its 105 towns), and the client follows Travian Kingdoms' screen layout in MASSALIA's theme and art. It is becoming a hybrid: MASSALIA's family already runs the hero (the hero is the head of a house who marries, has children, ages and passes the sword to an heir) and MASSALIA's calendar dates the world from 300 BC. Festivals and politics come next. See [docs/HYBRID.md](docs/HYBRID.md).
+The world is MASSALIA's: the grid of 33,856 hexagons is derived from MASSALIA's hand-drawn world 2 map (its terrain art, its 175 regions and its 105 towns), and the client follows Travian Kingdoms' screen layout in MASSALIA's theme and art. It is becoming a hybrid: MASSALIA's family already runs the hero (the hero is the head of a house who marries, has children, ages and passes the sword to an heir) and MASSALIA's calendar dates the world from 300 BC. Festivals and politics come next. See [docs/HYBRID.md](docs/HYBRID.md).
 
 ## Quick start
 
@@ -22,7 +22,7 @@ The client runs the whole game in the browser: pick a people and a world speed, 
 | --- | --- |
 | `packages/engine` | `@emporion/engine`: the pure rules. No clock, no I/O, no randomness outside the seeded state. |
 | `content/` | Every balance number, as JSON validated by the engine's zod schema. |
-| `content/map/tiles.json` | The generated tile grid. Do not edit by hand. |
+| `content/map/tiles.json` | The generated hex grid. Do not edit by hand. |
 | `tools/map/` | `build_tiles.py` and its committed MASSALIA sources. |
 | `apps/web` | The Vite + React client, plus `scripts/artifact.mjs` that packages it as one page. |
 | `docs/` | [DESIGN.md](docs/DESIGN.md) (systems and formulas), [HYBRID.md](docs/HYBRID.md) (the MASSALIA merge), [RULINGS.md](docs/RULINGS.md) (the design calls awaiting a decision). |
@@ -30,8 +30,8 @@ The client runs the whole game in the browser: pick a people and a world speed, 
 ## Rebuilding the map
 
 ```bash
-python3 tools/map/build_tiles.py            # 16 px tiles: 196 x 169
-python3 tools/map/build_tiles.py --tile 12  # a finer grid
+python3 tools/map/build_tiles.py            # hexes 17 px wide: 184 x 184
+python3 tools/map/build_tiles.py --hex 12   # a finer grid
 ```
 
 It needs Python 3 with numpy and Pillow. It reads only `tools/map/sources/` (copies of MASSALIA's `apps/web/public/map2` files) and writes `content/map/tiles.json`, `apps/web/public/map/terrain.webp` and a check image, `tools/map/preview.png`.

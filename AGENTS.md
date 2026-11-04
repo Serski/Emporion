@@ -2,7 +2,7 @@
 
 ## What this is
 
-A tile-map browser strategy game (working title EMPORION) that will merge with MASSALIA. pnpm/TypeScript monorepo laid out like MASSALIA: the pure rules in `packages/engine`, the balance in `content/` (zod-validated JSON), and a Vite/React client in `apps/web` that today runs the engine locally. A server is not built yet; the engine is written so one can call it per request (see docs/HYBRID.md).
+A hex-map browser strategy game (working title EMPORION) that will merge with MASSALIA. pnpm/TypeScript monorepo laid out like MASSALIA: the pure rules in `packages/engine`, the balance in `content/` (zod-validated JSON), and a Vite/React client in `apps/web` that today runs the engine locally. A server is not built yet; the engine is written so one can call it per request (see docs/HYBRID.md).
 
 ## Invariants
 
@@ -13,6 +13,7 @@ A tile-map browser strategy game (working title EMPORION) that will merge with M
 - Commands settle the world first (`Game` does it) and return a `Result`: `{ ok: false, code, message }` for a broken rule, never a throw. Throws are for programmer errors.
 - Advancing in many steps equals advancing in one (`test/economy.test.ts`). Keep it true: event times are whole milliseconds, rates are constant between events.
 - The map grid is generated: `tools/map/build_tiles.py` from the committed sources. Never hand-edit `content/map/tiles.json`.
+- The map is pointy-top hexagons in rows, odd rows shifted half a hex east. Every distance, ring, line and neighbour goes through `world/map.ts` (`distance`, `forEachHexWithin`, `hexLine`, `hexNeighbour`, `hexCentre`, `hexAtPoint`); never measure with `Math.hypot` on (x, y).
 - State is plain JSON. No classes, Maps or functions in `GameState`.
 
 ## How to run
@@ -25,7 +26,7 @@ pnpm simulate -- 30 3                      # AI governors, 30 days at speed 3
 pnpm gate                                  # the green light: build, lint, typecheck, test
 ```
 
-`pnpm --filter @emporion/engine exec tsx scripts/make-save.ts out.json` writes a save with a town ready to raid; load it into the client's `localStorage["emporion.save.v1"]` to test the UI quickly.
+`pnpm --filter @emporion/engine exec tsx scripts/make-save.ts out.json` writes a save with a town ready to raid; load it into the client's `localStorage["emporion.save.v2"]` to test the UI quickly.
 
 ## Where things are
 

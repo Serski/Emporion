@@ -14,7 +14,7 @@ Design, balance and wording calls made while building the first version. Each is
 
 ## Map
 
-8. **Grid size.** 16-pixel tiles give 196 × 169 = 33,124 tiles, 8,063 of them land. `--tile 12` gives about 14,000 land tiles.
+8. **Grid.** Hexagons, not squares: pointy-top, in rows, with every odd row shifted half a hex east. Hexes 17 art pixels wide give 184 × 184 = 33,856 hexes, 8,208 of them land, close to the old square grid's 8,063. `--hex 12` gives 16,467 land hexes. Distance counts hex steps, so every rule that says "within N fields" means N rings of hexes.
 9. **Sea crossings.** Marches go in a straight line across water, but water legs cost × 1.5. The alternatives are 1.0 (sea is like land) or forbidding crossings without ships.
 10. **Terrain mix.** Plains 84% settleable, hills 70% and mountains 32%; the rest is oasis or wild land. Layouts and oases are weighted by terrain.
 
@@ -45,7 +45,7 @@ Design, balance and wording calls made while building the first version. Each is
 
 ## Borders and the calendar
 
-27. **Territory.** Each player's town claims every tile within 4 fields, a free city 2, an outlaw camp only its own tile. A tile shared by two claims goes to the nearer town, then to the older one. No one may found a town inside another player's borders, new players start outside every border, and an oasis can be annexed only from the town whose borders hold it. Borders do not stop marches, raids or trade.
+27. **Territory.** Each player's town claims the 4 rings of hexes around it (61 hexes), a free city 2 rings (19), an outlaw camp only its own hex. A hex shared by two claims goes to the nearer town, then to the older one. No one may found a town inside another player's borders, new players start outside every border, and an oasis can be annexed only from the town whose borders hold it. Borders do not stop marches, raids or trade.
 28. **Calendar.** MASSALIA's seasons, one every 24 hours ÷ speed: Winter, Spring, Summer, Autumn, from Winter 300 BC. Four seasons make a year, and people age one year per year. Seasons do not change production yet.
 
 ## The house (MASSALIA's family on the hero)

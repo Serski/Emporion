@@ -40,11 +40,11 @@ Every number below is a default from `content/`; change the JSON, not the code. 
 
 ## The map
 
-- **The grid.** 196 × 169 tiles, each 16 × 16 pixels of MASSALIA's world 2 art. Terrain per tile: S sea, F fog (off the playable world), L lake, P plain, H hills, M mountain. Each tile also has a region (with its MASSALIA name and polity), and the 105 towns stand on their tiles. Built by `tools/map/build_tiles.py`.
+- **The grid.** 184 × 184 = 33,856 pointy-top hexagons laid over MASSALIA's world 2 art, each 17 art pixels wide, in rows with every odd row shifted half a hex east ("odd-r"). Hex (x, y) is column x of row y, and players see it as (x|y). Terrain per hex: S sea, F fog (off the playable world), L lake, P plain, H hills, M mountain; 8,208 hexes are land. Each hex also has a region (with its MASSALIA name and polity), and the 105 towns stand on their hexes. Built by `tools/map/build_tiles.py`, which reads each hex's region from a sample lattice inside it and its relief from the art's shading.
 - **What stands on land** is drawn from the world seed, weighted by terrain. Plains are 84% valley, 10% oasis and 6% wild; mountains 32%, 10% and 58%. Valleys take a field layout weighted by terrain (wheat-rich on plains, iron and stone in the mountains). Oases take a bonus type the same way.
-- **Distance** is straight-line in tiles, with no wrap-around. Travel distance = d · (1 − w) + d · w · 1.5, where w is the share of the line over water or fog. Marches keep straight lines, but sea legs cost half again.
+- **Distance** is counted in hex steps: one step to any of the six neighbours is one field, with no wrap-around. Travel distance = d · (1 − w) + d · w · 1.5, where w is the share of the hexes on the straight line (`hexLine`) that are water or fog. Marches keep straight lines, but sea legs cost half again.
 - **March time** = travel distance ÷ the slowest unit's speed (fields per hour), ÷ troop speed. The Hippodrome adds 8% per level on the part beyond 15 fields.
-- **Borders** (`world/territory.ts`). Every town claims the tiles within a radius of it: 4 fields for a player's town, 2 for a free city, 0 (its own tile) for an outlaw camp. A tile inside two claims goes to the nearer town, and on a tie to the one founded first. The claim map is cached and rebuilt only when a town is founded; a conquest changes the claim's owner, not its shape. Borders are checked in three places: settlers cannot found a town in another player's borders (when sent and again on arrival), a new player's start tile lies outside every border, and an oasis can only be annexed from the town whose borders hold it.
+- **Borders** (`world/territory.ts`). Every town claims the hexes within a number of steps of it: 4 rings for a player's town (61 hexes), 2 for a free city (19), 0 (its own hex) for an outlaw camp. A hex inside two claims goes to the nearer town, and on a tie to the one founded first. The claim map is cached and rebuilt only when a town is founded; a conquest changes the claim's owner, not its shape. Borders are checked in three places: settlers cannot found a town in another player's borders (when sent and again on arrival), a new player's start hex lies outside every border, and an oasis can only be annexed from the town whose borders hold it.
 
 ## Missions
 
@@ -91,7 +91,7 @@ MASSALIA's family, seated on the hero. Every player has a house; its head is the
 ## Kingdoms (`social/kingdoms.ts`)
 
 - **Founding** needs a capital with 200 people and a Treasury.
-- **Influence.** Each of the king's towns projects a radius of min(14, 3 + 0.008 · population + 0.4 · treasures held). A tile belongs to the kingdom with the largest (radius − distance).
+- **Influence.** Each of the king's towns projects a radius of min(14, 3 + 0.008 · population + 0.4 · treasures held). A hex belongs to the kingdom with the largest (radius − distance).
 - **Governors** whose capital lies in the territory may join. They divert 8% of their production into a tribute pot (capped at 24 hours of tribute) and gain +4% production. The king collects every pot into the capital, as far as it has room.
 - **Victory points** = 25 per treasure held + 1 per 100 population.
 
@@ -105,5 +105,5 @@ MASSALIA's family, seated on the hero. Every player has a house; its head is the
 
 - **Layout.** Travian Kingdoms' arrangement in MASSALIA's dress. `App.tsx` renders the top bar, the stage (one of `views/FieldsView`, `views/TownView`, `views/MapView`) and the HUD from `hud.tsx` over it: the town switcher (top left), the three view medallions and the stores ribbon (top centre), the hero badge with marches and troops at home (top right), the tool rail (left), the builders (bottom) and quick actions (bottom right). Below 960 px the HUD stacks around the view and the rail becomes a bar along the bottom.
 - **Windows** (`windows/`) open from the HUD and the views: field, building and construction; tile; send troops and goods; the hero (Hero, Family, Lineage tabs); reports (filed by kind, opened in place); standings (players with a podium, kingdoms, houses); kingdom; troops (at home, abroad, on the road); players.
-- **Map.** A canvas over MASSALIA's terrain art. It draws each town's borders as a wash of its owner's colour with an edge line, kingdom frontiers in gold when zoomed in, and a hover card for the tile under the pointer.
+- **Map.** A canvas over MASSALIA's terrain art, in the same frame as the hex grid (one world unit is one hex width, `hexWidth` art pixels), so each hex sits on the art it was read from. It tints fog, wild land and oases per hex (a pre-drawn overlay when zoomed out, crisp hexes when zoomed in), outlines the hexes from zoom 12, washes each town's borders in its owner's colour with an edge line on every border side (yours in gold over a dark edge), draws kingdom frontiers in gold when zoomed in, and shows a hover card for the hex under the pointer.
 - **Art.** `public/art/` holds a painting per building (`b-<id>.webp`), the view medallions, the lion coin and the window banners; `public/portraits/` the family faces by stage; `public/assets/` the unit and goods art. All are MASSALIA's.
