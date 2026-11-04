@@ -5,8 +5,10 @@
 import { DAY, Game, HOUR, playerPopulation, troopCount } from "../src/index.js";
 import { content } from "../test/helpers.js";
 
-const days = Number(process.argv[2] ?? 14);
-const speed = Number(process.argv[3] ?? 1);
+// `pnpm simulate -- 30 3` forwards the "--" itself; skip it.
+const args = process.argv.slice(2).filter((a) => a !== "--");
+const days = Number(args[0] ?? 14);
+const speed = Number(args[1] ?? 1);
 const c = content();
 const start = Date.UTC(2026, 10, 1);
 const g = Game.create(c, { startedAt: start, speed, npcCamps: 80, npcRaids: true, seed: 42 });
