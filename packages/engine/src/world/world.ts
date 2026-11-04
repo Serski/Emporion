@@ -4,7 +4,7 @@ import { newId, nextSeq } from "../core/ids.js";
 import { hash01, nextRandom, weightedChoice } from "../core/rng.js";
 import { HOUR } from "../core/time.js";
 import type { GameState, Hero, Ms, Player, PlayerKind, Resources, Troops, Village, VillageKind } from "../core/types.js";
-import { distance, tileIndex, tileKind, tileLayout, tilesAround, tileXY } from "./map.js";
+import { distance, forEachHexWithin, tileIndex, tileKind, tileLayout, tilesAround, tileXY } from "./map.js";
 import { capacity } from "../village/stats.js";
 import { scheduleBot } from "../ai/bot.js";
 import { createHouse, familyEnabled, scheduleFamilyYear } from "../social/family.js";
@@ -176,18 +176,14 @@ function startLayout(content: Content): LayoutDef {
   return content.world.mapgen.layouts.find((l) => l.start) ?? content.world.mapgen.layouts[0]!;
 }
 
+// Is any town within `spacing` hex steps of this hex?
 function nearVillage(state: GameState, content: Content, tile: number, spacing: number): boolean {
   const { x, y } = tileXY(content, tile);
-  const r = Math.ceil(spacing);
-  for (let dy = -r; dy <= r; dy++)
-    for (let dx = -r; dx <= r; dx++) {
-      if (Math.hypot(dx, dy) > spacing) continue;
-      const xx = x + dx;
-      const yy = y + dy;
-      if (xx < 0 || yy < 0 || xx >= content.map.width || yy >= content.map.height) continue;
-      if (state.occupancy[tileIndex(content, xx, yy)]) return true;
-    }
-  return false;
+  let near = false;
+  forEachHexWithin(content, x, y, spacing, (t) => {
+    if (state.occupancy[t]) near = true;
+  });
+  return near;
 }
 
 export function isFreeValley(state: GameState, content: Content, tile: number): boolean {

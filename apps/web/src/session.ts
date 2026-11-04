@@ -8,7 +8,10 @@ import { content } from "./content";
 // each command over the wire instead of running it here.
 // ---------------------------------------------------------------------------
 
-const SAVE_KEY = "emporion.save.v1";
+// v2: the hex map. Saves from the square map (v1) place towns on tiles that
+// no longer exist, so they are dropped and a new world starts.
+const SAVE_KEY = "emporion.save.v2";
+const OLD_KEYS = ["emporion.save.v1"];
 
 export interface Clock {
   game: number; // game time at `real`
@@ -18,7 +21,7 @@ export interface Clock {
 }
 
 export interface SaveFile {
-  v: 1;
+  v: 2;
   state: GameState;
   clock: Clock;
   active: string;
@@ -82,6 +85,7 @@ export class Session {
 
   static load(): Session | null {
     try {
+      for (const k of OLD_KEYS) localStorage.removeItem(k);
       const raw = localStorage.getItem(SAVE_KEY);
       if (!raw) return null;
       return Session.fromSave(JSON.parse(raw) as SaveFile);
@@ -91,7 +95,7 @@ export class Session {
   }
 
   static fromSave(save: SaveFile): Session | null {
-    if (!save || save.v !== 1 || !save.state) return null;
+    if (!save || save.v !== 2 || !save.state) return null;
     const game = Game.restore(content, save.state);
     // Time passed while the page was closed counts at the saved warp, capped
     // at one real hour so a forgotten tab does not skip a week of game time.
@@ -216,7 +220,7 @@ export class Session {
   }
 
   toSave(): SaveFile {
-    return { v: 1, state: this.state, clock: { ...this.clock, game: this.now(), real: Date.now() }, active: this.active, humans: this.humans, village: this.village };
+    return { v: 2, state: this.state, clock: { ...this.clock, game: this.now(), real: Date.now() }, active: this.active, humans: this.humans, village: this.village };
   }
 
   saveSoon() {

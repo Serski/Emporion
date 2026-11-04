@@ -2,6 +2,10 @@ import { describe, expect, it } from "vitest";
 import {
   claimedTiles,
   createVillage,
+  distance,
+  hexLine,
+  hexRing,
+  hexesWithin,
   isFreeValley,
   tileIndex,
   tileLayout,
@@ -17,18 +21,19 @@ const tileOf = (g: Game, vid: string) => {
 };
 
 describe("territory", () => {
-  it("claims every tile within four fields of a town", () => {
+  it("claims every hex within four steps of a town", () => {
     const g = newGame();
     const { vid } = join(g);
     const v = village(g, vid);
-    const at = (dx: number, dy: number) => territoryAt(g.state, g.content, tileIndex(g.content, v.x + dx, v.y + dy));
-    expect(at(0, 0)?.id).toBe(vid);
-    expect(at(4, 0)?.id).toBe(vid);
-    expect(at(0, -4)?.id).toBe(vid);
-    expect(at(2, 3)?.id).toBe(vid);
-    expect(at(5, 0)?.id).not.toBe(vid);
-    expect(at(3, 3)?.id).not.toBe(vid); // 4.24 fields away
-    expect(claimedTiles(g.state, g.content, v).length).toBe(49);
+    const home = tileOf(g, vid);
+    const within = hexesWithin(g.content, home, 4);
+    expect(within).toHaveLength(61); // 1 + 6 + 12 + 18 + 24
+    for (const t of within) expect(territoryAt(g.state, g.content, t)?.id).toBe(vid);
+    const ring5 = hexRing(g.content, home, 5);
+    expect(ring5).toHaveLength(30);
+    for (const t of ring5) expect(territoryAt(g.state, g.content, t)?.id).not.toBe(vid);
+    expect(claimedTiles(g.state, g.content, v)).toHaveLength(61);
+    for (const t of hexRing(g.content, home, 4)) expect(distance(g.content, home, t)).toBe(4);
   });
 
   it("starts new players outside the territory of others", () => {
@@ -36,17 +41,14 @@ describe("territory", () => {
     const a = join(g, "Attalos");
     const b = join(g, "Demeas");
     expect(territoryAt(g.state, g.content, tileOf(g, b.vid))?.id).toBe(b.vid);
-    const da = Math.hypot(village(g, a.vid).x - village(g, b.vid).x, village(g, a.vid).y - village(g, b.vid).y);
-    expect(da).toBeGreaterThan(4);
+    expect(distance(g.content, tileOf(g, a.vid), tileOf(g, b.vid))).toBeGreaterThan(4);
   });
 
   it("gives an overlapped tile to the nearer town", () => {
     const g = newGame();
     const a = join(g, "Attalos");
-    const v = village(g, a.vid);
-    const near = tilesAround(g.content, 1, tileOf(g, a.vid), 7).find(
-      (t) => isFreeValley(g.state, g.content, t) && Math.hypot((t % g.content.map.width) - v.x, Math.floor(t / g.content.map.width) - v.y) >= 5,
-    )!;
+    const home = tileOf(g, a.vid);
+    const near = tilesAround(g.content, 1, home, 7).find((t) => isFreeValley(g.state, g.content, t) && distance(g.content, home, t) >= 5)!;
     const other = createVillage(g.state, g.content, {
       ownerId: a.pid,
       tile: near,
@@ -56,9 +58,10 @@ describe("territory", () => {
       isCapital: false,
       at: T0 + 1,
     });
-    const nx = near % g.content.map.width;
-    const ny = Math.floor(near / g.content.map.width);
-    const mid = tileIndex(g.content, Math.round((nx + v.x * 2) / 3), Math.round((ny + v.y * 2) / 3));
+    // A third of the way along the line between them is nearer the first town.
+    const line = hexLine(g.content, home, near);
+    const mid = line[Math.floor((line.length - 1) / 3)]!;
+    expect(distance(g.content, home, mid)).toBeLessThan(distance(g.content, near, mid));
     expect(territoryAt(g.state, g.content, mid)?.id).toBe(a.vid);
     expect(territoryAt(g.state, g.content, near)?.id).toBe(other.id);
   });

@@ -3,15 +3,18 @@ import type { LandTerrain, LayoutDef, OasisTypeDef, TownDef } from "../content/s
 import { hash01, weightedChoice } from "../core/rng.js";
 
 // ---------------------------------------------------------------------------
-// The square-tile world. Geography (sea, fog, plain, hills, mountain, region,
+// The hexagon world. Geography (sea, fog, plain, hills, mountain, region,
 // towns) comes from content/map/tiles.json, derived from MASSALIA's world 2
-// map. What stands on each land tile (a settleable valley with its field
+// map. What stands on each land hex (a settleable valley with its field
 // layout, an oasis, or wild land) is drawn from the world seed with a
-// stateless hash, weighted by terrain — so any tile can be read on its own
+// stateless hash, weighted by terrain — so any hex can be read on its own
 // and every client derives the same map from the same seed.
 //
-// Coordinates: x grows east, y grows south, (0,0) is the north-west corner.
-// Tiles are addressed by index = y · width + x. There is no wrap-around.
+// The grid: pointy-top hexagons in rows, every odd row shifted half a hex
+// east. Hex (x, y) is column x of row y, shown to players as (x|y); x grows
+// east, y grows south, (0,0) is the north-west corner. Hexes (the engine
+// calls them tiles) are addressed by index = y · width + x. One step to a
+// neighbouring hex is one field, and distance counts steps. No wrap-around.
 // ---------------------------------------------------------------------------
 
 export type TileKind = "water" | "fog" | "valley" | "oasis" | "wild" | "town";
@@ -101,6 +104,158 @@ export function onMap(content: Content, x: number, y: number): boolean {
   return x >= 0 && y >= 0 && x < content.map.width && y < content.map.height;
 }
 
+// --- hex geometry -------------------------------------------------------------
+
+// Axial coordinates (q, r) make distances and lines simple; r is the row.
+export function toAxial(x: number, y: number): { q: number; r: number } {
+  return { q: x - (y - (y & 1)) / 2, r: y };
+}
+
+export function fromAxial(q: number, r: number): { x: number; y: number } {
+  return { x: q + (r - (r & 1)) / 2, y: r };
+}
+
+// Steps between two hexes given as (x, y).
+export function hexSteps(ax: number, ay: number, bx: number, by: number): number {
+  const a = toAxial(ax, ay);
+  const b = toAxial(bx, by);
+  const dq = a.q - b.q;
+  const dr = a.r - b.r;
+  return (Math.abs(dq) + Math.abs(dr) + Math.abs(dq + dr)) / 2;
+}
+
+// Neighbour offsets (dx, dy) for even and odd rows: east, north-east,
+// north-west, west, south-west, south-east.
+const DIRS_EVEN: readonly (readonly [number, number])[] = [
+  [1, 0],
+  [0, -1],
+  [-1, -1],
+  [-1, 0],
+  [-1, 1],
+  [0, 1],
+];
+const DIRS_ODD: readonly (readonly [number, number])[] = [
+  [1, 0],
+  [1, -1],
+  [0, -1],
+  [-1, 0],
+  [0, 1],
+  [1, 1],
+];
+
+// The hex next to (x, y) in direction dir (0 east, then anticlockwise), or
+// null off the map.
+export function hexNeighbour(content: Content, x: number, y: number, dir: number): number | null {
+  const [dx, dy] = (y & 1 ? DIRS_ODD : DIRS_EVEN)[((dir % 6) + 6) % 6]!;
+  const nx = x + dx;
+  const ny = y + dy;
+  return onMap(content, nx, ny) ? ny * content.map.width + nx : null;
+}
+
+export function hexNeighbours(content: Content, tile: number): number[] {
+  const { x, y } = tileXY(content, tile);
+  const out: number[] = [];
+  for (let d = 0; d < 6; d++) {
+    const n = hexNeighbour(content, x, y, d);
+    if (n !== null) out.push(n);
+  }
+  return out;
+}
+
+// Calls fn for every hex on the map within `radius` steps of (x, y).
+export function forEachHexWithin(content: Content, x: number, y: number, radius: number, fn: (tile: number, steps: number) => void): void {
+  const R = Math.floor(radius + 1e-9);
+  const { q, r } = toAxial(x, y);
+  const W = content.map.width;
+  for (let dq = -R; dq <= R; dq++) {
+    const lo = Math.max(-R, -dq - R);
+    const hi = Math.min(R, -dq + R);
+    for (let dr = lo; dr <= hi; dr++) {
+      const p = fromAxial(q + dq, r + dr);
+      if (!onMap(content, p.x, p.y)) continue;
+      fn(p.y * W + p.x, (Math.abs(dq) + Math.abs(dr) + Math.abs(dq + dr)) / 2);
+    }
+  }
+}
+
+export function hexesWithin(content: Content, center: number, radius: number): number[] {
+  const { x, y } = tileXY(content, center);
+  const out: number[] = [];
+  forEachHexWithin(content, x, y, radius, (t) => out.push(t));
+  return out;
+}
+
+export function hexRing(content: Content, center: number, radius: number): number[] {
+  const { x, y } = tileXY(content, center);
+  const out: number[] = [];
+  forEachHexWithin(content, x, y, radius, (t, d) => {
+    if (d === radius) out.push(t);
+  });
+  return out;
+}
+
+// The hexes a straight line from a to b passes through, a and b included.
+// Off-map points (possible along the edge) come back as -1.
+export function hexLine(content: Content, a: number, b: number): number[] {
+  const pa = tileXY(content, a);
+  const pb = tileXY(content, b);
+  const n = hexSteps(pa.x, pa.y, pb.x, pb.y);
+  if (n === 0) return [a];
+  const A = toAxial(pa.x, pa.y);
+  const B = toAxial(pb.x, pb.y);
+  // A tiny nudge keeps the line off the exact edges between hexes.
+  const aq = A.q + 1e-6;
+  const ar = A.r + 2e-6;
+  const bq = B.q + 1e-6;
+  const br = B.r + 2e-6;
+  const out: number[] = [];
+  for (let i = 0; i <= n; i++) {
+    const t = i / n;
+    const q = aq + (bq - aq) * t;
+    const r = ar + (br - ar) * t;
+    const s = -q - r;
+    let rq = Math.round(q);
+    let rr = Math.round(r);
+    const rs = Math.round(s);
+    const eq = Math.abs(rq - q);
+    const er = Math.abs(rr - r);
+    const es = Math.abs(rs - s);
+    if (eq > er && eq > es) rq = -rr - rs;
+    else if (er > es) rr = -rq - rs;
+    const p = fromAxial(rq, rr);
+    out.push(onMap(content, p.x, p.y) ? tileIndex(content, p.x, p.y) : -1);
+  }
+  return out;
+}
+
+// Where hex centres sit, in units of one hex width: rows are HEX_ROW apart and
+// a hex reaches HEX_RADIUS above and below its centre. Clients draw with these.
+export const HEX_ROW = Math.sqrt(3) / 2;
+export const HEX_RADIUS = 1 / Math.sqrt(3);
+
+export function hexCentre(x: number, y: number): { x: number; y: number } {
+  return { x: x + 0.5 + 0.5 * (y & 1), y: HEX_RADIUS + y * HEX_ROW };
+}
+
+// The hex (x, y) under a point given in hex-width units (it may be off the map).
+export function hexAtPoint(px: number, py: number): { x: number; y: number } {
+  const rx = px - 0.5;
+  const ry = py - HEX_RADIUS;
+  const q = rx - ry / Math.sqrt(3);
+  const r = (2 * ry) / Math.sqrt(3);
+  const s = -q - r;
+  let rq = Math.round(q);
+  let rr = Math.round(r);
+  const rs = Math.round(s);
+  const eq = Math.abs(rq - q);
+  const er = Math.abs(rr - r);
+  const es = Math.abs(rs - s);
+  if (eq > er && eq > es) rq = -rr - rs;
+  else if (er > es) rr = -rq - rs;
+  // `|| 0` turns a rounded -0 into 0.
+  return fromAxial(rq || 0, rr || 0);
+}
+
 export function tileKind(content: Content, seed: number, tile: number): TileKind {
   return KIND_CODES[cache(content, seed).kind[tile]!]!;
 }
@@ -124,14 +279,7 @@ export function isLand(content: Content, tile: number): boolean {
 
 export function isCoastal(content: Content, tile: number): boolean {
   if (!isLand(content, tile)) return false;
-  const { x, y } = tileXY(content, tile);
-  for (let dy = -1; dy <= 1; dy++)
-    for (let dx = -1; dx <= 1; dx++) {
-      if (!dx && !dy) continue;
-      if (!onMap(content, x + dx, y + dy)) continue;
-      if (content.map.terrain[tileIndex(content, x + dx, y + dy)] === "S") return true;
-    }
-  return false;
+  return hexNeighbours(content, tile).some((n) => content.map.terrain[n] === "S");
 }
 
 export function tileInfo(content: Content, seed: number, tile: number): TileInfo {
@@ -154,30 +302,24 @@ export function tileInfo(content: Content, seed: number, tile: number): TileInfo
   };
 }
 
+// Fields between two hexes: the number of steps from one to the other.
 export function distance(content: Content, a: number, b: number): number {
   const pa = tileXY(content, a);
   const pb = tileXY(content, b);
-  return Math.hypot(pa.x - pb.x, pa.y - pb.y);
+  return hexSteps(pa.x, pa.y, pb.x, pb.y);
 }
 
-// Share of the straight line between two tiles that crosses water or fog,
-// sampled at half-tile steps. Marches keep straight lines (as on any tile
-// map) but the sea legs cost seaTravelMultiplier.
+// Share of the hexes on the straight line between two hexes that are water or
+// fog. Marches keep straight lines, but the sea legs cost seaTravelMultiplier.
 export function waterShare(content: Content, a: number, b: number): number {
-  const pa = tileXY(content, a);
-  const pb = tileXY(content, b);
-  const d = Math.hypot(pa.x - pb.x, pa.y - pb.y);
-  if (d === 0) return 0;
-  const steps = Math.max(2, Math.ceil(d * 2));
+  if (a === b) return 0;
+  const line = hexLine(content, a, b);
   let wet = 0;
-  for (let i = 0; i <= steps; i++) {
-    const t = i / steps;
-    const x = Math.round(pa.x + (pb.x - pa.x) * t);
-    const y = Math.round(pa.y + (pb.y - pa.y) * t);
-    const terrain = content.map.terrain[tileIndex(content, x, y)];
+  for (const t of line) {
+    const terrain = t < 0 ? "F" : content.map.terrain[t];
     if (terrain === "S" || terrain === "L" || terrain === "F") wet++;
   }
-  return wet / (steps + 1);
+  return wet / line.length;
 }
 
 // Distance in "land fields": sea legs count seaTravelMultiplier times.
@@ -187,20 +329,12 @@ export function travelDistance(content: Content, a: number, b: number): number {
   return d * (1 - wet) + d * wet * content.world.mapgen.seaTravelMultiplier;
 }
 
-// Tiles in rings around a centre, nearest first (ties broken by the hash so
-// the order is stable for a seed). Used for placement searches.
+// Hexes in rings around a centre, nearest first (within a ring the order is
+// shuffled by the hash, stable for a seed). Used for placement searches.
 export function tilesAround(content: Content, seed: number, center: number, maxRadius: number): number[] {
-  const { x: cx, y: cy } = tileXY(content, center);
+  const { x, y } = tileXY(content, center);
   const out: { tile: number; d: number }[] = [];
-  const r = Math.ceil(maxRadius);
-  for (let y = cy - r; y <= cy + r; y++)
-    for (let x = cx - r; x <= cx + r; x++) {
-      if (!onMap(content, x, y)) continue;
-      const d = Math.hypot(x - cx, y - cy);
-      if (d > maxRadius) continue;
-      const tile = tileIndex(content, x, y);
-      out.push({ tile, d: d + hash01(seed, tile, 97) * 0.5 });
-    }
+  forEachHexWithin(content, x, y, maxRadius, (tile, d) => out.push({ tile, d: d + hash01(seed, tile, 97) * 0.5 }));
   out.sort((p, q) => p.d - q.d);
   return out.map((p) => p.tile);
 }

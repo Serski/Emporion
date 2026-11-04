@@ -21,6 +21,6 @@ const camp = Object.values(g.state.villages)
   .filter((v) => v.kind === "camp")
   .sort((a, b) => distance(c, home, tileIndex(c, a.x, a.y)) - distance(c, home, tileIndex(c, b.x, b.y)))[0]!;
 console.log(`camp ${camp.name} at ${camp.x}|${camp.y}, ${distance(c, home, tileIndex(c, camp.x, camp.y)).toFixed(1)} fields`);
-const save = { v: 1, state: g.state, clock: { game: start, real: start, warp: 1, paused: false }, active: player.id, humans: [player.id], village: { [player.id]: village.id } };
+const save = { v: 2, state: g.state, clock: { game: start, real: start, warp: 1, paused: false }, active: player.id, humans: [player.id], village: { [player.id]: village.id } };
 writeFileSync(process.argv[2]!, JSON.stringify(save));
 writeFileSync(process.argv[2]! + ".target", `${camp.x}|${camp.y}`);

@@ -1,23 +1,77 @@
 import { useEffect, useRef, useState } from "react";
-import { kingdomAtTile, territoryMap, tileDetails, tileIndex, tileKind, type GameState } from "@emporion/engine";
+import {
+  HEX_RADIUS,
+  HEX_ROW,
+  hexAtPoint,
+  hexCentre,
+  hexNeighbour,
+  kingdomAtTile,
+  territoryMap,
+  tileDetails,
+  tileIndex,
+  tileKind,
+  type GameState,
+  type TileKind,
+} from "@emporion/engine";
 import { content } from "../content";
 import { Icon } from "../icons";
 import { useNav } from "../nav";
 import { ResIcon, factionColor, useSession } from "../ui";
 
 // ---------------------------------------------------------------------------
-// The world map: MASSALIA's hand-drawn terrain under a square-tile grid.
-// Canvas, not DOM: thousands of tiles stay smooth while panning on a phone.
-// The fog of the unknown world, oases, wild land, towns, camps and players
-// are drawn from the engine's tile cache; marches show as lines with a dot
-// where the column is right now.
+// The world map: MASSALIA's hand-drawn terrain under a grid of pointy-top
+// hexagons, odd rows shifted half a hex east (the engine's grid). Canvas, not
+// DOM: thousands of hexes stay smooth while panning on a phone.
+//
+// World units are hex widths: hex (x, y) has its centre at hexCentre(x, y)
+// and the terrain art sits in the same frame at hexWidth art pixels per unit,
+// so every hex lies on the art it was read from. The fog of the unknown world,
+// wild land and oases are tinted per hex; towns' borders are washed in their
+// owner's colour with an edge line; marches show as lines with a dot where
+// the column is right now.
 // ---------------------------------------------------------------------------
 
 const MIN_ZOOM = 3;
 const MAX_ZOOM = 64;
 const W = content.map.width;
 const H = content.map.height;
-const TS = content.map.tileSize;
+const HW = content.map.grid.hexWidth; // art pixels per hex width
+const WORLD_W = W + 0.5;
+const WORLD_H = 2 * HEX_RADIUS + (H - 1) * HEX_ROW;
+
+// Corners of a pointy-top hex of width 1, clockwise from the upper right.
+const CORNERS: [number, number][] = Array.from({ length: 6 }, (_, i) => {
+  const a = ((60 * i - 30) * Math.PI) / 180;
+  return [HEX_RADIUS * Math.cos(a), HEX_RADIUS * Math.sin(a)];
+});
+// The corners of the edge shared with the neighbour in direction d
+// (0 east, 1 north-east, 2 north-west, 3 west, 4 south-west, 5 south-east).
+const EDGE: [number, number][] = [
+  [0, 1],
+  [5, 0],
+  [4, 5],
+  [3, 4],
+  [2, 3],
+  [1, 2],
+];
+
+const colOf = (t: number) => t % W;
+const rowOf = (t: number) => Math.floor(t / W);
+const centreX = (t: number) => colOf(t) + 0.5 + 0.5 * (rowOf(t) & 1);
+const centreY = (t: number) => HEX_RADIUS + rowOf(t) * HEX_ROW;
+const neighbourOf = (t: number, d: number) => hexNeighbour(content, colOf(t), rowOf(t), d);
+
+function addHex(ctx: CanvasRenderingContext2D, px: number, py: number, size: number) {
+  ctx.moveTo(px + CORNERS[0]![0] * size, py + CORNERS[0]![1] * size);
+  for (let i = 1; i < 6; i++) ctx.lineTo(px + CORNERS[i]![0] * size, py + CORNERS[i]![1] * size);
+  ctx.closePath();
+}
+
+function addEdge(ctx: CanvasRenderingContext2D, px: number, py: number, size: number, d: number) {
+  const [a, b] = EDGE[d]!;
+  ctx.moveTo(px + CORNERS[a]![0] * size, py + CORNERS[a]![1] * size);
+  ctx.lineTo(px + CORNERS[b]![0] * size, py + CORNERS[b]![1] * size);
+}
 
 let terrainImage: HTMLImageElement | null = null;
 const terrainListeners = new Set<() => void>();
@@ -31,37 +85,28 @@ function terrain(): HTMLImageElement {
   return terrainImage;
 }
 
+// Tints per hex: the unknown world darkened, wild land shaded, oases green.
+// Each kind is filled as one path, so neighbouring hexes show no seams.
+const TINTS: [TileKind, string][] = [
+  ["fog", "rgba(14, 11, 9, 0.67)"],
+  ["wild", "rgba(60, 42, 24, 0.18)"],
+  ["oasis", "rgba(70, 150, 90, 0.28)"],
+];
+const OVERLAY_K = 8; // pixels per hex width in the pre-drawn overlay
 const overlays = new Map<number, HTMLCanvasElement>();
-// One pixel per tile: fog darkened, wild land lightly shaded, oases tinted.
 function overlay(seed: number): HTMLCanvasElement {
   let c = overlays.get(seed);
   if (c) return c;
   c = document.createElement("canvas");
-  c.width = W;
-  c.height = H;
+  c.width = Math.ceil(WORLD_W * OVERLAY_K);
+  c.height = Math.ceil(WORLD_H * OVERLAY_K);
   const ctx = c.getContext("2d")!;
-  const img = ctx.createImageData(W, H);
-  for (let i = 0; i < W * H; i++) {
-    const k = tileKind(content, seed, i);
-    const o = i * 4;
-    if (k === "fog") {
-      img.data[o] = 14;
-      img.data[o + 1] = 11;
-      img.data[o + 2] = 9;
-      img.data[o + 3] = 170;
-    } else if (k === "wild") {
-      img.data[o] = 60;
-      img.data[o + 1] = 42;
-      img.data[o + 2] = 24;
-      img.data[o + 3] = 46;
-    } else if (k === "oasis") {
-      img.data[o] = 70;
-      img.data[o + 1] = 150;
-      img.data[o + 2] = 90;
-      img.data[o + 3] = 70;
-    }
+  for (const [kind, fill] of TINTS) {
+    ctx.beginPath();
+    for (let t = 0; t < W * H; t++) if (tileKind(content, seed, t) === kind) addHex(ctx, centreX(t) * OVERLAY_K, centreY(t) * OVERLAY_K, OVERLAY_K);
+    ctx.fillStyle = fill;
+    ctx.fill();
   }
-  ctx.putImageData(img, 0, 0);
   overlays.set(seed, c);
   return c;
 }
@@ -74,12 +119,12 @@ const regionCentroids = (() => {
     const t = content.map.terrain[i];
     if (t !== "P" && t !== "H" && t !== "M") continue;
     const a = acc.get(r) ?? { x: 0, y: 0, n: 0 };
-    a.x += i % W;
-    a.y += Math.floor(i / W);
+    a.x += centreX(i);
+    a.y += centreY(i);
     a.n++;
     acc.set(r, a);
   }
-  return [...acc.entries()].filter(([, a]) => a.n >= 25).map(([r, a]) => ({ name: content.map.regionList[r]!.name, x: a.x / a.n + 0.5, y: a.y / a.n + 0.5, n: a.n }));
+  return [...acc.entries()].filter(([, a]) => a.n >= 25).map(([r, a]) => ({ name: content.map.regionList[r]!.name, x: a.x / a.n, y: a.y / a.n, n: a.n }));
 })();
 
 function townPolityColor(townId: string | null): string {
@@ -90,7 +135,7 @@ function townPolityColor(townId: string | null): string {
 }
 
 // Each town's claim: a light wash of its owner's colour, and its border drawn
-// just inside its own tiles, so two neighbours' borders show side by side.
+// just inside its own hexes, so two neighbours' borders show side by side.
 // Kingdom frontiers run over them as a gold line.
 function claimColor(state: GameState, me: string, villageId: string): string | null {
   const v = state.villages[villageId];
@@ -100,71 +145,87 @@ function claimColor(state: GameState, me: string, villageId: string): string | n
   return factionColor(state.players[v.ownerId]?.factionId ?? "");
 }
 
-function drawTerritories(
-  ctx: CanvasRenderingContext2D,
-  state: GameState,
-  me: string,
-  tx0: number,
-  ty0: number,
-  tx1: number,
-  ty1: number,
-  sx: (x: number) => number,
-  sy: (y: number) => number,
-  zoom: number,
-) {
+type Claims = ReturnType<typeof territoryMap>;
+const claimGroups = new WeakMap<Claims, Map<number, number[]>>();
+function claimedByOwner(t: Claims): Map<number, number[]> {
+  let g = claimGroups.get(t);
+  if (g) return g;
+  g = new Map();
+  for (let i = 0; i < t.owner.length; i++) {
+    const o = t.owner[i]!;
+    if (o < 0) continue;
+    let list = g.get(o);
+    if (!list) g.set(o, (list = []));
+    list.push(i);
+  }
+  claimGroups.set(t, g);
+  return g;
+}
+
+interface Frame {
+  wpx: number;
+  hpx: number;
+  zoom: number;
+  x0: number;
+  y0: number;
+  x1: number;
+  y1: number;
+  sx: (x: number) => number;
+  sy: (y: number) => number;
+  visible: number[]; // hexes in view, row by row
+}
+
+const inView = (f: Frame, t: number) => {
+  const x = centreX(t);
+  const y = centreY(t);
+  return x > f.x0 - 1 && x < f.x1 + 1 && y > f.y0 - 1 && y < f.y1 + 1;
+};
+
+function drawTerritories(ctx: CanvasRenderingContext2D, f: Frame, state: GameState, me: string) {
   const t = territoryMap(state, content);
-  const colorOf = new Map<number, string | null>();
-  const color = (idx: number) => {
-    if (idx < 0) return null;
-    if (!colorOf.has(idx)) colorOf.set(idx, claimColor(state, me, t.ids[idx]!));
-    return colorOf.get(idx) ?? null;
-  };
-  const ownerAt = (x: number, y: number) => (x < 0 || y < 0 || x >= W || y >= H ? -1 : t.owner[y * W + x]!);
-  ctx.save();
-  ctx.globalAlpha = 0.16;
-  for (let y = ty0; y <= ty1; y++)
-    for (let x = tx0; x <= tx1; x++) {
-      const c = color(ownerAt(x, y));
-      if (!c) continue;
-      ctx.fillStyle = c;
-      ctx.fillRect(sx(x), sy(y), zoom + 0.5, zoom + 0.5);
-    }
-  ctx.globalAlpha = 0.9;
+  const groups = claimedByOwner(t);
+  const { zoom, sx, sy } = f;
   const lw = zoom >= 14 ? 2 : 1.25;
-  ctx.lineWidth = lw;
   const inset = lw / 2 + (zoom >= 14 ? 1 : 0);
-  for (let y = ty0; y <= ty1; y++)
-    for (let x = tx0; x <= tx1; x++) {
-      const o = ownerAt(x, y);
-      const c = color(o);
-      if (!c) continue;
-      ctx.strokeStyle = c;
-      ctx.beginPath();
-      const X = sx(x);
-      const Y = sy(y);
-      if (ownerAt(x, y - 1) !== o) {
-        ctx.moveTo(X, Y + inset);
-        ctx.lineTo(X + zoom, Y + inset);
+  const shrink = Math.max(0.7, 1 - inset / (zoom * HEX_RADIUS));
+  ctx.save();
+  for (const [idx, tiles] of groups) {
+    const id = t.ids[idx]!;
+    const color = claimColor(state, me, id);
+    if (!color) continue;
+    const shown = tiles.filter((x) => inView(f, x));
+    if (shown.length === 0) continue;
+    const mineHere = state.villages[id]?.ownerId === me;
+    ctx.globalAlpha = mineHere ? 0.22 : 0.16;
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    for (const x of shown) addHex(ctx, sx(centreX(x)), sy(centreY(x)), zoom);
+    ctx.fill();
+    ctx.beginPath();
+    for (const x of shown) {
+      const px = sx(centreX(x));
+      const py = sy(centreY(x));
+      for (let d = 0; d < 6; d++) {
+        const n = neighbourOf(x, d);
+        if (n === null || t.owner[n] !== idx) addEdge(ctx, px, py, zoom * shrink, d);
       }
-      if (ownerAt(x, y + 1) !== o) {
-        ctx.moveTo(X, Y + zoom - inset);
-        ctx.lineTo(X + zoom, Y + zoom - inset);
-      }
-      if (ownerAt(x - 1, y) !== o) {
-        ctx.moveTo(X + inset, Y);
-        ctx.lineTo(X + inset, Y + zoom);
-      }
-      if (ownerAt(x + 1, y) !== o) {
-        ctx.moveTo(X + zoom - inset, Y);
-        ctx.lineTo(X + zoom - inset, Y + zoom);
-      }
+    }
+    // Your own borders get a dark edge under the gold, so they stand apart
+    // from Greek cities and Hellene rivals, whose colours are close to it.
+    if (mineHere) {
+      ctx.globalAlpha = 0.85;
+      ctx.strokeStyle = "#1c120c";
+      ctx.lineWidth = lw + 2.5;
       ctx.stroke();
     }
-  if (Object.keys(state.kingdoms).length > 0 && zoom >= 6) {
+    ctx.globalAlpha = 0.95;
+    ctx.strokeStyle = mineHere ? "#ffd58a" : color;
+    ctx.lineWidth = mineHere ? lw + 0.5 : lw;
+    ctx.stroke();
+  }
+  if (Object.keys(state.kingdoms).length > 0 && zoom >= 8) {
     const kAt = new Map<number, string | null>();
-    const k = (x: number, y: number) => {
-      if (x < 0 || y < 0 || x >= W || y >= H) return null;
-      const tile = y * W + x;
+    const k = (tile: number) => {
       if (!kAt.has(tile)) kAt.set(tile, kingdomAtTile(state, content, tile));
       return kAt.get(tile) ?? null;
     };
@@ -172,18 +233,13 @@ function drawTerritories(
     ctx.lineWidth = zoom >= 14 ? 3 : 2;
     ctx.globalAlpha = 0.95;
     ctx.beginPath();
-    for (let y = ty0; y <= ty1; y++)
-      for (let x = tx0; x <= tx1; x++) {
-        const here = k(x, y);
-        if (k(x + 1, y) !== here) {
-          ctx.moveTo(sx(x + 1), sy(y));
-          ctx.lineTo(sx(x + 1), sy(y + 1));
-        }
-        if (k(x, y + 1) !== here) {
-          ctx.moveTo(sx(x), sy(y + 1));
-          ctx.lineTo(sx(x + 1), sy(y + 1));
-        }
+    for (const x of f.visible) {
+      const here = k(x);
+      for (const d of [0, 4, 5]) {
+        const n = neighbourOf(x, d);
+        if (n !== null && k(n) !== here) addEdge(ctx, sx(centreX(x)), sy(centreY(x)), zoom, d);
       }
+    }
     ctx.stroke();
   }
   ctx.restore();
@@ -195,45 +251,63 @@ interface ViewState {
   zoom: number;
 }
 
-function css(name: string, fallback: string) {
-  const v = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
-  return v || fallback;
-}
-
-function draw(ctx: CanvasRenderingContext2D, wpx: number, hpx: number, view: ViewState, state: GameState, me: string, selected: number | null, now: number) {
+function frameFor(wpx: number, hpx: number, view: ViewState): Frame {
   const { cx, cy, zoom } = view;
   const x0 = cx - wpx / 2 / zoom;
   const y0 = cy - hpx / 2 / zoom;
-  ctx.fillStyle = css("--sea-deep", "#22394a");
+  const x1 = x0 + wpx / zoom;
+  const y1 = y0 + hpx / zoom;
+  const ty0 = Math.max(0, Math.floor((y0 - 2 * HEX_RADIUS) / HEX_ROW));
+  const ty1 = Math.min(H - 1, Math.ceil(y1 / HEX_ROW));
+  const tx0 = Math.max(0, Math.floor(x0 - 1));
+  const tx1 = Math.min(W - 1, Math.ceil(x1));
+  const visible: number[] = [];
+  for (let y = ty0; y <= ty1; y++) for (let x = tx0; x <= tx1; x++) visible.push(y * W + x);
+  return { wpx, hpx, zoom, x0, y0, x1, y1, sx: (x) => (x - x0) * zoom, sy: (y) => (y - y0) * zoom, visible };
+}
+
+function draw(ctx: CanvasRenderingContext2D, wpx: number, hpx: number, view: ViewState, state: GameState, me: string, selected: number | null, now: number) {
+  const f = frameFor(wpx, hpx, view);
+  const { zoom, x0, y0, sx, sy } = f;
+  const seed = state.settings.seed;
+  ctx.fillStyle = "#22394a";
   ctx.fillRect(0, 0, wpx, hpx);
   const img = terrain();
   if (img.complete && img.naturalWidth > 0) {
-    ctx.imageSmoothingEnabled = zoom < TS;
-    ctx.drawImage(img, x0 * TS, y0 * TS, (wpx / zoom) * TS, (hpx / zoom) * TS, 0, 0, wpx, hpx);
+    ctx.imageSmoothingEnabled = zoom < HW;
+    ctx.drawImage(img, x0 * HW, y0 * HW, (wpx / zoom) * HW, (hpx / zoom) * HW, 0, 0, wpx, hpx);
   }
-  ctx.imageSmoothingEnabled = false;
-  ctx.drawImage(overlay(state.settings.seed), x0, y0, wpx / zoom, hpx / zoom, 0, 0, wpx, hpx);
 
-  const tx0 = Math.max(0, Math.floor(x0));
-  const ty0 = Math.max(0, Math.floor(y0));
-  const tx1 = Math.min(W - 1, Math.ceil(x0 + wpx / zoom));
-  const ty1 = Math.min(H - 1, Math.ceil(y0 + hpx / zoom));
-  const sx = (x: number) => (x - x0) * zoom;
-  const sy = (y: number) => (y - y0) * zoom;
+  // Tints: the pre-drawn overlay when zoomed out, crisp hexes when zoomed in.
+  if (zoom < 16) {
+    ctx.imageSmoothingEnabled = true;
+    ctx.drawImage(overlay(seed), x0 * OVERLAY_K, y0 * OVERLAY_K, (wpx / zoom) * OVERLAY_K, (hpx / zoom) * OVERLAY_K, 0, 0, wpx, hpx);
+  } else {
+    for (const [kind, fill] of TINTS) {
+      ctx.beginPath();
+      for (const t of f.visible) if (tileKind(content, seed, t) === kind) addHex(ctx, sx(centreX(t)), sy(centreY(t)), zoom);
+      ctx.fillStyle = fill;
+      ctx.fill();
+    }
+  }
 
-  drawTerritories(ctx, state, me, tx0, ty0, tx1, ty1, sx, sy, zoom);
+  drawTerritories(ctx, f, state, me);
 
   if (zoom >= 12) {
-    ctx.strokeStyle = "rgba(20, 14, 10, 0.18)";
+    ctx.strokeStyle = "rgba(20, 14, 10, 0.2)";
     ctx.lineWidth = 1;
     ctx.beginPath();
-    for (let x = tx0; x <= tx1 + 1; x++) {
-      ctx.moveTo(Math.round(sx(x)) + 0.5, 0);
-      ctx.lineTo(Math.round(sx(x)) + 0.5, hpx);
-    }
-    for (let y = ty0; y <= ty1 + 1; y++) {
-      ctx.moveTo(0, Math.round(sy(y)) + 0.5);
-      ctx.lineTo(wpx, Math.round(sy(y)) + 0.5);
+    for (const t of f.visible) {
+      const px = sx(centreX(t));
+      const py = sy(centreY(t));
+      addEdge(ctx, px, py, zoom, 0);
+      addEdge(ctx, px, py, zoom, 1);
+      addEdge(ctx, px, py, zoom, 5);
+      if (colOf(t) === 0) {
+        addEdge(ctx, px, py, zoom, 3);
+        addEdge(ctx, px, py, zoom, 2);
+        addEdge(ctx, px, py, zoom, 4);
+      }
     }
     ctx.stroke();
   }
@@ -255,75 +329,73 @@ function draw(ctx: CanvasRenderingContext2D, wpx: number, hpx: number, view: Vie
     }
   }
 
-  const ink = css("--ink-map", "#1c120c");
-  const mine = css("--accent", "#d6873f");
+  const ink = "#1c120c";
+  const mine = "#d6873f";
   const labels: { x: number; y: number; text: string; strong: boolean }[] = [];
-  for (let y = ty0; y <= ty1; y++) {
-    for (let x = tx0; x <= tx1; x++) {
-      const tile = y * W + x;
-      const vid = state.occupancy[tile];
-      const px = sx(x + 0.5);
-      const py = sy(y + 0.5);
-      const r = Math.max(2.5, zoom * 0.34);
-      if (vid) {
-        const v = state.villages[vid];
-        if (!v) continue;
-        const owner = state.players[v.ownerId];
-        ctx.lineWidth = Math.max(1, zoom * 0.07);
-        ctx.strokeStyle = ink;
-        if (v.kind === "town") {
-          ctx.fillStyle = townPolityColor(v.npc?.townId ?? null);
+  for (const tile of f.visible) {
+    const vid = state.occupancy[tile];
+    const px = sx(centreX(tile));
+    const py = sy(centreY(tile));
+    const r = Math.max(2.5, zoom * 0.3);
+    if (vid) {
+      const v = state.villages[vid];
+      if (!v) continue;
+      const owner = state.players[v.ownerId];
+      ctx.lineWidth = Math.max(1, zoom * 0.07);
+      ctx.strokeStyle = ink;
+      if (v.kind === "town") {
+        // A free city: a small hexagon in its polity's colour.
+        ctx.fillStyle = townPolityColor(v.npc?.townId ?? null);
+        ctx.beginPath();
+        addHex(ctx, px, py, Math.max(5, zoom * 0.62));
+        ctx.fill();
+        ctx.stroke();
+        ctx.fillStyle = "rgba(255,245,225,0.9)";
+        ctx.beginPath();
+        ctx.arc(px, py, r * 0.38, 0, Math.PI * 2);
+        ctx.fill();
+      } else if (v.kind === "camp") {
+        ctx.fillStyle = "#7a1f1c";
+        ctx.beginPath();
+        ctx.moveTo(px, py - r);
+        ctx.lineTo(px + r, py);
+        ctx.lineTo(px, py + r);
+        ctx.lineTo(px - r, py);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+      } else {
+        ctx.fillStyle = v.ownerId === me ? mine : factionColor(owner?.factionId ?? "");
+        ctx.beginPath();
+        ctx.arc(px, py, r, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        if (v.ownerId === me) {
+          ctx.strokeStyle = "rgba(255, 244, 220, 0.95)";
+          ctx.lineWidth = Math.max(1.5, zoom * 0.09);
           ctx.beginPath();
-          ctx.rect(px - r, py - r, r * 2, r * 2);
-          ctx.fill();
-          ctx.stroke();
-          ctx.fillStyle = "rgba(255,245,225,0.9)";
-          ctx.beginPath();
-          ctx.arc(px, py, r * 0.38, 0, Math.PI * 2);
-          ctx.fill();
-        } else if (v.kind === "camp") {
-          ctx.fillStyle = "#7a1f1c";
-          ctx.beginPath();
-          ctx.moveTo(px, py - r);
-          ctx.lineTo(px + r, py);
-          ctx.lineTo(px, py + r);
-          ctx.lineTo(px - r, py);
-          ctx.closePath();
-          ctx.fill();
-          ctx.stroke();
-        } else {
-          ctx.fillStyle = v.ownerId === me ? mine : factionColor(owner?.factionId ?? "");
-          ctx.beginPath();
-          ctx.arc(px, py, r, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.stroke();
-          if (v.ownerId === me) {
-            ctx.strokeStyle = "rgba(255, 244, 220, 0.95)";
-            ctx.lineWidth = Math.max(1.5, zoom * 0.09);
-            ctx.beginPath();
-            ctx.arc(px, py, r + Math.max(2, zoom * 0.1), 0, Math.PI * 2);
-            ctx.stroke();
-          }
-        }
-        if (zoom >= 26) labels.push({ x: px, y: py + r + 9, text: v.name, strong: v.ownerId === me });
-      } else if (zoom >= 9) {
-        const k = tileKind(content, state.settings.seed, tile);
-        if (k === "oasis") {
-          const o = state.oases[tile];
-          ctx.fillStyle = o?.ownerVillageId ? (state.villages[o.ownerVillageId]?.ownerId === me ? mine : "#2f6b45") : "#3f8f5a";
-          ctx.beginPath();
-          ctx.arc(px, py, Math.max(2, zoom * 0.18), 0, Math.PI * 2);
-          ctx.fill();
-        } else if (k === "wild" && zoom >= 20) {
-          ctx.strokeStyle = "rgba(50, 32, 18, 0.35)";
-          ctx.lineWidth = 1;
-          ctx.beginPath();
-          const q = zoom * 0.28;
-          ctx.moveTo(px - q, py + q);
-          ctx.lineTo(px, py - q);
-          ctx.lineTo(px + q, py + q);
+          ctx.arc(px, py, r + Math.max(2, zoom * 0.1), 0, Math.PI * 2);
           ctx.stroke();
         }
+      }
+      if (zoom >= 26) labels.push({ x: px, y: py + r + 10, text: v.name, strong: v.ownerId === me });
+    } else if (zoom >= 9) {
+      const k = tileKind(content, seed, tile);
+      if (k === "oasis") {
+        const o = state.oases[tile];
+        ctx.fillStyle = o?.ownerVillageId ? (state.villages[o.ownerVillageId]?.ownerId === me ? mine : "#2f6b45") : "#3f8f5a";
+        ctx.beginPath();
+        ctx.arc(px, py, Math.max(2, zoom * 0.16), 0, Math.PI * 2);
+        ctx.fill();
+      } else if (k === "wild" && zoom >= 20) {
+        ctx.strokeStyle = "rgba(50, 32, 18, 0.35)";
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        const q = zoom * 0.24;
+        ctx.moveTo(px - q, py + q);
+        ctx.lineTo(px, py - q);
+        ctx.lineTo(px + q, py + q);
+        ctx.stroke();
       }
     }
   }
@@ -338,10 +410,10 @@ function draw(ctx: CanvasRenderingContext2D, wpx: number, hpx: number, view: Vie
     const own = m.ownerId === me;
     if (!own && !ownTiles.has(m.toTile)) continue;
     const hostile = !own && (m.kind === "attack" || m.kind === "raid" || m.kind === "scout");
-    const ax = sx((m.fromTile % W) + 0.5);
-    const ay = sy(Math.floor(m.fromTile / W) + 0.5);
-    const bx = sx((m.toTile % W) + 0.5);
-    const by = sy(Math.floor(m.toTile / W) + 0.5);
+    const ax = sx(centreX(m.fromTile));
+    const ay = sy(centreY(m.fromTile));
+    const bx = sx(centreX(m.toTile));
+    const by = sy(centreY(m.toTile));
     const t = Math.min(1, Math.max(0, (now - m.departAt) / Math.max(1, m.arriveAt - m.departAt)));
     ctx.strokeStyle = hostile ? "rgba(200, 50, 50, 0.85)" : m.kind === "return" || m.kind === "tradeReturn" ? "rgba(120, 160, 90, 0.8)" : "rgba(255, 235, 200, 0.85)";
     ctx.lineWidth = 2;
@@ -374,13 +446,15 @@ function draw(ctx: CanvasRenderingContext2D, wpx: number, hpx: number, view: Vie
   }
 
   if (selected !== null) {
-    const x = selected % W;
-    const y = Math.floor(selected / W);
     ctx.strokeStyle = "#fff4dc";
     ctx.lineWidth = 2;
-    ctx.strokeRect(sx(x) + 1, sy(y) + 1, zoom - 2, zoom - 2);
+    ctx.beginPath();
+    addHex(ctx, sx(centreX(selected)), sy(centreY(selected)), zoom * 0.9);
+    ctx.stroke();
   }
 }
+
+const focusOn = (tile: number) => ({ cx: centreX(tile), cy: centreY(tile) });
 
 export function MapView() {
   const s = useSession();
@@ -390,12 +464,7 @@ export function MapView() {
   const canvas = useRef<HTMLCanvasElement>(null);
   const mini = useRef<HTMLCanvasElement>(null);
   const [size, setSize] = useState({ w: 800, h: 560 });
-  const [view, setView] = useState<ViewState>(() => {
-    const f = nav.mapFocus;
-    const fx = f !== null ? f % W : v.x;
-    const fy = f !== null ? Math.floor(f / W) : v.y;
-    return { cx: fx + 0.5, cy: fy + 0.5, zoom: 22 };
-  });
+  const [view, setView] = useState<ViewState>(() => ({ ...focusOn(nav.mapFocus ?? tileIndex(content, v.x, v.y)), zoom: 22 }));
   const [selected, setSelected] = useState<number | null>(nav.mapFocus);
   const [hover, setHover] = useState<{ x: number; y: number; px: number; py: number } | null>(null);
   const [, setLoaded] = useState(0);
@@ -415,7 +484,7 @@ export function MapView() {
 
   useEffect(() => {
     if (nav.mapFocus === null) return;
-    setView((vw) => ({ ...vw, cx: (nav.mapFocus! % W) + 0.5, cy: Math.floor(nav.mapFocus! / W) + 0.5 }));
+    setView((vw) => ({ ...vw, ...focusOn(nav.mapFocus!) }));
     setSelected(nav.mapFocus);
   }, [nav.mapFocus]);
 
@@ -440,7 +509,7 @@ export function MapView() {
     draw(ctx, size.w, size.h, view, s.state, s.active, selected, now);
   });
 
-  const miniScale = 180 / W;
+  const miniScale = 180 / WORLD_W;
   useEffect(() => {
     const c = mini.current;
     if (!c) return;
@@ -448,13 +517,14 @@ export function MapView() {
     const img = terrain();
     ctx.fillStyle = "#22394a";
     ctx.fillRect(0, 0, c.width, c.height);
-    if (img.complete && img.naturalWidth > 0) ctx.drawImage(img, 0, 0, c.width, c.height);
-    ctx.imageSmoothingEnabled = false;
-    ctx.drawImage(overlay(s.state.settings.seed), 0, 0, c.width, c.height);
+    if (img.complete && img.naturalWidth > 0) ctx.drawImage(img, 0, 0, (img.naturalWidth / HW) * miniScale, (img.naturalHeight / HW) * miniScale);
+    const ov = overlay(s.state.settings.seed);
+    ctx.drawImage(ov, 0, 0, (ov.width / OVERLAY_K) * miniScale, (ov.height / OVERLAY_K) * miniScale);
     for (const id of s.player.villageIds) {
       const t = s.state.villages[id]!;
+      const p = hexCentre(t.x, t.y);
       ctx.fillStyle = "#ffd28a";
-      ctx.fillRect(t.x * miniScale - 1.5, t.y * miniScale - 1.5, 3, 3);
+      ctx.fillRect(p.x * miniScale - 1.5, p.y * miniScale - 1.5, 3, 3);
     }
     ctx.strokeStyle = "#fff4dc";
     ctx.lineWidth = 1;
@@ -463,14 +533,15 @@ export function MapView() {
 
   const clampView = (vw: ViewState): ViewState => ({
     zoom: Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, vw.zoom)),
-    cx: Math.min(W, Math.max(0, vw.cx)),
-    cy: Math.min(H, Math.max(0, vw.cy)),
+    cx: Math.min(WORLD_W, Math.max(0, vw.cx)),
+    cy: Math.min(WORLD_H, Math.max(0, vw.cy)),
   });
 
   const tileAt = (clientX: number, clientY: number) => {
     const rect = canvas.current!.getBoundingClientRect();
-    const x = Math.floor(view.cx + (clientX - rect.left - size.w / 2) / view.zoom);
-    const y = Math.floor(view.cy + (clientY - rect.top - size.h / 2) / view.zoom);
+    const wx = view.cx + (clientX - rect.left - size.w / 2) / view.zoom;
+    const wy = view.cy + (clientY - rect.top - size.h / 2) / view.zoom;
+    const { x, y } = hexAtPoint(wx, wy);
     return x >= 0 && y >= 0 && x < W && y < H ? { x, y } : null;
   };
 
@@ -508,7 +579,7 @@ export function MapView() {
       const label = d.village.kind === "town" ? "Free city" : d.village.kind === "camp" ? d.village.label : `${d.village.ownerName}${d.village.isCapital ? " · capital" : ""}`;
       return { title: d.village.name, sub: `${label} · ${d.village.population} people`, layout: null };
     }
-    if (d.info.oasis) return { title: d.info.oasis.name, sub: d.oasis?.ownerVillageName ? `Held by ${d.oasis.ownerVillageName}` : claim ?? "Unclaimed oasis", layout: null };
+    if (d.info.oasis) return { title: d.info.oasis.name, sub: d.oasis?.ownerVillageName ? `Held by ${d.oasis.ownerVillageName}` : (claim ?? "Unclaimed oasis"), layout: null };
     if (d.info.kind === "valley") return { title: "Free valley", sub: [d.info.regionName, claim].filter(Boolean).join(" · ") || null, layout: d.info.layout?.fields ?? null };
     const names: Record<string, string> = { water: "Open water", fog: "Beyond the known world", wild: "Wild land", town: "City" };
     return { title: names[d.info.kind] ?? "Land", sub: [d.info.regionName, claim].filter(Boolean).join(" · ") || null, layout: null };
@@ -564,13 +635,15 @@ export function MapView() {
             }
           }}
           onPointerLeave={() => setHover(null)}
-          aria-label="World map. Drag to move, scroll or pinch to zoom, click a tile for details."
+          aria-label="World map. Drag to move, scroll or pinch to zoom, click a hex for details."
           role="img"
         />
         {hover && hoverInfo && (
           <div className="map-tip" style={{ left: hover.px + 18, top: hover.py + 14 }} role="tooltip">
             <div className="map-tip__head">
-              <span className="map-tip__xy">({hover.x}|{hover.y})</span>
+              <span className="map-tip__xy">
+                ({hover.x}|{hover.y})
+              </span>
               <span className="map-tip__name">{hoverInfo.title}</span>
             </div>
             {hoverInfo.sub && <div className="map-tip__sub">{hoverInfo.sub}</div>}
@@ -590,11 +663,11 @@ export function MapView() {
           <canvas
             ref={mini}
             className="map-mini"
-            width={Math.round(W * miniScale)}
-            height={Math.round(H * miniScale)}
+            width={Math.round(WORLD_W * miniScale)}
+            height={Math.round(WORLD_H * miniScale)}
             onPointerDown={(e) => {
               const rect = (e.target as HTMLCanvasElement).getBoundingClientRect();
-              const k = rect.width / (W * miniScale);
+              const k = rect.width / (WORLD_W * miniScale);
               setView((vw) => clampView({ ...vw, cx: (e.clientX - rect.left) / k / miniScale, cy: (e.clientY - rect.top) / k / miniScale }));
             }}
             aria-label="Overview map: click to jump"
@@ -607,7 +680,7 @@ export function MapView() {
             <button className="sq-btn" onClick={() => zoomAround(1 / 1.4)} aria-label="Zoom out">
               <Icon name="minus" size={18} />
             </button>
-            <button className="sq-btn" onClick={() => setView((vw) => ({ ...vw, cx: v.x + 0.5, cy: v.y + 0.5, zoom: Math.max(vw.zoom, 18) }))} aria-label={`Centre on ${v.name}`}>
+            <button className="sq-btn" onClick={() => setView((vw) => ({ ...vw, ...focusOn(tileIndex(content, v.x, v.y)), zoom: Math.max(vw.zoom, 18) }))} aria-label={`Centre on ${v.name}`}>
               <Icon name="home" size={18} />
             </button>
           </div>
@@ -617,10 +690,11 @@ export function MapView() {
               e.preventDefault();
               const m = goto.match(/(\d+)\s*[|,; ]\s*(\d+)/);
               if (!m) return;
-              const x = Number(m[1]);
-              const y = Number(m[2]);
-              setView((vw) => clampView({ ...vw, cx: x + 0.5, cy: y + 0.5, zoom: Math.max(vw.zoom, 20) }));
-              setSelected(tileIndex(content, Math.min(W - 1, x), Math.min(H - 1, y)));
+              const x = Math.min(W - 1, Number(m[1]));
+              const y = Math.min(H - 1, Number(m[2]));
+              const tile = tileIndex(content, x, y);
+              setView((vw) => clampView({ ...vw, ...focusOn(tile), zoom: Math.max(vw.zoom, 20) }));
+              setSelected(tile);
             }}
           >
             <input id="map-goto" value={goto} onChange={(e) => setGoto(e.target.value)} placeholder="x|y" aria-label="Go to coordinates" />

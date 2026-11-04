@@ -1,11 +1,12 @@
 import type { Content } from "../content/load.js";
 import type { GameState, Village } from "../core/types.js";
-import { tileIndex } from "./map.js";
+import { forEachHexWithin } from "./map.js";
 
 // ---------------------------------------------------------------------------
-// Territory. Every player town claims the tiles within townRadius fields of it
-// (4 by default), every free city those within cityRadius, an outlaw camp only
-// its own tile. Where claims overlap, the nearest town wins, then the older.
+// Territory. Every player town claims the hexes within townRadius steps of it
+// (4 rings by default), every free city those within cityRadius, an outlaw
+// camp only its own hex. Where claims overlap, the nearest town wins, then the
+// older.
 // Players cannot found towns inside someone else's territory, and a hero can
 // only annex an oasis inside the territory of the town it marches from.
 // ---------------------------------------------------------------------------
@@ -32,22 +33,12 @@ function build(state: GameState, content: Content): TerritoryMap {
   const ids: string[] = [];
   for (const v of villages) {
     const idx = ids.push(v.id) - 1;
-    const r = territoryRadius(content, v);
-    const R = Math.ceil(r);
-    for (let dy = -R; dy <= R; dy++) {
-      for (let dx = -R; dx <= R; dx++) {
-        const d = Math.hypot(dx, dy);
-        if (d > r + 1e-9) continue;
-        const x = v.x + dx;
-        const y = v.y + dy;
-        if (x < 0 || y < 0 || x >= W || y >= H) continue;
-        const t = y * W + x;
-        if (d < best[t]! - 1e-9) {
-          best[t] = d;
-          owner[t] = idx;
-        }
+    forEachHexWithin(content, v.x, v.y, territoryRadius(content, v), (t, d) => {
+      if (d < best[t]!) {
+        best[t] = d;
+        owner[t] = idx;
       }
-    }
+    });
   }
   return { count: villages.length, owner, ids };
 }
@@ -84,14 +75,8 @@ export function claimedTiles(state: GameState, content: Content, v: Village): nu
   const m = territoryMap(state, content);
   const idx = m.ids.indexOf(v.id);
   const out: number[] = [];
-  const r = Math.ceil(territoryRadius(content, v));
-  for (let dy = -r; dy <= r; dy++)
-    for (let dx = -r; dx <= r; dx++) {
-      const x = v.x + dx;
-      const y = v.y + dy;
-      if (x < 0 || y < 0 || x >= content.map.width || y >= content.map.height) continue;
-      const t = tileIndex(content, x, y);
-      if (m.owner[t] === idx) out.push(t);
-    }
+  forEachHexWithin(content, v.x, v.y, territoryRadius(content, v), (t) => {
+    if (m.owner[t] === idx) out.push(t);
+  });
   return out;
 }

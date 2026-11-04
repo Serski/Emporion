@@ -249,9 +249,13 @@ export type LandTerrain = (typeof LAND_TERRAIN)[number];
 
 export const mapSchema = z
   .object({
-    version: z.literal(1),
+    version: z.literal(2),
     source: z.string(),
-    tileSize: pos,
+    // Pointy-top hexagons in rows, odd rows shifted half a hex east. hexWidth
+    // is a hex's width (centre to centre along a row) in image pixels.
+    grid: z
+      .object({ shape: z.literal("hex"), orientation: z.literal("pointy"), offset: z.literal("odd-r"), hexWidth: pos })
+      .strict(),
     width: posInt,
     height: posInt,
     image: z.object({ file: z.string(), width: posInt, height: posInt }).strict(),

@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import {
+  distance,
   marchMs,
   merchantsNeeded,
   rallyPoint,
@@ -57,6 +58,7 @@ export function SendWindow({ tile, mission, onClose }: { tile?: number; mission?
   const speed = slowestSpeed(content, troops, withHero && heroHere ? content.hero.speed : null);
   const travel = toTile !== null && any ? marchMs(s.state, content, v, fromTile, toTile, speed) : null;
   const dist = toTile !== null ? travelDistance(content, fromTile, toTile) : null;
+  const steps = toTile !== null ? distance(content, fromTile, toTile) : null;
   const catapults = Object.entries(troops).some(([u]) => content.units[u]?.role === "catapult");
   const rp = rallyPoint(content, v);
   const aimSlots = kind === "attack" && catapults && rp ? (rp.level >= rp.twoTargetsFrom ? 2 : rp.level >= rp.chooseTargetFrom ? 1 : 0) : 0;
@@ -165,7 +167,11 @@ export function SendWindow({ tile, mission, onClose }: { tile?: number; mission?
               </label>
             ))}
           <div className="send-summary">
-            {dist !== null && <span>Distance {dist.toFixed(1)} fields</span>}
+            {dist !== null && steps !== null && (
+              <span>
+                {steps} hex{steps === 1 ? "" : "es"} away{dist > steps + 0.05 ? `, marched as ${dist.toFixed(1)} with the sea legs` : ""}
+              </span>
+            )}
             {travel !== null && (
               <span>
                 March {duration(travel)} · arrives {at(now + travel, s.state.settings.startedAt)}

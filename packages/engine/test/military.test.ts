@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   createVillage,
+  distance,
   isFreeValley,
   marchMs,
   tileIndex,
@@ -206,7 +207,8 @@ describe("raids and attacks", () => {
     const b = tileIndex(c, carthage.x, carthage.y);
     const w = waterShare(c, a, b);
     expect(w).toBeGreaterThan(0.6);
-    const d = Math.hypot(massalia.x - carthage.x, massalia.y - carthage.y);
+    const d = distance(c, a, b);
+    expect(Number.isInteger(d)).toBe(true);
     expect(travelDistance(c, a, b)).toBeCloseTo(d * (1 - w) + d * w * c.world.mapgen.seaTravelMultiplier, 6);
   });
 });

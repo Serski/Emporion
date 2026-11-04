@@ -29,7 +29,7 @@ export function NewGame({ onStart }: { onStart: (opts: NewGameOptions) => void }
       <header className="newgame__head">
         <img className="newgame__banner" src={art("banner-harbor")} alt="" />
         <div className="newgame__plaque">
-          <div className="eyebrow">A tile-map strategy world on MASSALIA's map · 300 BC</div>
+          <div className="eyebrow">A hex-map strategy world on MASSALIA's map · 300 BC</div>
           <h1 className="newgame__title">Found your house</h1>
           <p className="lede">
             Found a town on the coasts and hills of the western Mediterranean. Raise its fields and buildings, train an army, raid outlaw camps and the old cities,
@@ -92,7 +92,7 @@ export function NewGame({ onStart }: { onStart: (opts: NewGameOptions) => void }
           Found your town
         </button>
         <p className="small muted">
-          {content.map.width * content.map.height} tiles · {content.map.towns.length} historical cities · the game saves in this browser.
+          {(content.map.width * content.map.height).toLocaleString("en-US")} hexes · {content.map.towns.length} historical cities · the game saves in this browser.
         </p>
       </form>
     </div>

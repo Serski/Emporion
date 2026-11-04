@@ -1,4 +1,4 @@
-import { tileDetails, tileIndex, travelDistance, type MissionKind } from "@emporion/engine";
+import { distance, tileDetails, tileIndex, travelDistance, type MissionKind } from "@emporion/engine";
 import { content } from "../content";
 import { int, pct } from "../format";
 import { useNav } from "../nav";
@@ -12,6 +12,7 @@ export function TileWindow({ tile, onClose }: { tile: number; onClose: () => voi
   const d = tileDetails(s.state, content, tile);
   const v = s.state.villages[s.villageId]!;
   const from = tileIndex(content, v.x, v.y);
+  const steps = distance(content, from, tile);
   const dist = travelDistance(content, from, tile);
   const info = d.info;
   const polity = info.polity ? content.map.polities[info.polity] : undefined;
@@ -36,7 +37,8 @@ export function TileWindow({ tile, onClose }: { tile: number; onClose: () => voi
         </li>
         <li>
           <span>Distance</span>
-          {dist.toFixed(1)} fields from {v.name}
+          {steps} hex{steps === 1 ? "" : "es"} from {v.name}
+          {dist > steps + 0.05 ? `, marched as ${dist.toFixed(1)} with the sea legs` : ""}
         </li>
         {kingdom && (
           <li>
@@ -104,7 +106,10 @@ export function TileWindow({ tile, onClose }: { tile: number; onClose: () => voi
         </div>
       )}
       {info.kind === "valley" && !d.village && d.territory && d.territory.ownerId !== s.active && (
-        <p className="note note--warn">This valley lies inside the borders of {d.territory.villageName}. Only {d.territory.ownerName} may found a town here.</p>
+        <p className="note note--warn">
+          This valley lies inside the borders of {d.territory.villageName}.{" "}
+          {s.state.players[d.territory.ownerId]?.kind === "npc" ? "No one may found a town here." : `Only ${d.territory.ownerName} may found a town here.`}
+        </p>
       )}
       <div className="actions">
         {mine && (
