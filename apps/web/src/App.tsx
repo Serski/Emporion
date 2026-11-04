@@ -1,15 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { SideColumn, TopBar, ViewTabs, ToastHost } from "./chrome";
+import { BuilderSlots, HeroBadge, HomeTroops, Marches, QuickBar, ResourceBanner, ToastHost, ToolRail, TopBar, VillageSwitcher, ViewSwitch } from "./hud";
 import { NavContext, VIEWS, type ModalState, type Nav, type View } from "./nav";
 import { Session } from "./session";
 import { SessionContext } from "./ui";
 import { FieldsView } from "./views/FieldsView";
 import { TownView } from "./views/TownView";
 import { MapView } from "./views/MapView";
-import { ReportsView } from "./views/ReportsView";
-import { RankingsView } from "./views/RankingsView";
-import { HeroView } from "./views/HeroView";
-import { KingdomView } from "./views/KingdomView";
 import { NewGame } from "./views/NewGame";
 import { ModalHost } from "./windows/ModalHost";
 
@@ -47,10 +43,18 @@ export function App({ initial, onSession }: { initial: Session | null; onSession
   );
 }
 
+// The Travian Kingdoms arrangement: the view fills the screen; the stores,
+// the three views, the hero, the tools, the marches and the builders sit on
+// top of it at the edges.
 function GameShell({ session, onNewWorld }: { session: Session; onNewWorld: () => void }) {
   const [view, setView] = useState<View>(viewFromHash);
   const [modal, setModal] = useState<ModalState>(null);
   const [mapFocus, setMapFocus] = useState<number | null>(null);
+
+  // The new-game form may have been scrolled; the game opens at the top.
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   useEffect(() => {
     session.tick();
@@ -100,20 +104,37 @@ function GameShell({ session, onNewWorld }: { session: Session; onNewWorld: () =
 
   return (
     <NavContext.Provider value={nav}>
-      <div className="app">
+      <div className={`game game--${view}`}>
         <TopBar />
-        <ViewTabs />
-        <div className={`layout layout--${view}`}>
-          <main className="main" id="main">
+        <div className="play">
+          <main className="stage" id="main">
             {view === "fields" && <FieldsView />}
             {view === "town" && <TownView />}
             {view === "map" && <MapView />}
-            {view === "reports" && <ReportsView />}
-            {view === "rankings" && <RankingsView />}
-            {view === "hero" && <HeroView />}
-            {view === "kingdom" && <KingdomView />}
           </main>
-          <SideColumn />
+          <div className="hud">
+            <div className="hud__tl">
+              <VillageSwitcher />
+            </div>
+            <div className="hud__top">
+              <ViewSwitch />
+              <ResourceBanner />
+            </div>
+            <div className="hud__tr">
+              <HeroBadge />
+              <Marches />
+              <HomeTroops />
+            </div>
+            <div className="hud__left">
+              <ToolRail />
+            </div>
+            <div className="hud__bottom">
+              <BuilderSlots />
+            </div>
+            <div className="hud__br">
+              <QuickBar />
+            </div>
+          </div>
         </div>
         <ModalHost modal={modal} />
         <ToastHost />

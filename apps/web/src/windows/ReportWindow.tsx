@@ -89,7 +89,11 @@ function Battle({ d, me }: { d: BattleReportData; me: string }) {
         </div>
       )}
       <ul className="bullets">
-        {d.treasures > 0 && <li>{d.treasures} treasures taken.</li>}
+        {d.treasures > 0 && (
+          <li>
+            {d.treasures} treasure{d.treasures === 1 ? "" : "s"} taken.
+          </li>
+        )}
         {d.wall && (
           <li>
             Walls battered from level {d.wall.from} to {d.wall.to}.
@@ -147,17 +151,21 @@ function Scout({ d }: { d: ScoutReportData }) {
   );
 }
 
-export function ReportWindow({ id, onClose }: { id: string; onClose: () => void }) {
+// The report itself, for the single-report window and the reports window.
+export function ReportBody({ id }: { id: string }) {
   const s = useSession();
   const nav = useNav();
   const r = s.state.reports[id];
   useEffect(() => {
-    if (r && r.unread.includes(s.active)) s.game.markRead(s.active, id);
+    if (r && r.unread.includes(s.active)) {
+      s.game.markRead(s.active, id);
+      s.tick();
+    }
   }, [r, id, s]);
-  if (!r) return null;
+  if (!r) return <p className="empty">This report has been cleared away.</p>;
   const tile = r.data.type === "simple" ? r.data.tile : r.data.target.tile;
   return (
-    <Modal title={r.title} eyebrow={at(r.at, s.state.settings.startedAt)} onClose={onClose} wide={r.data.type !== "simple"}>
+    <div className="report">
       {r.data.type === "battle" && <Battle d={r.data} me={s.active} />}
       {r.data.type === "scout" && <Scout d={r.data} />}
       {r.data.type === "simple" && (
@@ -184,6 +192,17 @@ export function ReportWindow({ id, onClose }: { id: string; onClose: () => void 
           </button>
         </div>
       )}
+    </div>
+  );
+}
+
+export function ReportWindow({ id, onClose }: { id: string; onClose: () => void }) {
+  const s = useSession();
+  const r = s.state.reports[id];
+  if (!r) return null;
+  return (
+    <Modal title={r.title} eyebrow={at(r.at, s.state.settings.startedAt)} onClose={onClose} wide={r.data.type !== "simple"}>
+      <ReportBody id={id} />
     </Modal>
   );
 }

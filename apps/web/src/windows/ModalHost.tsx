@@ -2,10 +2,15 @@ import type { ModalState } from "../nav";
 import { useNav } from "../nav";
 import { useSession } from "../ui";
 import { BuildingWindow, ConstructWindow, FieldWindow } from "./BuildWindows";
+import { HeroWindow } from "./HeroWindow";
+import { KingdomWindow } from "./KingdomWindow";
 import { PlayersWindow } from "./PlayersWindow";
 import { ReportWindow } from "./ReportWindow";
+import { ReportsWindow } from "./ReportsWindow";
 import { MarketWindow, SendWindow } from "./SendWindow";
+import { StatsWindow } from "./StatsWindow";
 import { TileWindow } from "./TileWindow";
+import { TroopsWindow } from "./TroopsWindow";
 
 export function ModalHost({ modal }: { modal: ModalState }) {
   const s = useSession();
@@ -24,11 +29,21 @@ export function ModalHost({ modal }: { modal: ModalState }) {
       return <TileWindow tile={modal.tile} onClose={nav.close} />;
     case "report":
       return <ReportWindow id={modal.id} onClose={nav.close} />;
+    case "reports":
+      return <ReportsWindow onClose={nav.close} />;
     case "send":
       return <SendWindow tile={modal.tile} mission={modal.mission} onClose={nav.close} />;
     case "resources":
       return <MarketWindow toVillageId={modal.toVillageId} onClose={nav.close} />;
     case "players":
       return <PlayersWindow onClose={nav.close} />;
+    case "stats":
+      return <StatsWindow onClose={nav.close} />;
+    case "hero":
+      return <HeroWindow key={modal.tab ?? "hero"} tab={modal.tab} onClose={nav.close} />;
+    case "kingdom":
+      return <KingdomWindow onClose={nav.close} />;
+    case "troops":
+      return <TroopsWindow onClose={nav.close} />;
   }
 }

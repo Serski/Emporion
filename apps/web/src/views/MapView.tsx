@@ -1,8 +1,9 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { tileIndex, tileKind, type GameState } from "@emporion/engine";
+import { useEffect, useRef, useState } from "react";
+import { kingdomAtTile, territoryMap, tileDetails, tileIndex, tileKind, type GameState } from "@emporion/engine";
 import { content } from "../content";
+import { Icon } from "../icons";
 import { useNav } from "../nav";
-import { factionColor, useSession } from "../ui";
+import { ResIcon, factionColor, useSession } from "../ui";
 
 // ---------------------------------------------------------------------------
 // The world map: MASSALIA's hand-drawn terrain under a square-tile grid.
@@ -88,6 +89,106 @@ function townPolityColor(townId: string | null): string {
   return (region?.polity && content.map.polities[region.polity]?.color) || "#b9a88a";
 }
 
+// Each town's claim: a light wash of its owner's colour, and its border drawn
+// just inside its own tiles, so two neighbours' borders show side by side.
+// Kingdom frontiers run over them as a gold line.
+function claimColor(state: GameState, me: string, villageId: string): string | null {
+  const v = state.villages[villageId];
+  if (!v || v.kind === "camp") return null;
+  if (v.kind === "town") return townPolityColor(v.npc?.townId ?? null);
+  if (v.ownerId === me) return "#e8b04a";
+  return factionColor(state.players[v.ownerId]?.factionId ?? "");
+}
+
+function drawTerritories(
+  ctx: CanvasRenderingContext2D,
+  state: GameState,
+  me: string,
+  tx0: number,
+  ty0: number,
+  tx1: number,
+  ty1: number,
+  sx: (x: number) => number,
+  sy: (y: number) => number,
+  zoom: number,
+) {
+  const t = territoryMap(state, content);
+  const colorOf = new Map<number, string | null>();
+  const color = (idx: number) => {
+    if (idx < 0) return null;
+    if (!colorOf.has(idx)) colorOf.set(idx, claimColor(state, me, t.ids[idx]!));
+    return colorOf.get(idx) ?? null;
+  };
+  const ownerAt = (x: number, y: number) => (x < 0 || y < 0 || x >= W || y >= H ? -1 : t.owner[y * W + x]!);
+  ctx.save();
+  ctx.globalAlpha = 0.16;
+  for (let y = ty0; y <= ty1; y++)
+    for (let x = tx0; x <= tx1; x++) {
+      const c = color(ownerAt(x, y));
+      if (!c) continue;
+      ctx.fillStyle = c;
+      ctx.fillRect(sx(x), sy(y), zoom + 0.5, zoom + 0.5);
+    }
+  ctx.globalAlpha = 0.9;
+  const lw = zoom >= 14 ? 2 : 1.25;
+  ctx.lineWidth = lw;
+  const inset = lw / 2 + (zoom >= 14 ? 1 : 0);
+  for (let y = ty0; y <= ty1; y++)
+    for (let x = tx0; x <= tx1; x++) {
+      const o = ownerAt(x, y);
+      const c = color(o);
+      if (!c) continue;
+      ctx.strokeStyle = c;
+      ctx.beginPath();
+      const X = sx(x);
+      const Y = sy(y);
+      if (ownerAt(x, y - 1) !== o) {
+        ctx.moveTo(X, Y + inset);
+        ctx.lineTo(X + zoom, Y + inset);
+      }
+      if (ownerAt(x, y + 1) !== o) {
+        ctx.moveTo(X, Y + zoom - inset);
+        ctx.lineTo(X + zoom, Y + zoom - inset);
+      }
+      if (ownerAt(x - 1, y) !== o) {
+        ctx.moveTo(X + inset, Y);
+        ctx.lineTo(X + inset, Y + zoom);
+      }
+      if (ownerAt(x + 1, y) !== o) {
+        ctx.moveTo(X + zoom - inset, Y);
+        ctx.lineTo(X + zoom - inset, Y + zoom);
+      }
+      ctx.stroke();
+    }
+  if (Object.keys(state.kingdoms).length > 0 && zoom >= 6) {
+    const kAt = new Map<number, string | null>();
+    const k = (x: number, y: number) => {
+      if (x < 0 || y < 0 || x >= W || y >= H) return null;
+      const tile = y * W + x;
+      if (!kAt.has(tile)) kAt.set(tile, kingdomAtTile(state, content, tile));
+      return kAt.get(tile) ?? null;
+    };
+    ctx.strokeStyle = "#f2d16b";
+    ctx.lineWidth = zoom >= 14 ? 3 : 2;
+    ctx.globalAlpha = 0.95;
+    ctx.beginPath();
+    for (let y = ty0; y <= ty1; y++)
+      for (let x = tx0; x <= tx1; x++) {
+        const here = k(x, y);
+        if (k(x + 1, y) !== here) {
+          ctx.moveTo(sx(x + 1), sy(y));
+          ctx.lineTo(sx(x + 1), sy(y + 1));
+        }
+        if (k(x, y + 1) !== here) {
+          ctx.moveTo(sx(x), sy(y + 1));
+          ctx.lineTo(sx(x + 1), sy(y + 1));
+        }
+      }
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
 interface ViewState {
   cx: number;
   cy: number;
@@ -119,6 +220,8 @@ function draw(ctx: CanvasRenderingContext2D, wpx: number, hpx: number, view: Vie
   const ty1 = Math.min(H - 1, Math.ceil(y0 + hpx / zoom));
   const sx = (x: number) => (x - x0) * zoom;
   const sy = (y: number) => (y - y0) * zoom;
+
+  drawTerritories(ctx, state, me, tx0, ty0, tx1, ty1, sx, sy, zoom);
 
   if (zoom >= 12) {
     ctx.strokeStyle = "rgba(20, 14, 10, 0.18)";
@@ -294,7 +397,7 @@ export function MapView() {
     return { cx: fx + 0.5, cy: fy + 0.5, zoom: 22 };
   });
   const [selected, setSelected] = useState<number | null>(nav.mapFocus);
-  const [hover, setHover] = useState<{ x: number; y: number } | null>(null);
+  const [hover, setHover] = useState<{ x: number; y: number; px: number; py: number } | null>(null);
   const [, setLoaded] = useState(0);
   const [goto, setGoto] = useState("");
   const drag = useRef<{ x: number; y: number; cx: number; cy: number; moved: boolean } | null>(null);
@@ -397,16 +500,19 @@ export function MapView() {
     return () => el.removeEventListener("wheel", onWheel);
   }, []);
 
-  const legend = useMemo(
-    () => [
-      { cls: "lg-me", text: "Your towns" },
-      { cls: "lg-player", text: "Other players (faction colour)" },
-      { cls: "lg-city", text: "Free cities (polity colour)" },
-      { cls: "lg-camp", text: "Outlaw camps" },
-      { cls: "lg-oasis", text: "Oases" },
-    ],
-    [],
-  );
+  const hoverInfo = (() => {
+    if (!hover) return null;
+    const d = tileDetails(s.state, content, tileIndex(content, hover.x, hover.y));
+    const claim = d.territory && d.territory.villageId !== d.village?.id ? `Territory of ${d.territory.villageName}` : null;
+    if (d.village) {
+      const label = d.village.kind === "town" ? "Free city" : d.village.kind === "camp" ? d.village.label : `${d.village.ownerName}${d.village.isCapital ? " · capital" : ""}`;
+      return { title: d.village.name, sub: `${label} · ${d.village.population} people`, layout: null };
+    }
+    if (d.info.oasis) return { title: d.info.oasis.name, sub: d.oasis?.ownerVillageName ? `Held by ${d.oasis.ownerVillageName}` : claim ?? "Unclaimed oasis", layout: null };
+    if (d.info.kind === "valley") return { title: "Free valley", sub: [d.info.regionName, claim].filter(Boolean).join(" · ") || null, layout: d.info.layout?.fields ?? null };
+    const names: Record<string, string> = { water: "Open water", fog: "Beyond the known world", wild: "Wild land", town: "City" };
+    return { title: names[d.info.kind] ?? "Land", sub: [d.info.regionName, claim].filter(Boolean).join(" · ") || null, layout: null };
+  })();
 
   return (
     <div className="map-view">
@@ -439,7 +545,9 @@ export function MapView() {
               if (Math.abs(dx) + Math.abs(dy) > 4) dr.moved = true;
               if (dr.moved) setView((vw) => clampView({ ...vw, cx: dr.cx - dx / vw.zoom, cy: dr.cy - dy / vw.zoom }));
             }
-            setHover(tileAt(e.clientX, e.clientY));
+            const t = tileAt(e.clientX, e.clientY);
+            const rect = wrap.current!.getBoundingClientRect();
+            setHover(t && e.pointerType === "mouse" ? { ...t, px: e.clientX - rect.left, py: e.clientY - rect.top } : null);
           }}
           onPointerUp={(e) => {
             pointers.current.delete(e.pointerId);
@@ -459,59 +567,68 @@ export function MapView() {
           aria-label="World map. Drag to move, scroll or pinch to zoom, click a tile for details."
           role="img"
         />
-        <div className="map-hud map-hud--tl">
-          <span className="map-coords">{hover ? `(${hover.x}|${hover.y})` : `(${Math.floor(view.cx)}|${Math.floor(view.cy)})`}</span>
+        {hover && hoverInfo && (
+          <div className="map-tip" style={{ left: hover.px + 18, top: hover.py + 14 }} role="tooltip">
+            <div className="map-tip__head">
+              <span className="map-tip__xy">({hover.x}|{hover.y})</span>
+              <span className="map-tip__name">{hoverInfo.title}</span>
+            </div>
+            {hoverInfo.sub && <div className="map-tip__sub">{hoverInfo.sub}</div>}
+            {hoverInfo.layout && (
+              <div className="map-tip__layout">
+                {content.resourceIds.map((r) => (
+                  <span key={r}>
+                    <ResIcon id={r} size={16} />
+                    {hoverInfo.layout![r] ?? 0}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+        <div className="map-controls">
+          <canvas
+            ref={mini}
+            className="map-mini"
+            width={Math.round(W * miniScale)}
+            height={Math.round(H * miniScale)}
+            onPointerDown={(e) => {
+              const rect = (e.target as HTMLCanvasElement).getBoundingClientRect();
+              const k = rect.width / (W * miniScale);
+              setView((vw) => clampView({ ...vw, cx: (e.clientX - rect.left) / k / miniScale, cy: (e.clientY - rect.top) / k / miniScale }));
+            }}
+            aria-label="Overview map: click to jump"
+            role="img"
+          />
+          <div className="map-controls__col">
+            <button className="sq-btn" onClick={() => zoomAround(1.4)} aria-label="Zoom in">
+              <Icon name="plus" size={18} />
+            </button>
+            <button className="sq-btn" onClick={() => zoomAround(1 / 1.4)} aria-label="Zoom out">
+              <Icon name="minus" size={18} />
+            </button>
+            <button className="sq-btn" onClick={() => setView((vw) => ({ ...vw, cx: v.x + 0.5, cy: v.y + 0.5, zoom: Math.max(vw.zoom, 18) }))} aria-label={`Centre on ${v.name}`}>
+              <Icon name="home" size={18} />
+            </button>
+          </div>
+          <form
+            className="map-goto"
+            onSubmit={(e) => {
+              e.preventDefault();
+              const m = goto.match(/(\d+)\s*[|,; ]\s*(\d+)/);
+              if (!m) return;
+              const x = Number(m[1]);
+              const y = Number(m[2]);
+              setView((vw) => clampView({ ...vw, cx: x + 0.5, cy: y + 0.5, zoom: Math.max(vw.zoom, 20) }));
+              setSelected(tileIndex(content, Math.min(W - 1, x), Math.min(H - 1, y)));
+            }}
+          >
+            <input id="map-goto" value={goto} onChange={(e) => setGoto(e.target.value)} placeholder="x|y" aria-label="Go to coordinates" />
+            <button className="sq-btn" type="submit" aria-label="Go">
+              <Icon name="right" size={16} />
+            </button>
+          </form>
         </div>
-        <div className="map-hud map-hud--tr">
-          <button className="icon-btn" onClick={() => zoomAround(1.4)} aria-label="Zoom in">
-            +
-          </button>
-          <button className="icon-btn" onClick={() => zoomAround(1 / 1.4)} aria-label="Zoom out">
-            −
-          </button>
-          <button className="icon-btn icon-btn--text" onClick={() => setView((vw) => ({ ...vw, cx: v.x + 0.5, cy: v.y + 0.5, zoom: Math.max(vw.zoom, 18) }))} aria-label={`Centre on ${v.name}`}>
-            ⌂
-          </button>
-        </div>
-        <canvas
-          ref={mini}
-          className="map-mini"
-          width={Math.round(W * miniScale)}
-          height={Math.round(H * miniScale)}
-          onPointerDown={(e) => {
-            const rect = (e.target as HTMLCanvasElement).getBoundingClientRect();
-            setView((vw) => clampView({ ...vw, cx: (e.clientX - rect.left) / miniScale, cy: (e.clientY - rect.top) / miniScale }));
-          }}
-          aria-label="Overview map: click to jump"
-          role="img"
-        />
-      </div>
-      <div className="map-bar">
-        <form
-          className="inline-form"
-          onSubmit={(e) => {
-            e.preventDefault();
-            const m = goto.match(/(\d+)\s*[|,; ]\s*(\d+)/);
-            if (!m) return;
-            const x = Number(m[1]);
-            const y = Number(m[2]);
-            setView((vw) => clampView({ ...vw, cx: x + 0.5, cy: y + 0.5, zoom: Math.max(vw.zoom, 20) }));
-            setSelected(tileIndex(content, Math.min(W - 1, x), Math.min(H - 1, y)));
-          }}
-        >
-          <input id="map-goto" value={goto} onChange={(e) => setGoto(e.target.value)} placeholder="Go to x|y" aria-label="Go to coordinates" />
-          <button className="btn" type="submit">
-            Go
-          </button>
-        </form>
-        <ul className="legend">
-          {legend.map((l) => (
-            <li key={l.cls}>
-              <span className={`legend__mark ${l.cls}`} aria-hidden />
-              {l.text}
-            </li>
-          ))}
-        </ul>
       </div>
     </div>
   );

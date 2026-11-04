@@ -33,4 +33,6 @@ mkdirSync(out, { recursive: true });
 writeFileSync(join(out, "index.html"), page);
 cpSync(join(root, "public", "assets"), join(out, "assets"), { recursive: true });
 cpSync(join(root, "public", "map"), join(out, "map"), { recursive: true });
+cpSync(join(root, "public", "art"), join(out, "art"), { recursive: true });
+cpSync(join(root, "public", "portraits"), join(out, "portraits"), { recursive: true });
 console.log(`dist-artifact/index.html ${(page.length / 1024).toFixed(0)} KB`);

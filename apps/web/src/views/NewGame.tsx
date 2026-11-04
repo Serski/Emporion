@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { content } from "../content";
 import type { NewGameOptions } from "../session";
-import { UnitIcon } from "../ui";
+import { Band, UnitIcon, art } from "../ui";
 
 const SPEEDS = [
   { v: 1, label: "×1", note: "a real-time world: fields take hours" },
@@ -14,19 +14,29 @@ const SPEEDS = [
 export function NewGame({ onStart }: { onStart: (opts: NewGameOptions) => void }) {
   const playable = content.factionList.filter((f) => f.playable);
   const [name, setName] = useState("Protis");
-  const [factionId, setFaction] = useState(playable[0]!.id);
+  // MASSALIA's own people first: the founder Protis was a Phocaean Greek.
+  const [factionId, setFaction] = useState((playable.find((f) => f.id === "hellenes") ?? playable[0]!).id);
   const [speed, setSpeed] = useState(10);
   const [rivals, setRivals] = useState(5);
   const [raids, setRaids] = useState(true);
   return (
     <div className="newgame">
+      <div className="newgame__bar">
+        <img className="coin" src={art("lion")} alt="" width={44} height={44} />
+        <span className="wordmark">Emporion</span>
+      </div>
+      <Band />
       <header className="newgame__head">
-        <div className="eyebrow">A tile-map strategy world on MASSALIA's map, 300 BC</div>
-        <h1 className="newgame__title">Emporion</h1>
-        <p className="lede">
-          Found a town on the coasts and hills of the western Mediterranean. Raise its fields and buildings, train an army, raid outlaw camps and the
-          old cities, send settlers to new valleys, and take your rivals' colonies.
-        </p>
+        <img className="newgame__banner" src={art("banner-harbor")} alt="" />
+        <div className="newgame__plaque">
+          <div className="eyebrow">A tile-map strategy world on MASSALIA's map · 300 BC</div>
+          <h1 className="newgame__title">Found your house</h1>
+          <p className="lede">
+            Found a town on the coasts and hills of the western Mediterranean. Raise its fields and buildings, train an army, raid outlaw camps and the old cities,
+            send settlers to new valleys, and take your rivals' colonies. Your hero is the head of your house: marry, raise heirs, and pass the sword down the
+            generations.
+          </p>
+        </div>
       </header>
       <form
         className="newgame__form"
@@ -78,7 +88,7 @@ export function NewGame({ onStart }: { onStart: (opts: NewGameOptions) => void }
             <input type="checkbox" checked={raids} onChange={(e) => setRaids(e.target.checked)} /> Outlaws raid careless towns
           </label>
         </div>
-        <button className="btn btn--primary btn--hero" type="submit">
+        <button className="btn btn--buy btn--hero" type="submit">
           Found your town
         </button>
         <p className="small muted">

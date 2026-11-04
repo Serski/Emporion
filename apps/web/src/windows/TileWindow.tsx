@@ -44,6 +44,12 @@ export function TileWindow({ tile, onClose }: { tile: number; onClose: () => voi
             {kingdom.name}
           </li>
         )}
+        {d.territory && d.territory.villageId !== d.village?.id && (
+          <li>
+            <span>Territory</span>
+            {d.territory.villageName} ({d.territory.ownerId === s.active ? "yours" : d.territory.ownerName})
+          </li>
+        )}
         {d.village && (
           <>
             <li>
@@ -96,6 +102,9 @@ export function TileWindow({ tile, onClose }: { tile: number; onClose: () => voi
             </p>
           )}
         </div>
+      )}
+      {info.kind === "valley" && !d.village && d.territory && d.territory.ownerId !== s.active && (
+        <p className="note note--warn">This valley lies inside the borders of {d.territory.villageName}. Only {d.territory.ownerName} may found a town here.</p>
       )}
       <div className="actions">
         {mine && (
@@ -155,7 +164,7 @@ export function TileWindow({ tile, onClose }: { tile: number; onClose: () => voi
             )}
           </>
         )}
-        {info.kind === "valley" && !d.village && (
+        {info.kind === "valley" && !d.village && (!d.territory || d.territory.ownerId === s.active) && (
           <button className="btn btn--primary" onClick={() => send("settle")}>
             Found a town here
           </button>

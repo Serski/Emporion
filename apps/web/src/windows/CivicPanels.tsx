@@ -97,7 +97,7 @@ export function HeroonPanel() {
     <section className="subpanel">
       <div className="subpanel__head">
         <h3 className="subpanel__title">Oases</h3>
-        <button className="btn" onClick={() => nav.go("hero")}>
+        <button className="btn" onClick={() => nav.open({ kind: "hero" })}>
           Hero
         </button>
       </div>
@@ -136,7 +136,7 @@ export function TreasuryPanel() {
     <section className="subpanel">
       <div className="subpanel__head">
         <h3 className="subpanel__title">Treasures</h3>
-        <button className="btn" onClick={() => nav.go("kingdom")}>
+        <button className="btn" onClick={() => nav.open({ kind: "kingdom" })}>
           Kingdom
         </button>
       </div>

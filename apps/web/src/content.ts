@@ -1,5 +1,6 @@
 import { parseContent, type ContentBundle } from "@emporion/engine";
 import buildings from "../../../content/buildings.json";
+import family from "../../../content/family.json";
 import hero from "../../../content/hero.json";
 import kingdoms from "../../../content/kingdoms.json";
 import map from "../../../content/map/tiles.json";
@@ -15,6 +16,7 @@ export const content = parseContent({
   buildings,
   hero,
   kingdoms,
+  family,
   map,
   factions: Object.keys(factionFiles)
     .sort()

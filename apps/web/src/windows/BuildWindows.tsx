@@ -9,10 +9,10 @@ import {
   type Resources,
   type Village,
 } from "@emporion/engine";
-import { content } from "../content";
 import { duration, int, pct } from "../format";
 import { useNav } from "../nav";
-import { Cost, Modal, useSession } from "../ui";
+import { asset, content } from "../content";
+import { Cost, Modal, art, useSession } from "../ui";
 import { ArmoryPanel, MusterPanel, ResearchPanel, TrainPanel } from "./MilitaryPanels";
 import { ExpansionPanel, FestivalPanel, HeroonPanel, MarketPanel, TreasuryPanel } from "./CivicPanels";
 
@@ -42,7 +42,7 @@ export function UpgradeBlock({ plan, onRun, verb = "Raise to level" }: { plan: B
         <span className="upgrade__title">
           {verb} {plan.toLevel}
         </span>
-        <button className="btn btn--primary" disabled={!plan.check.ok} onClick={onRun}>
+        <button className="btn btn--buy" disabled={!plan.check.ok} onClick={onRun}>
           {plan.fromLevel === 0 && plan.target.kind === "building" ? "Build" : "Upgrade"}
         </button>
       </div>
@@ -117,6 +117,17 @@ function Effects({ def, level }: { def: BuildingDef; level: number }) {
   );
 }
 
+// Painted MASSALIA banners over the windows of the buildings that have one.
+const BANNERS: Record<string, string> = {
+  agora: "banner-market",
+  theatre: "banner-dionysia",
+  hippodrome: "banner-olympic",
+  harbor: "banner-harbor",
+  prytaneion: "banner-court",
+  treasury: "banner-ledger",
+  oikist_house: "banner-politics",
+};
+
 export function FieldWindow({ index, onClose }: { index: number; onClose: () => void }) {
   const s = useSession();
   const v = s.state.villages[s.villageId]!;
@@ -127,7 +138,15 @@ export function FieldWindow({ index, onClose }: { index: number; onClose: () => 
   const now = curveAt(def.production, f.level) * speed;
   const next = curveAt(def.production, plan.toLevel) * speed;
   return (
-    <Modal title={`${def.name}`} eyebrow={`Level ${f.level}${plan.fromLevel > f.level ? ` · building to ${plan.fromLevel}` : ""}`} onClose={onClose}>
+    <Modal
+      title={`${def.name}`}
+      eyebrow={`Level ${f.level}${plan.fromLevel > f.level ? ` · building to ${plan.fromLevel}` : ""}`}
+      onClose={onClose}
+      image={(() => {
+        const icon = content.resources.find((r) => r.id === f.resource)?.icon;
+        return icon ? asset(icon) : undefined;
+      })()}
+    >
       <p className="lede">{def.description}</p>
       <div className="effects">
         <div>
@@ -162,7 +181,14 @@ export function BuildingWindow({ slot, onClose }: { slot: number; onClose: () =>
   const trains = faction.units.some((u) => u.building.includes(def.id));
   const e = def.effects;
   return (
-    <Modal title={def.name} eyebrow={`Level ${level}${plan.fromLevel > level ? ` · building to ${plan.fromLevel}` : ""}`} onClose={onClose} wide={trains || !!e.rallyPoint || !!e.research || !!e.armory || !!e.merchants}>
+    <Modal
+      title={def.name}
+      eyebrow={`Level ${level}${plan.fromLevel > level ? ` · building to ${plan.fromLevel}` : ""}`}
+      onClose={onClose}
+      image={art(`b-${def.id}`)}
+      banner={BANNERS[def.id] ? art(BANNERS[def.id]!) : undefined}
+      wide={trains || !!e.rallyPoint || !!e.research || !!e.armory || !!e.merchants}
+    >
       <p className="lede">{def.description}</p>
       <Effects def={def} level={level} />
       <UpgradeBlock plan={plan} onRun={() => s.run((g, t) => g.upgradeBuilding(s.active, v.id, slot, t), `${def.name} is being raised.`)} />
@@ -221,6 +247,7 @@ export function ConstructWindow({ slot, onClose }: { slot: number; onClose: () =
       <ul className="build-list">
         {shown.map((o) => (
           <li key={o.def.id} className={`build-option${o.available ? "" : " is-locked"}`}>
+            <img className="build-option__art" src={art(`b-${o.def.id}`)} alt="" width={72} height={72} loading="lazy" />
             <div className="build-option__text">
               <h3 className="build-option__name">{o.def.name}</h3>
               <p className="small">{o.def.description}</p>
@@ -229,7 +256,7 @@ export function ConstructWindow({ slot, onClose }: { slot: number; onClose: () =
             <div className="build-option__act">
               <Cost cost={o.plan.cost} have={v.resources} time={o.plan.durationMs} />
               <button
-                className="btn btn--primary"
+                className="btn btn--buy"
                 disabled={!o.available || !o.plan.check.ok}
                 title={o.plan.check.ok ? undefined : o.plan.check.message}
                 onClick={() => {
