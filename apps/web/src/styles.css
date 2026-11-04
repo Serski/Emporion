@@ -1301,181 +1301,56 @@ input[type="range"] {
   gap: 8px;
   padding: 196px 24px 104px;
 }
-.fields-ring {
-  --ring: clamp(280px, min(100cqh - 330px, 100cqw - 600px), 680px);
-  position: relative;
-  flex: none;
-  width: var(--ring);
-  max-width: 100%;
-  aspect-ratio: 1;
-}
-.fields-ring__land {
-  position: absolute;
-  inset: 2.5%;
-  border-radius: 50%;
-  background:
-    radial-gradient(circle at 50% 45%, transparent 0 18%, rgba(255, 236, 196, 0.05) 18.4% 18.9%, transparent 19.3%),
-    radial-gradient(circle at 50% 45%, var(--land-1) 0%, var(--land-2) 46%, var(--land-3) 80%, #1b1710 100%);
-  box-shadow:
-    0 0 0 1px var(--bronze),
-    0 0 0 6px var(--ink),
-    0 0 0 7px var(--rule),
-    inset 0 -30px 70px rgba(0, 0, 0, 0.45),
-    0 24px 60px var(--shade);
-}
-.fields-ring__land::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  background: repeating-radial-gradient(circle at 50% 50%, transparent 0 22px, rgba(255, 240, 200, 0.035) 22px 23px);
-}
-.fields-ring__town {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 28%;
-  aspect-ratio: 1;
-  transform: translate(-50%, -50%);
-  padding: 0;
-  border: 0;
-  border-radius: 50%;
-  background: var(--panel);
-  box-shadow:
-    0 0 0 3px var(--bronze),
-    0 0 0 7px var(--ink),
-    0 0 0 8px var(--bronze),
-    0 14px 30px var(--shade);
-}
-.fields-ring__town img {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border-radius: 50%;
-  transition: filter 0.2s;
-}
-.fields-ring__town:hover img {
-  filter: brightness(1.12);
-}
-.fields-ring__town-name {
-  position: absolute;
-  left: 50%;
-  bottom: -14px;
-  transform: translateX(-50%);
-  padding: 2px 10px;
-  border: 1px solid var(--bronze);
-  background: var(--panel);
-  box-shadow: 0 4px 10px var(--shade);
-  font-family: var(--font-display);
-  font-size: clamp(0.56rem, calc(var(--ring) / 52), 0.68rem);
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  line-height: 1.4;
-  text-transform: uppercase;
-  white-space: nowrap;
-  color: var(--cream);
-}
-.fields-ring__town:hover .fields-ring__town-name {
-  border-color: var(--flame);
-  color: var(--flame);
-}
-.plot {
-  position: absolute;
-  width: 13.5%;
-  aspect-ratio: 1;
-  transform: translate(-50%, -50%);
-  display: grid;
-  place-items: center;
-  padding: 0;
-  border: 0;
-  border-radius: 50%;
-  background: radial-gradient(circle at 42% 36%, var(--plot-hi), var(--plot) 58%, var(--plot-lo));
-  box-shadow:
-    0 0 0 2px var(--rule),
-    0 0 0 3px rgba(0, 0, 0, 0.5),
-    0 8px 14px rgba(0, 0, 0, 0.45);
-  transition: transform 0.12s;
-}
-.plot:hover {
-  transform: translate(-50%, -50%) scale(1.08);
-  box-shadow:
-    0 0 0 2px var(--flame),
-    0 0 0 3px rgba(0, 0, 0, 0.5),
-    0 8px 14px rgba(0, 0, 0, 0.45);
-}
-.plot .res-icon {
-  width: 58%;
-  height: 58%;
-  filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.55));
-}
-.plot--timber {
+/* The resource fields as cards, laid out like the town's building sites:
+   each field's resource on its own ground, the level badge, the yield. */
+.field--timber {
   --plot-hi: #6f8a45;
   --plot: #455a2b;
   --plot-lo: #23301a;
 }
-.plot--stone {
+.field--stone {
   --plot-hi: #9b968c;
   --plot: #69655e;
   --plot-lo: #36332f;
 }
-.plot--iron {
+.field--iron {
   --plot-hi: #7a8ea3;
   --plot: #4c5d70;
   --plot-lo: #263240;
 }
-.plot--grain {
+.field--grain {
   --plot-hi: #d6b066;
   --plot: #a7833c;
   --plot-lo: #5f4820;
 }
-.plot__level {
-  position: absolute;
-  right: -3px;
-  bottom: -3px;
-  min-width: 25px;
-  height: 25px;
-  padding: 0 6px;
-  display: grid;
-  place-items: center;
-  border: 2px solid var(--ink);
-  background: var(--panel);
-  color: var(--cream);
-  font-family: var(--font-display);
-  font-size: 0.8rem;
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-  box-shadow: 0 0 0 1px var(--rule);
+.estate {
+  --site: clamp(64px, min((100cqw - 620px) / 6.7, (100cqh - 380px) / 3.45), 124px);
 }
-.plot.is-ready .plot__level {
-  background: var(--bronze-hi);
-  color: var(--on-bronze);
-  box-shadow: 0 0 0 1px var(--flame);
+.estate .polis__grid {
+  grid-template-columns: repeat(6, var(--site));
 }
-.plot__next {
-  position: absolute;
-  top: -9px;
-  left: 50%;
-  transform: translateX(-50%);
-  padding: 0 6px;
-  border: 1px solid var(--ink);
-  background: var(--flame);
-  color: var(--on-bronze);
-  font-size: 0.7rem;
-  font-weight: 700;
-  white-space: nowrap;
+.site--field {
+  background:
+    radial-gradient(circle at 50% 34%, color-mix(in srgb, var(--plot-hi) 70%, transparent), transparent 62%),
+    linear-gradient(160deg, var(--plot), var(--plot-lo));
 }
-.plot.is-building {
-  animation: building 2.4s ease-in-out infinite;
+.site__art.site__art--field {
+  inset: 9% 20% 30%;
+  width: 60%;
+  height: 61%;
+  object-fit: contain;
+  filter: drop-shadow(0 6px 8px rgba(0, 0, 0, 0.5));
 }
-@keyframes building {
-  50% {
-    box-shadow:
-      0 0 0 2px var(--flame),
-      0 0 0 7px color-mix(in srgb, var(--flame) 35%, transparent),
-      0 8px 14px rgba(0, 0, 0, 0.45);
-  }
+.site__rate {
+  display: block;
+  font-size: 0.86em;
+  font-weight: 500;
+  color: var(--good);
 }
+.site--town {
+  border-color: var(--bronze);
+}
+
 .fields-view__caption {
   margin: 0;
   font-family: var(--font-display);
@@ -1520,8 +1395,9 @@ input[type="range"] {
   margin-bottom: calc(var(--site) * 0.41);
   background:
     radial-gradient(ellipse at 50% 40%, rgba(214, 135, 63, 0.08), transparent 70%),
-    linear-gradient(#1d1611, #120e0b);
+    linear-gradient(rgba(29, 22, 17, 0.9), rgba(18, 14, 11, 0.92));
   box-shadow: 0 20px 50px var(--shade);
+  backdrop-filter: blur(2px);
 }
 .polis__grid {
   position: relative;
@@ -1697,6 +1573,34 @@ input[type="range"] {
 }
 .site--muster.site--empty .site__name {
   opacity: 1;
+}
+
+/* The map behind the resources and the town: the land around the town,
+   dimmed so the cards stay the thing to read. */
+.map-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+.map-backdrop canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  filter: saturate(0.85) brightness(0.82);
+}
+.map-backdrop::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 50% 55%, rgba(13, 10, 9, 0.1) 0%, rgba(13, 10, 9, 0.35) 60%, rgba(13, 10, 9, 0.7) 100%),
+    linear-gradient(180deg, rgba(13, 10, 9, 0.5), transparent 20%, transparent 82%, rgba(13, 10, 9, 0.5));
+}
+.fields-view,
+.town-view {
+  z-index: 1;
 }
 
 /* --- the world map ------------------------------------------------------------------------ */
@@ -3272,9 +3176,6 @@ input[type="range"] {
   .fields-view {
     padding: 0 var(--gutter-r) 0 var(--gutter-l);
   }
-  .fields-ring {
-    --ring: min(100cqw - 40px, 560px);
-  }
   .town-view {
     overflow: visible;
     padding: 0 var(--gutter-r) 0 var(--gutter-l);
@@ -3284,6 +3185,12 @@ input[type="range"] {
   }
   .polis__grid {
     grid-template-columns: repeat(4, var(--site));
+  }
+  .estate {
+    --site: min((100cqw - 32px - 32px - 16px) / 3, 124px);
+  }
+  .estate .polis__grid {
+    grid-template-columns: repeat(3, var(--site));
   }
   .polis__ring {
     padding: 16px 16px calc(var(--site) * 0.41 + 12px);

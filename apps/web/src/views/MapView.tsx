@@ -851,3 +851,57 @@ export function MapView() {
     </div>
   );
 }
+
+// The world map behind the town's two views: one frame of the map, centred on
+// the town on screen and dimmed, so the fields and the buildings sit over the
+// land around them. It is redrawn when the town, the size or the art changes,
+// and every few seconds of play for the borders and marches.
+const BACKDROP_ZOOM = 24;
+
+export function MapBackdrop() {
+  const s = useSession();
+  const v = s.state.villages[s.villageId]!;
+  const wrap = useRef<HTMLDivElement>(null);
+  const canvas = useRef<HTMLCanvasElement>(null);
+  const [size, setSize] = useState({ w: 0, h: 0 });
+  const [loaded, setLoaded] = useState(0);
+
+  useEffect(() => {
+    const f = () => setLoaded((n) => n + 1);
+    terrainListeners.add(f);
+    terrain();
+    return () => {
+      terrainListeners.delete(f);
+    };
+  }, []);
+
+  useEffect(() => {
+    const el = wrap.current;
+    if (!el) return;
+    const ro = new ResizeObserver(() => setSize({ w: el.clientWidth, h: el.clientHeight }));
+    ro.observe(el);
+    setSize({ w: el.clientWidth, h: el.clientHeight });
+    return () => ro.disconnect();
+  }, []);
+
+  const tile = tileIndex(content, v.x, v.y);
+  const beat = Math.floor(s.version / 16);
+  useEffect(() => {
+    const c = canvas.current;
+    if (!c || size.w === 0 || size.h === 0) return;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    c.width = Math.round(size.w * dpr);
+    c.height = Math.round(size.h * dpr);
+    const ctx = c.getContext("2d")!;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const view = clampTo({ ...focusOn(tile), zoom: BACKDROP_ZOOM }, size.w, size.h);
+    draw(ctx, size.w, size.h, view, s.state, s.active, null, s.now());
+    // The session is read at draw time; the beat, the town and the size decide when.
+  }, [size.w, size.h, tile, loaded, beat]);
+
+  return (
+    <div className="map-backdrop" ref={wrap} aria-hidden="true">
+      <canvas ref={canvas} />
+    </div>
+  );
+}

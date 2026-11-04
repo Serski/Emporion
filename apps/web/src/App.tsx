@@ -5,7 +5,7 @@ import { Session } from "./session";
 import { SessionContext } from "./ui";
 import { FieldsView } from "./views/FieldsView";
 import { TownView } from "./views/TownView";
-import { MapView } from "./views/MapView";
+import { MapBackdrop, MapView } from "./views/MapView";
 import { NewGame } from "./views/NewGame";
 import { ModalHost } from "./windows/ModalHost";
 
@@ -108,6 +108,7 @@ function GameShell({ session, onNewWorld }: { session: Session; onNewWorld: () =
         <TopBar />
         <div className="play">
           <main className="stage" id="main">
+            {view !== "map" && <MapBackdrop />}
             {view === "fields" && <FieldsView />}
             {view === "town" && <TownView />}
             {view === "map" && <MapView />}
