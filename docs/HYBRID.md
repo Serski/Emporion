@@ -13,20 +13,27 @@ EMPORION was built to MASSALIA's conventions so the two can merge: TypeScript en
 | family portraits (`avatar-20-*`, `avatar-30-*`, `wife-*`, children, by age stage) | `apps/web/public/portraits/`, named in `content/family.json` |
 | family rules (`family.ts`: marriage, children, death, succession, adoption, regency) | `packages/engine/src/social/family.ts` with `content/family.json`, seated on the hero |
 | the calendar's seasons and BC years | `packages/engine/src/world/calendar.ts` (`world.calendar` in content) |
-| polities and their colours | free cities on the map wear their polity's colour; tile windows name the region and polity |
+| polities, their colours and crests, and which power owns each region (`politics2.json`) | each power with towns is one NPC state (`massalia/states.ts`) owning its cities; the map washes its land in its colour inside one border; tile windows show its crest |
+| the agora's vendor bands and seasonal coefficients, and the players' market (`buildings.json` vendor, `market.ts`) | `content/massalia/market.json` and `massalia/market.ts`: the purse of drachmae, 17 goods, stalls with escrow and a tax |
+| the household's people (`people.json`) | `content/massalia/people.json` and `massalia/house.ts`, hired at the Agora, paid each season, fed from the capital |
+| the character sheet, composure, age and the daily routine (`character.ts`, `composure.ts`, `age.ts`, `routines.ts`, `content/routines`) | `content/massalia/profile.json` and `massalia/profile.ts`: four stats, traits, ladders, one routine a season |
+| the hulls and the naval check (`content/military/ships.json`, `reach.ts`, `mapActions.ts`) | `content/massalia/ships.json` and `massalia/sea.ts`: sea crossings need hulls and naval supplies; a town's fleet drives off landings |
+| the slipway's crafts | `content/massalia/crafting.json` and `massalia/crafting.ts`: the Harbor's slips and the physician's bench; the altar in the Barracks |
+| hostile acts (`content/politics/interactions.json`, `interactions.ts`) | `content/massalia/intrigue.json` and `massalia/intrigue.ts`: poison, the assassin, the cure, the spymaster's posture |
+| goods, people, stat and season art, the agora banner | `apps/web/public/assets/` and `apps/web/public/art/` |
 
 ## Where MASSALIA's systems go
 
 | MASSALIA system | Plug-in point here | Notes |
 | --- | --- | --- |
-| Houses, characters, family, heirs (`family.ts`, `character.ts`) | done: `Player.house` and `social/family.ts` | The head of the house is the hero: age weakens him, his wife's trait helps him, and at his death the heir becomes the hero with part of the experience. Still to come from MASSALIA: characters' skills and offices, dowry negotiation, marriages between players' houses. |
+| Houses, characters, family, heirs (`family.ts`, `character.ts`) | done: `Player.house`, `Player.profile`, `social/family.ts` and `massalia/profile.ts` | The head of the house is the hero, with MASSALIA's four stats, composure, traits and daily routine. Age weakens him, his wife's trait helps him, and at his death the heir becomes the hero with part of the experience and the stats. Still to come from MASSALIA: characters' offices, dowry negotiation, marriages between players' houses. |
 | Festivals, Olympiad, Dionysia (`festival.ts`, `olympiad.ts`, `leagueFestivals.ts`) | the Theatre's `festivals` in `content/buildings.json`, the `FestivalJob` on the village timeline | World-wide festivals fit a new `ScheduledKind` in `world/settle.ts` (like `npcRaids`) that every player can join. |
-| Calendar and seasons, one season per real day (`calendar.ts`, seasonal coefficients in `buildings.json`) | the calendar is in (`world/calendar.ts`); for seasonal production, `village/stats.ts → villageRates` for the multiplier and `village/timeline.ts → nextEventAt` for the season boundary | Seasons name the date and age the family today. Add the boundary as a timeline event and seasonal accrual stays exact, which is better than MASSALIA's "current season for the whole window". |
-| More goods (wine, olive oil, salt, wool…) | `content/resources.json`: resources and fields are data | Add buildings that produce them through `effects.production`, and add them to unit costs. Only one resource may be food. |
-| Market, vendor bands, player listings (`market.ts`) | the Agora (`economy`, `sendResources`) | A vendor or exchange module can sit beside the merchants; prices belong in content. |
+| Calendar and seasons, one season per real day (`calendar.ts`, seasonal coefficients in `buildings.json`) | the calendar is in (`world/calendar.ts`); for seasonal production, `village/stats.ts → villageRates` for the multiplier and `village/timeline.ts → nextEventAt` for the season boundary | Seasons name the date, age the family, set the agora's prices, pay the people and give the head his day. Seasonal production is still to come: add the boundary as a timeline event and accrual stays exact, which is better than MASSALIA's "current season for the whole window". |
+| More goods (wine, olive oil, salt, wool…) | done as the house's goods (`content/massalia/market.json`) | They are bought, sold, crafted and spent by the house. A town's four resources stay its own, and only one may be food. Buildings that produce goods are still to come. |
+| Market, vendor bands, player listings (`market.ts`) | done: `massalia/market.ts`, at the Agora | The merchants still carry resources between towns (`sendResources`). |
 | Oligarchy, elections, League, Koinon, government (`oligarchy.ts`, `league*.ts`, `koinon.ts`) | `social/kingdoms.ts` | Kingdoms are the simplest political layer (king, governors, tribute, influence, victory points); MASSALIA's institutions can replace or extend it. |
 | Round-based battle with missiles, melee, morale and pursuit (`battle.ts`) | `setBattleResolver()` in `military/arrivals.ts` | The resolver takes stacks (unit, count, armory level), heroes, wall and morale and returns the winner and both loss rates. Wrap MASSALIA's `resolveBattle` behind that interface. |
-| Ships, pentekonters, triremes, coastal regions (`ships.json`) | `mapgen.seaTravelMultiplier`, `TileInfo.coastal`, the Harbor | Naval units would set their own sea speed, and ports can require coastal hexes. |
+| Ships, pentekonters, triremes, coastal regions (`ships.json`) | done: `massalia/sea.ts`, the Harbor (coastal towns only) | Hulls carry and escort; sea legs still cost `mapgen.seaTravelMultiplier`. Sea battles between fleets are still to come. |
 | Raids on towns, strikes, holdings | the free cities (village `kind: "town"`) and outlaw camps | Their garrisons come from population (`npc.towns`), never from MASSALIA's server-side military numbers. |
 
 ## A server
@@ -50,6 +57,6 @@ The client's `Session` (`apps/web/src/session.ts`) is the local host; a remote h
 
 1. Put the engine and content into the MASSALIA monorepo as `packages/strategy` and `content/strategy`, or keep this repo and import `@massalia/shared` here.
 2. Add a server route per command, plus the snapshot table.
-3. Houses and family on the hero: done. Next, characters and offices.
+3. Houses and family on the hero, the sheet, the day, the household, the agora, crafts, the altar, ships, plots and states: done. Next, characters' offices and the states' own turns.
 4. The calendar is in; next, seasons as production boundaries and festivals as world events.
 5. Decide whether kingdoms or MASSALIA's institutions run the politics.

@@ -37,6 +37,7 @@ Every push to `main` runs the gate on GitHub and, if it passes, publishes the cl
 - `engine/src/military/` — combat math (`combat.ts`, swappable via `setBattleResolver`), sending (`movements.ts`), arrivals (`arrivals.ts`).
 - `engine/src/economy/` — construction, training, research, armory, festivals.
 - `engine/src/social/` — hero, the house and family (`family.ts`), kingdoms, reports.
+- `engine/src/massalia/` — the MASSALIA pack, with its content in `content/massalia/`: purse, goods, people and the season's turn (`house.ts`), the agora and stalls (`market.ts`), the sheet and the day (`profile.ts`), crafts and the altar (`crafting.ts`), ships and sea crossings (`sea.ts`), plots (`intrigue.ts`), states (`states.ts`), read models (`views.ts`).
 - `engine/src/world/calendar.ts` — seasons and years; `world/territory.ts` — the borders every town claims.
 - `engine/src/views.ts` — read models for clients. `engine/src/game.ts` — the command facade.
 - `apps/web/src/session.ts` — the local host (clock, save, hot-seat). `hud.tsx` — the top bar and the HUD over the view. `views/` — the three full-screen views. `windows/` — every window.
