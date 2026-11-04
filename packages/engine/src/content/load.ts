@@ -13,6 +13,7 @@ import {
   type LayoutDef,
   type MapDef,
   type MassaliaDef,
+  type DepositDef,
   type OasisTypeDef,
   type ParsedBundle,
   type PersonTypeDef,
@@ -44,6 +45,7 @@ export interface Content {
   unitFaction: Record<string, string>;
   layouts: Record<string, LayoutDef>;
   oasisTypes: Record<string, OasisTypeDef>;
+  deposits: Record<string, DepositDef>;
   hero: HeroDef;
   kingdoms: KingdomsDef;
   family: FamilyDef;
@@ -299,6 +301,15 @@ export function parseContent(raw: ContentBundle): Content {
   if (!buildings[crafting.altar.building]) fail(`altar: unknown building ${crafting.altar.building}`);
   for (const o of crafting.altar.offerings) if (!isGood(o.good)) fail(`altar: unknown good ${o.good}`);
 
+  // What the valleys may hold.
+  const deposits: Record<string, DepositDef> = {};
+  for (const d of world.mapgen.deposits) {
+    if (deposits[d.id]) fail(`deposit: duplicate ${d.id}`);
+    deposits[d.id] = d;
+    if (!isGood(d.good)) fail(`deposit ${d.id}: unknown good ${d.good}`);
+    for (const pol of d.polities ?? []) if (!map.polities[pol]) fail(`deposit ${d.id}: unknown state ${pol}`);
+  }
+
   const ships: Record<string, ShipDef> = {};
   for (const sh of shipsFile.ships) {
     ships[sh.id] = sh;
@@ -328,6 +339,7 @@ export function parseContent(raw: ContentBundle): Content {
     unitFaction,
     layouts,
     oasisTypes,
+    deposits,
     hero,
     kingdoms,
     family,

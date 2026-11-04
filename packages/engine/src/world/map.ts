@@ -1,5 +1,5 @@
 import type { Content } from "../content/load.js";
-import type { LandTerrain, LayoutDef, OasisTypeDef, TownDef } from "../content/schema.js";
+import type { DepositDef, LandTerrain, LayoutDef, OasisTypeDef, TownDef } from "../content/schema.js";
 import { hash01, weightedChoice } from "../core/rng.js";
 
 // ---------------------------------------------------------------------------
@@ -30,6 +30,7 @@ export interface TileInfo {
   polity: string | null;
   layout: LayoutDef | null;
   oasis: OasisTypeDef | null;
+  deposit: DepositDef | null;
   town: TownDef | null;
   coastal: boolean;
 }
@@ -39,6 +40,7 @@ const KIND_CODES: TileKind[] = ["water", "fog", "valley", "oasis", "wild", "town
 interface TileCache {
   kind: Uint8Array; // index into KIND_CODES
   variant: Int16Array; // layout or oasis index, -1 otherwise
+  deposit: Int8Array; // index into mapgen.deposits for a valley, -1 otherwise
 }
 
 const caches = new WeakMap<Content, Map<number, TileCache>>();
@@ -81,7 +83,65 @@ function buildCache(content: Content, seed: number): TileCache {
       kind[i] = 4;
     }
   }
-  return { kind, variant };
+  return { kind, variant, deposit: depositsFor(content, seed, kind) };
+}
+
+// A valley may hold one deposit, drawn from the seed: each deposit's chance
+// times its terrain weight, where its latitude, distance to the sea and states
+// allow it.
+function depositsFor(content: Content, seed: number, kind: Uint8Array): Int8Array {
+  const { map } = content;
+  const defs = content.world.mapgen.deposits;
+  const n = map.width * map.height;
+  const out = new Int8Array(n).fill(-1);
+  if (defs.length === 0) return out;
+  const reach = Math.max(0, ...defs.map((d) => d.seaWithin ?? 0));
+  const toSea = reach > 0 ? seaDistances(content, reach) : null;
+  for (let i = 0; i < n; i++) {
+    if (kind[i] !== 2) continue;
+    const land = map.terrain[i] as LandTerrain;
+    const row = Math.floor(i / map.width) / map.height;
+    const r = content.mapRegion[i] ?? -1;
+    const polity = r >= 0 ? map.regionList[r]?.polity : undefined;
+    let roll = hash01(seed, i, 41);
+    for (let k = 0; k < defs.length; k++) {
+      const d = defs[k]!;
+      if (d.southOf !== undefined && row < d.southOf) continue;
+      if (d.seaWithin !== undefined && (toSea![i]! < 0 || toSea![i]! > d.seaWithin)) continue;
+      if (d.polities && (!polity || !d.polities.includes(polity))) continue;
+      const p = d.chance * (d.terrain[land] ?? 0);
+      if (roll < p) {
+        out[i] = k;
+        break;
+      }
+      roll -= p;
+    }
+  }
+  return out;
+}
+
+// Steps from each hex to the nearest open sea, up to `reach` (-1 beyond it).
+function seaDistances(content: Content, reach: number): Int16Array {
+  const n = content.map.width * content.map.height;
+  const dist = new Int16Array(n).fill(-1);
+  let frontier: number[] = [];
+  for (let i = 0; i < n; i++) {
+    if (content.map.terrain[i] !== "S") continue;
+    dist[i] = 0;
+    frontier.push(i);
+  }
+  for (let step = 1; step <= reach && frontier.length; step++) {
+    const next: number[] = [];
+    for (const t of frontier) {
+      for (const nb of hexNeighbours(content, t)) {
+        if (dist[nb] !== -1) continue;
+        dist[nb] = step;
+        next.push(nb);
+      }
+    }
+    frontier = next;
+  }
+  return dist;
 }
 
 function cache(content: Content, seed: number): TileCache {
@@ -272,6 +332,11 @@ export function tileOasis(content: Content, seed: number, tile: number): OasisTy
   return content.world.mapgen.oases[c.variant[tile]!] ?? null;
 }
 
+export function tileDeposit(content: Content, seed: number, tile: number): DepositDef | null {
+  const k = cache(content, seed).deposit[tile]!;
+  return k >= 0 ? (content.world.mapgen.deposits[k] ?? null) : null;
+}
+
 export function isLand(content: Content, tile: number): boolean {
   const t = content.map.terrain[tile];
   return t === "P" || t === "H" || t === "M";
@@ -297,6 +362,7 @@ export function tileInfo(content: Content, seed: number, tile: number): TileInfo
     polity: region?.polity ?? null,
     layout: tileLayout(content, seed, tile),
     oasis: tileOasis(content, seed, tile),
+    deposit: tileDeposit(content, seed, tile),
     town: content.townAtTile.get(tile) ?? null,
     coastal: isCoastal(content, tile),
   };

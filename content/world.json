@@ -67,7 +67,15 @@
     "oasisRegenHours": 48,
     "minSpacing": 2,
     "seaTravelMultiplier": 1.5,
-    "startArea": { "base": 3, "perPlayer": 1.5 }
+    "startArea": { "base": 3, "perPlayer": 1.5 },
+    "_deposits": "EMPORION's own: MASSALIA's map names no deposits. Vines grow south of row 56 (about 45.5°N), olives south of row 68 (about 44°N) and near the sea; tin, lead and marble lie in the lands that worked them in antiquity. A valley holds one at most.",
+    "deposits": [
+      { "id": "vines", "name": "Vines", "good": "wine", "chance": 0.1, "terrain": { "P": 1, "H": 1.3, "M": 0 }, "southOf": 0.3 },
+      { "id": "olives", "name": "Olive groves", "good": "oliveoil", "chance": 0.12, "terrain": { "P": 1, "H": 1, "M": 0 }, "southOf": 0.37, "seaWithin": 8 },
+      { "id": "tin", "name": "Tin", "good": "tin", "chance": 0.18, "terrain": { "P": 0.3, "H": 1, "M": 1.3 }, "polities": ["dumnonii", "osismii", "callaeci", "astures", "lusitani", "vettones", "etruscans"] },
+      { "id": "lead", "name": "Lead", "good": "lead", "chance": 0.2, "terrain": { "P": 0.3, "H": 1, "M": 1.3 }, "polities": ["oretani", "bastetani", "contestani", "deitani", "turdetani", "dobunni", "durotriges"] },
+      { "id": "marble", "name": "Marble", "good": "marble", "chance": 0.22, "terrain": { "P": 0, "H": 1, "M": 1.5 }, "polities": ["ligurians", "etruscans", "convenae", "massyli", "sparta", "epirus"] }
+    ]
   },
   "npc": {
     "camps": {

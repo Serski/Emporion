@@ -401,6 +401,25 @@ export const worldSchema = z
         minSpacing: nonNeg,
         seaTravelMultiplier: pos, // time multiplier for the share of a march over water
         startArea: z.object({ base: nonNeg, perPlayer: nonNeg }).strict(),
+        _deposits: z.string().optional(),
+        // What a valley may hold beyond its fields: vines, olives, ore and stone
+        // that a town on it can work with the matching building. One per hex.
+        deposits: z
+          .array(
+            z
+              .object({
+                id: idSchema,
+                name: z.string(),
+                good: z.string(), // the MASSALIA good it yields
+                chance: z.number().min(0).max(1), // per valley, before the terrain weight
+                terrain: z.record(z.enum(LAND_TERRAIN), nonNeg),
+                southOf: z.number().min(0).max(1).optional(), // only rows this far south (row ÷ height) or more
+                seaWithin: posInt.optional(), // only this many hexes or fewer from the sea
+                polities: z.array(z.string()).optional(), // only on these states' land
+              })
+              .strict(),
+          )
+          .default([]),
       })
       .strict(),
     npc: z
@@ -758,6 +777,7 @@ export type FamilyTraitDef = FamilyDef["traits"][number];
 export type WorldDef = z.infer<typeof worldSchema>;
 export type LayoutDef = WorldDef["mapgen"]["layouts"][number];
 export type OasisTypeDef = WorldDef["mapgen"]["oases"][number];
+export type DepositDef = WorldDef["mapgen"]["deposits"][number];
 export type CampTierDef = WorldDef["npc"]["camps"]["tiers"][number];
 export type MapDef = z.infer<typeof mapSchema>;
 export type TownDef = MapDef["towns"][number];
