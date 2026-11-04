@@ -4,6 +4,7 @@ import {
   calendarAt,
   familyMods,
   familyView,
+  heroView,
   parseContent,
   personAge,
   rankings,
@@ -161,6 +162,36 @@ describe("the house", () => {
     expect(h.headKind).toBe("forced");
     expect(h.head.name).not.toBe("Protis");
     expect(g.state.players[pid]!.hero!.name).toBe(h.head.name);
+  });
+
+  it("founds the house at the age and with the face the player chose, and the older start comes with its head start", () => {
+    const g = game();
+    const young = g.join({ name: "Protis", factionId: "hellenes", at: T0, startAge: 20, portrait: "avatar-20-4" }).player;
+    expect(personAge(g.state, g.content, young.house!.head, T0)).toBe(20);
+    expect(heroView(g.state, g.content, young, T0)?.portrait).toBe("avatar-20-4-young");
+    const old = g.join({ name: "Nikias", factionId: "hellenes", at: T0, startAge: 30, portrait: "avatar-30-2" }).player;
+    expect(personAge(g.state, g.content, old.house!.head, T0)).toBe(30);
+    expect(heroView(g.state, g.content, old, T0)?.portrait).toBe("avatar-30-2-prime");
+    // Both Hellenes start with +2 Intelligence; the established founder adds +3 Prestige and +2 Intelligence.
+    expect(young.profile!.stats).toMatchObject({ prestige: 0, intelligence: 2 });
+    expect(old.profile!.stats).toMatchObject({ prestige: 3, intelligence: 4 });
+    expect(() => g.join({ name: "Kleon", factionId: "hellenes", at: T0, startAge: 25 })).toThrow(/starting age/);
+    expect(() => g.join({ name: "Kleon", factionId: "hellenes", at: T0, portrait: "wife-01" })).toThrow(/portrait/);
+  });
+
+  it("lets the head take another face, and only a face from the portraits", () => {
+    const g = game();
+    const { pid } = join(g, "Protis");
+    expect(g.choosePortrait(pid, "avatar-30-5", T0).ok).toBe(true);
+    expect(g.state.players[pid]!.house!.head.portrait).toBe("avatar-30-5");
+    const bad = g.choosePortrait(pid, "wife-03", T0);
+    expect(bad.ok).toBe(false);
+  });
+
+  it("refuses content whose starting ages offer faces that are not portraits", () => {
+    const raw = rawBundle();
+    raw.family.head.ageOptions[0]!.faces.push("nobody-1");
+    expect(() => parseContent(raw)).toThrow(/nobody-1/);
   });
 
   it("gives a house to players in a save from before the family pack", () => {

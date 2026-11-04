@@ -449,7 +449,27 @@ export const familySchema = z
   .object({
     enabled: z.boolean(),
     comingOfAge: posInt,
-    head: z.object({ startAge: nonNeg, deathAge: z.object({ min: posInt, max: posInt }).strict() }).strict(),
+    head: z
+      .object({
+        startAge: nonNeg,
+        deathAge: z.object({ min: posInt, max: posInt }).strict(),
+        _ageOptions: z.string().optional(),
+        // The ages a founder may start at, each with its faces and a head start.
+        ageOptions: z
+          .array(
+            z
+              .object({
+                age: posInt,
+                label: z.string(),
+                note: z.string(),
+                startBonus: z.record(z.string(), z.number().int()),
+                faces: z.array(z.string()).min(1),
+              })
+              .strict(),
+          )
+          .min(1),
+      })
+      .strict(),
     lifeStages: z.array(z.object({ fromAge: nonNeg, name: z.string(), strength: pos }).strict()).min(1),
     portraitStages: z.array(z.object({ fromAge: nonNeg, stage: z.string() }).strict()).min(1),
     childStages: z.array(z.object({ fromAge: nonNeg, stage: z.string() }).strict()).min(1),

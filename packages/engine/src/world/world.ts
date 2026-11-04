@@ -10,7 +10,7 @@ import { scheduleBot } from "../ai/bot.js";
 import { createHouse, familyEnabled, scheduleFamilyYear } from "../social/family.js";
 import { territoryAt } from "./territory.js";
 import { scheduleSeason } from "../massalia/house.js";
-import { createProfile } from "../massalia/profile.js";
+import { changeStats, createProfile } from "../massalia/profile.js";
 import { ensureStates } from "../massalia/states.js";
 
 export interface WorldOptions {
@@ -211,11 +211,16 @@ export interface AddPlayerOptions {
   at: Ms;
   nearTile?: number; // start near this tile instead of the faction's home town
   villageName?: string;
+  startAge?: number; // one of family.head.ageOptions; its head start comes with it
+  portrait?: string; // the founder's face, from the male portraits
 }
 
 export function addPlayer(state: GameState, content: Content, opts: AddPlayerOptions): { player: Player; village: Village } {
   const faction = content.factions[opts.factionId];
   if (!faction || !faction.playable) throw new Error(`faction ${opts.factionId} is not playable`);
+  const ageOption = opts.startAge === undefined ? undefined : content.family.head.ageOptions.find((o) => o.age === opts.startAge);
+  if (opts.startAge !== undefined && !ageOption) throw new Error(`no starting age of ${opts.startAge}`);
+  if (opts.portrait !== undefined && !content.family.portraits.male.includes(opts.portrait)) throw new Error(`no portrait ${opts.portrait}`);
   const player = makePlayer(state, content, opts.name, faction.id, opts.kind ?? "human", opts.at);
   const tile = findStartTile(state, content, faction.id, opts.nearTile);
   const village = createVillage(state, content, {
@@ -228,7 +233,8 @@ export function addPlayer(state: GameState, content: Content, opts: AddPlayerOpt
     at: opts.at,
   });
   if (content.hero.enabled) player.hero = newHero(content, `${opts.name}`, village.id, opts.at);
-  if (familyEnabled(content)) createHouse(state, content, player, opts.name, opts.at);
+  if (familyEnabled(content)) createHouse(state, content, player, opts.name, opts.at, { age: ageOption?.age, portrait: opts.portrait });
+  if (ageOption && player.profile) changeStats(state, content, player, opts.at, ageOption.startBonus);
   if (player.kind === "ai") scheduleBot(state, player.id, opts.at);
   return { player, village };
 }

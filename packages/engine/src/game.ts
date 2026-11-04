@@ -6,7 +6,7 @@ import { holdFestival, research, train, upgradeUnit } from "./economy/training.j
 import { sendResources, sendTroops, withdraw, type SendOrder } from "./military/movements.js";
 import { assignHeroPoints, moveHeroHome, reviveHero, setHeroProduction } from "./social/hero.js";
 import { collectTribute, foundKingdom, joinKingdom, leaveKingdom } from "./social/kingdoms.js";
-import { adopt, ensureFamilies, marry, nameChild } from "./social/family.js";
+import { adopt, choosePortrait, ensureFamilies, marry, nameChild } from "./social/family.js";
 import { markRead } from "./social/reports.js";
 import { craft, sacrifice } from "./massalia/crafting.js";
 import { dismiss, ensureMassalia, hire } from "./massalia/house.js";
@@ -161,6 +161,11 @@ export class Game {
   marry(playerId: string, candidateId: string, now: Ms) {
     this.at(now);
     return marry(this.state, this.content, playerId, candidateId, now);
+  }
+
+  choosePortrait(playerId: string, portrait: string, now: Ms) {
+    this.at(now);
+    return choosePortrait(this.state, this.content, playerId, portrait);
   }
 
   nameChild(playerId: string, childId: string, name: string, now: Ms) {

@@ -1,7 +1,27 @@
 {
   "enabled": true,
   "comingOfAge": 15,
-  "head": { "startAge": 20, "deathAge": { "min": 55, "max": 68 } },
+  "head": {
+    "startAge": 20,
+    "deathAge": { "min": 55, "max": 68 },
+    "_ageOptions": "MASSALIA's starting ages and their faces (content/age/age-config.json ageOptions, avatars): a player founding a house picks one age and one face of it.",
+    "ageOptions": [
+      {
+        "age": 20,
+        "label": "Young (20)",
+        "note": "Weaker now, but a long road ahead and many years before age bites. The marathon.",
+        "startBonus": {},
+        "faces": ["avatar-20-1", "avatar-20-2", "avatar-20-3", "avatar-20-4", "avatar-20-5", "avatar-20-6", "avatar-20-7", "avatar-20-8"]
+      },
+      {
+        "age": 30,
+        "label": "Established (30)",
+        "note": "A modest head start - a decade of standing and learning - with most of your prime still ahead.",
+        "startBonus": { "prestige": 3, "intelligence": 2 },
+        "faces": ["avatar-30-1", "avatar-30-2", "avatar-30-3", "avatar-30-4", "avatar-30-5", "avatar-30-6", "avatar-30-7"]
+      }
+    ]
+  },
   "lifeStages": [
     { "fromAge": 0, "name": "Prime", "strength": 1 },
     { "fromAge": 40, "name": "Middle Age", "strength": 0.95 },

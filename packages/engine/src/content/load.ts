@@ -213,6 +213,13 @@ export function parseContent(raw: ContentBundle): Content {
   if (family.enabled) {
     for (const f of bundle.factions) if (f.playable && !family.names[f.id]) fail(`family: no name pool for faction ${f.id}`);
   }
+  const ages = new Set<number>();
+  for (const o of family.head.ageOptions) {
+    if (ages.has(o.age)) fail(`family: two starting ages of ${o.age}`);
+    ages.add(o.age);
+    if (o.age >= family.head.deathAge.min) fail(`family: starting age ${o.age} is past the earliest death age`);
+    for (const face of o.faces) if (!family.portraits.male.includes(face)) fail(`family: starting age ${o.age} offers ${face}, which is not a male portrait`);
+  }
   if (world.calendar.seasons.length === 0) fail("calendar needs at least one season");
 
   // --- the MASSALIA pack ---
@@ -266,6 +273,7 @@ export function parseContent(raw: ContentBundle): Content {
     for (const k of Object.keys(bonus)) if (!statIds.has(k)) fail(`profile start ${fid}: unknown stat ${k}`);
   }
   for (const d of profile.decay) for (const k of Object.keys(d)) if (k !== "fromAge" && !statIds.has(k)) fail(`profile decay: unknown stat ${k}`);
+  for (const o of family.head.ageOptions) for (const k of Object.keys(o.startBonus)) if (!statIds.has(k)) fail(`family: starting age ${o.age} gives unknown stat ${k}`);
   const routines: Record<string, RoutineDef> = {};
   for (const r of profile.routines) {
     if (routines[r.id]) fail(`routine: duplicate ${r.id}`);

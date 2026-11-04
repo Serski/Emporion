@@ -90,6 +90,7 @@ interface NewPerson {
   sex: Sex;
   age: number;
   name?: string;
+  portrait?: string;
   traitChance?: number;
   deathAge?: { min: number; max: number };
 }
@@ -105,7 +106,7 @@ function makePerson(state: GameState, content: Content, player: Player, at: Ms, 
     name: np.name ?? drawName(state, content, player.factionId, np.sex, exclude),
     sex: np.sex,
     bornAt: Math.round(at - np.age * yearMs(state, content)),
-    portrait: drawPortrait(state, content, np.sex),
+    portrait: np.portrait ?? drawPortrait(state, content, np.sex),
     traitId,
     deathAge: randomInt(state, range.min, range.max),
     diedAt: null,
@@ -142,9 +143,11 @@ function familyReport(state: GameState, player: Player, at: Ms, title: string, l
 
 // --- the house -----------------------------------------------------------------------
 
-export function createHouse(state: GameState, content: Content, player: Player, headName: string, at: Ms): House {
+// The founder starts at the content's age with a drawn face, unless the
+// player chose an age and a face (MASSALIA's creation step).
+export function createHouse(state: GameState, content: Content, player: Player, headName: string, at: Ms, founder: { age?: number; portrait?: string } = {}): House {
   const f = content.family;
-  const head = makePerson(state, content, player, at, { sex: "male", age: f.head.startAge, name: headName });
+  const head = makePerson(state, content, player, at, { sex: "male", age: founder.age ?? f.head.startAge, name: headName, portrait: founder.portrait });
   const house: House = {
     name: `House of ${headName}`,
     generation: 1,
@@ -433,6 +436,16 @@ export function marry(state: GameState, content: Content, playerId: string, cand
       chronicle(h, now, `Her dowry fills the stores of ${cap.name}.`);
     }
   }
+  return ok({});
+}
+
+// The head of the house may take another face from the portraits; it changes
+// nothing but the picture.
+export function choosePortrait(state: GameState, content: Content, playerId: string, portrait: string): Result {
+  const h = state.players[playerId]?.house;
+  if (!h) return fail("not_found", "You have no house.");
+  if (!content.family.portraits.male.includes(portrait)) return fail("invalid", "No such face.");
+  h.head.portrait = portrait;
   return ok({});
 }
 
