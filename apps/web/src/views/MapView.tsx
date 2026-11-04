@@ -38,6 +38,10 @@ const H = content.map.height;
 const HW = content.map.grid.hexWidth; // art pixels per hex width
 const WORLD_W = W + 0.5;
 const WORLD_H = 2 * HEX_RADIUS + (H - 1) * HEX_ROW;
+// The view never leaves MASSALIA's art: the camera stays inside whichever is
+// smaller, the grid or the picture (the outer hexes overhang it a little).
+const VIEW_W = Math.min(WORLD_W, content.map.image.width / HW);
+const VIEW_H = Math.min(WORLD_H, content.map.image.height / HW);
 
 // Corners of a pointy-top hex of width 1, clockwise from the upper right.
 const CORNERS: [number, number][] = Array.from({ length: 6 }, (_, i) => {
@@ -456,6 +460,21 @@ function draw(ctx: CanvasRenderingContext2D, wpx: number, hpx: number, view: Vie
 
 const focusOn = (tile: number) => ({ cx: centreX(tile), cy: centreY(tile) });
 
+// Keep the camera on the world: zoomed out no further than the world fills the
+// canvas, and panned no further than its edges, so no sea-blue backdrop shows.
+function minZoomFor(w: number, h: number): number {
+  return Math.max(MIN_ZOOM, w / VIEW_W, h / VIEW_H);
+}
+
+function clampTo(vw: ViewState, w: number, h: number): ViewState {
+  const zoom = Math.min(MAX_ZOOM, Math.max(minZoomFor(w, h), vw.zoom));
+  const hw = w / 2 / zoom;
+  const hh = h / 2 / zoom;
+  const cx = hw * 2 >= VIEW_W ? VIEW_W / 2 : Math.min(VIEW_W - hw, Math.max(hw, vw.cx));
+  const cy = hh * 2 >= VIEW_H ? VIEW_H / 2 : Math.min(VIEW_H - hh, Math.max(hh, vw.cy));
+  return { zoom, cx, cy };
+}
+
 export function MapView() {
   const s = useSession();
   const nav = useNav();
@@ -484,7 +503,7 @@ export function MapView() {
 
   useEffect(() => {
     if (nav.mapFocus === null) return;
-    setView((vw) => ({ ...vw, ...focusOn(nav.mapFocus!) }));
+    setView((vw) => clampView({ ...vw, ...focusOn(nav.mapFocus!) }));
     setSelected(nav.mapFocus);
   }, [nav.mapFocus]);
 
@@ -531,11 +550,13 @@ export function MapView() {
     ctx.strokeRect((view.cx - size.w / 2 / view.zoom) * miniScale, (view.cy - size.h / 2 / view.zoom) * miniScale, (size.w / view.zoom) * miniScale, (size.h / view.zoom) * miniScale);
   });
 
-  const clampView = (vw: ViewState): ViewState => ({
-    zoom: Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, vw.zoom)),
-    cx: Math.min(WORLD_W, Math.max(0, vw.cx)),
-    cy: Math.min(WORLD_H, Math.max(0, vw.cy)),
-  });
+  const clampView = (vw: ViewState): ViewState => clampTo(vw, size.w, size.h);
+  const minZoom = minZoomFor(size.w, size.h);
+
+  // A resized canvas (rotating a phone, opening the map) re-fits the camera.
+  useEffect(() => {
+    setView((vw) => clampTo(vw, size.w, size.h));
+  }, [size.w, size.h]);
 
   const tileAt = (clientX: number, clientY: number) => {
     const rect = canvas.current!.getBoundingClientRect();
@@ -550,7 +571,7 @@ export function MapView() {
       const rect = canvas.current!.getBoundingClientRect();
       const ox = clientX !== undefined ? clientX - rect.left - size.w / 2 : 0;
       const oy = clientY !== undefined ? clientY - rect.top - size.h / 2 : 0;
-      const zoom = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, vw.zoom * factor));
+      const zoom = Math.min(MAX_ZOOM, Math.max(minZoomFor(size.w, size.h), vw.zoom * factor));
       const wx = vw.cx + ox / vw.zoom;
       const wy = vw.cy + oy / vw.zoom;
       return clampView({ zoom, cx: wx - ox / zoom, cy: wy - oy / zoom });
@@ -677,10 +698,10 @@ export function MapView() {
             <button className="sq-btn" onClick={() => zoomAround(1.4)} aria-label="Zoom in">
               <Icon name="plus" size={18} />
             </button>
-            <button className="sq-btn" onClick={() => zoomAround(1 / 1.4)} aria-label="Zoom out">
+            <button className="sq-btn" onClick={() => zoomAround(1 / 1.4)} aria-label="Zoom out" disabled={view.zoom <= minZoom + 1e-6}>
               <Icon name="minus" size={18} />
             </button>
-            <button className="sq-btn" onClick={() => setView((vw) => ({ ...vw, ...focusOn(tileIndex(content, v.x, v.y)), zoom: Math.max(vw.zoom, 18) }))} aria-label={`Centre on ${v.name}`}>
+            <button className="sq-btn" onClick={() => setView((vw) => clampView({ ...vw, ...focusOn(tileIndex(content, v.x, v.y)), zoom: Math.max(vw.zoom, 18) }))} aria-label={`Centre on ${v.name}`}>
               <Icon name="home" size={18} />
             </button>
           </div>
