@@ -2,9 +2,10 @@
 """Derive the hexagon world grid from MASSALIA's hand-drawn world 2 map.
 
 Inputs (committed copies under tools/map/sources/, taken from the MASSALIA repo's
-apps/web/public/map2/): world2.json (175 region polygons + 105 towns, in a
-3126 x 2696 pixel space), names2.json, politics2.json, townstats.json and
-terrain2.webp (the hand-drawn terrain art).
+apps/web/public/map2/ and content/map/): world2.json (175 region polygons + 105
+towns, in a 3126 x 2696 pixel space), names2.json, politics2.json,
+townstats.json, town-military.json (each town's fleet) and terrain2.webp (the
+hand-drawn terrain art).
 
 Outputs:
   content/map/tiles.json          the grid the engine reads (terrain + region per hex, towns)
@@ -177,6 +178,7 @@ def main() -> None:
     names = json.loads((SOURCES / "names2.json").read_text())["names"]
     politics = json.loads((SOURCES / "politics2.json").read_text())
     townstats = json.loads((SOURCES / "townstats.json").read_text())["towns"]
+    military = json.loads((SOURCES / "town-military.json").read_text())["towns"]
     art = Image.open(SOURCES / "terrain2.webp").convert("RGB")
 
     labels = rasterise(world)
@@ -324,6 +326,10 @@ def main() -> None:
                 "region": rid,
                 "population": stats.get("population", 1000),
                 "walls": stats.get("walls", 1),
+                "fleet": {
+                    "pentekonters": military.get(town["id"], {}).get("pentekonters", 0),
+                    "triremes": military.get(town["id"], {}).get("triremes", 0),
+                },
             }
         )
 

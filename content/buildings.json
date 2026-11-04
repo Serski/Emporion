@@ -164,6 +164,7 @@
     },
     {
       "id": "harbor",
+      "coastal": true,
       "name": "Harbor",
       "description": "Quays and warehouses by the water. Each level lets every merchant carry more.",
       "category": "economy",

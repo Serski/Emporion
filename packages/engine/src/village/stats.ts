@@ -3,6 +3,8 @@ import { curveAt, curveSum } from "../content/curves.js";
 import type { BuildingDef, FactionDef } from "../content/schema.js";
 import type { GameState, Player, Resources, Troops, Village } from "../core/types.js";
 import { familyMods } from "../social/family.js";
+import { houseCulture, houseFood, houseProduction } from "../massalia/house.js";
+import { prestigeCultureFactor } from "../massalia/profile.js";
 
 // ---------------------------------------------------------------------------
 // Derived village numbers. Everything here is a pure read of the state and the
@@ -176,16 +178,26 @@ export interface VillageRates {
   population: number;
 }
 
+// Culture a day at speed 1: buildings and fields, a devout wife's blessing in
+// the hero's home town, citizens in the capital, and the head's prestige.
+export function villageCulturePerDay(state: GameState, content: Content, v: Village): number {
+  const owner = state.players[v.ownerId];
+  let c = culturePerDay(content, v) * (owner?.hero?.homeVillageId === v.id ? 1 + familyMods(state, content, owner, v.updatedAt).cultureBonus : 1);
+  c += houseCulture(state, content, v);
+  return c * prestigeCultureFactor(content, owner);
+}
+
 export function villageRates(state: GameState, content: Content, v: Village, transit?: number): VillageRates {
   const base = fieldProduction(content, v);
   const bonus = productionBonus(state, content, v);
   const hero = heroProduction(state, content, v);
+  const house = houseProduction(state, content, v);
   const production: Resources = {};
   const tribute: Resources = {};
   const owner = state.players[v.ownerId];
   const share = owner && content.kingdoms.enabled && isGovernor(state, owner) ? content.kingdoms.tribute.share : 0;
   for (const r of content.resourceIds) {
-    const gross = (base[r] ?? 0) * (1 + (bonus[r] ?? 0)) + (hero[r] ?? 0);
+    const gross = (base[r] ?? 0) * (1 + (bonus[r] ?? 0)) + (hero[r] ?? 0) + (house[r] ?? 0);
     tribute[r] = gross * share;
     production[r] = gross - tribute[r]!;
   }
@@ -200,6 +212,7 @@ export function villageRates(state: GameState, content: Content, v: Village, tra
       if (o) for (const s of o.stationed) upkeep += troopUpkeep(content, s.troops);
     }
     upkeep += transit ?? transitUpkeep(state, content, v.id);
+    upkeep += houseFood(state, content, v);
   }
   const net: Resources = { ...production };
   net[content.food] = (net[content.food] ?? 0) - upkeep;
@@ -213,7 +226,7 @@ export function villageRates(state: GameState, content: Content, v: Village, tra
     upkeep,
     net,
     capacity: capacity(content, v),
-    culturePerDay: culturePerDay(content, v) * (owner?.hero?.homeVillageId === v.id ? 1 + familyMods(state, content, owner, v.updatedAt).cultureBonus : 1),
+    culturePerDay: villageCulturePerDay(state, content, v),
     loyaltyPerHour: loyalty,
     population: pop,
   };

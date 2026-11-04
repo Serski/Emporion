@@ -35,6 +35,9 @@ import { tileInfo, tileXY } from "../world/map.js";
 import { oasisAt } from "../world/oases.js";
 import { createVillage, isFreeValley } from "../world/world.js";
 import { familyMods } from "../social/family.js";
+import { altarBoost } from "../massalia/crafting.js";
+import { scoutStatFactor } from "../massalia/profile.js";
+import { harbourFleet, navalStrength } from "../massalia/sea.js";
 import { inForeignTerritory, villageClaims } from "../world/territory.js";
 import {
   carryCapacity,
@@ -223,6 +226,26 @@ function resolveAttack(state: GameState, content: Content, m: Movement, at: Ms):
     return;
   }
 
+  // A landing from the sea is driven off when the town's ships outweigh the
+  // escort (MASSALIA: pentekonters count 1, triremes 5).
+  if (tv && m.ships && (m.seaZones ?? 0) > 0) {
+    const theirs = navalStrength(content, harbourFleet(state, content, tv));
+    const ours = navalStrength(content, m.ships);
+    if (theirs > ours) {
+      sendHome(state, content, { ...homeArgs(m), troops: m.troops, hero: m.hero, mission: m.kind }, at);
+      addReport(state, at, "battle", `The landing at ${label} was driven off`, [m.ownerId], {
+        type: "simple",
+        lines: [`The ships of ${tv.name} (naval strength ${theirs}) outweighed your escort (${ours}), and your troops turned back without a fight.`, "Each Trireme counts five and each Pentekonter one. Bring more warships."],
+        tile: m.toTile,
+      });
+      const defender = state.players[tv.ownerId];
+      if (defender && defender.kind !== "npc") {
+        addReport(state, at, "battle", `Your ships drove off a landing at ${tv.name}`, [defender.id], { type: "simple", lines: [`A fleet from ${homeName(state, m.homeVillageId)} tried to land at ${tv.name} and was driven off.`], tile: m.toTile });
+      }
+      return;
+    }
+  }
+
   const attackerHero = m.hero && heroAlive(attacker.hero) ? attacker.hero : null;
   const defenderOwnerId = tv ? tv.ownerId : oasis?.ownerVillageId ? (state.villages[oasis.ownerVillageId]?.ownerId ?? null) : null;
   const moraleFactor = morale(state, content, attacker, defenderOwnerId);
@@ -235,10 +258,12 @@ function resolveAttack(state: GameState, content: Content, m: Movement, at: Ms):
       stacks: stacksOf(content, m.troops, m.armory),
       hero: attackerHero ? heroInBattle(content, attackerHero, familyMods(state, content, attacker, at)) : null,
       morale: moraleFactor,
+      boost: 1 + altarBoost(attacker, at),
     },
     defenders: groups.map((g) => ({
       stacks: stacksOf(content, g.troops, g.armory),
       hero: g.heroOwner?.hero ? heroInBattle(content, g.heroOwner.hero, familyMods(state, content, g.heroOwner, at)) : null,
+      boost: 1 + altarBoost(g.ownerId ? state.players[g.ownerId] : undefined, at),
     })),
     wallLevel: wall,
     wallBonusPerLevel: defenderFaction?.wall.bonusPerLevel ?? 0,
@@ -554,11 +579,11 @@ function resolveScout(state: GameState, content: Content, m: Movement, at: Ms): 
     const o = oasisAt(state, content, m.toTile, at)!;
     groups = oasisDefenders(state, content, o);
   }
-  const attack = scoutPower(content, m.troops, m.armory, "attack");
+  const attack = scoutPower(content, m.troops, m.armory, "attack") * scoutStatFactor(content, state.players[m.ownerId]);
   let defense = 0;
   const defenderScouts: Troops = {};
   for (const g of groups) {
-    defense += scoutPower(content, g.troops, g.armory, "defense");
+    defense += scoutPower(content, g.troops, g.armory, "defense") * scoutStatFactor(content, g.ownerId ? state.players[g.ownerId] : undefined);
     for (const [u, n] of Object.entries(g.troops)) if (content.units[u]?.role === "scout") defenderScouts[u] = (defenderScouts[u] ?? 0) + n;
   }
   const r = resolveScouting(attack, defense, content.world.combat.scoutLossExponent);

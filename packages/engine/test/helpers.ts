@@ -20,6 +20,14 @@ export function rawBundle(): ContentBundle {
     hero: read("hero.json"),
     kingdoms: read("kingdoms.json"),
     family: read("family.json"),
+    massalia: {
+      market: read(pathJoin("massalia", "market.json")),
+      people: read(pathJoin("massalia", "people.json")),
+      profile: read(pathJoin("massalia", "profile.json")),
+      crafting: read(pathJoin("massalia", "crafting.json")),
+      ships: read(pathJoin("massalia", "ships.json")),
+      intrigue: read(pathJoin("massalia", "intrigue.json")),
+    },
     map: read(pathJoin("map", "tiles.json")),
   };
 }

@@ -140,6 +140,8 @@ export const buildingSchema = z
     culture: curveSchema,
     requires: z.array(requirementSchema).default([]),
     capitalOnly: z.boolean().optional(),
+    coastal: z.boolean().optional(), // only a town on the sea may raise it
+
     notInCapital: z.boolean().optional(),
     onePerPlayer: z.boolean().optional(),
     exclusiveWith: z.array(idSchema).optional(),
@@ -285,6 +287,8 @@ export const mapSchema = z
           region: z.string().nullable(),
           population: nonNeg,
           walls: int.nonnegative(),
+          // MASSALIA's town fleet (content/map/town-military.json): it can drive off a landing.
+          fleet: z.object({ pentekonters: int.nonnegative(), triremes: int.nonnegative() }).strict().default({ pentekonters: 0, triremes: 0 }),
         })
         .strict(),
     ),
@@ -495,6 +499,203 @@ export const familySchema = z
   })
   .strict();
 
+// --- the MASSALIA pack (content/massalia/) ----------------------------------------
+// MASSALIA's agora, people, character sheet and day, crafts, hulls and plots.
+
+// MASSALIA's good ids keep their hyphens (naval-supplies, trade-ship).
+export const goodIdSchema = z.string().regex(/^[a-z][a-z0-9_-]*$/, "good ids are lower case with - or _");
+const goodCategorySchema = z.enum(["agricultural", "yearround"]);
+const statMapSchema = z.record(idSchema, z.number());
+
+export const marketSchema = z
+  .object({
+    _note: z.string().optional(),
+    currency: z.object({ id: idSchema, name: z.string(), short: z.string(), start: nonNeg }).strict(),
+    resourceLot: posInt, // a town's resources trade in lots of this many
+    resources: z.record(idSchema, z.object({ sell: pos, buy: pos, category: goodCategorySchema }).strict()),
+    goods: z.array(
+      z
+        .object({
+          id: goodIdSchema,
+          name: z.string(),
+          icon: z.string().optional(),
+          group: z.enum(["goods", "materials", "naval"]),
+          category: goodCategorySchema,
+          sell: pos, // what the agora charges
+          buy: pos, // what the agora pays
+        })
+        .strict(),
+    ),
+    seasonal: z.record(goodCategorySchema, z.array(pos).min(1)), // price coefficient per season
+    prestigePriceBonus: nonNeg, // the agora pays this much more per point of prestige
+    stalls: z.object({ max: posInt, maxQty: posInt, maxPrice: posInt, taxRate: z.number().min(0).max(1) }).strict(),
+    building: idSchema, // trading needs this building in the town
+  })
+  .strict();
+
+export const peopleSchema = z
+  .object({
+    _note: z.string().optional(),
+    people: z.array(
+      z
+        .object({
+          id: idSchema,
+          name: z.string(),
+          plural: z.string(),
+          icon: z.string().optional(),
+          portrait: z.string().optional(),
+          hire: nonNeg,
+          sellBack: nonNeg,
+          upkeep: nonNeg, // drachmae per season
+          food: nonNeg, // wheat per hour at speed 1, eaten in the capital
+          max: posInt.optional(),
+          dismiss: z.string(),
+          about: z.string(),
+          production: resourceMapSchema.optional(), // per hour at speed 1, in the capital
+          culturePerDay: nonNeg.optional(),
+          herbsPerSeason: nonNeg.optional(),
+          altarDuration: pos.optional(),
+          heroXpBonus: nonNeg.optional(),
+          revealsAttacks: z.boolean().optional(),
+        })
+        .strict(),
+    ),
+    building: idSchema, // hiring needs this building in the town
+  })
+  .strict();
+
+const routineSchema = z
+  .object({
+    id: idSchema.or(goodIdSchema),
+    pool: idSchema,
+    name: z.string(),
+    effects: statMapSchema, // stat ids, "composure" and "drachmae"
+    ladder: idSchema.optional(),
+    xp: nonNeg.optional(),
+    fee: nonNeg.optional(),
+    needs: z.object({ good: goodIdSchema, qty: posInt, keep: z.boolean().optional() }).strict().optional(),
+    waivedBy: idSchema.optional(), // a building in the capital that waives the fee and the need
+    boostedBy: z.record(idSchema, z.object({ amount: pos, xp: pos, composure: z.number() }).strict()).optional(),
+  })
+  .strict();
+
+export const profileSchema = z
+  .object({
+    _note: z.string().optional(),
+    stats: z.array(z.object({ id: idSchema, name: z.string(), icon: z.string(), about: z.string() }).strict()).min(1),
+    cap: posInt,
+    start: z.record(idSchema, statMapSchema),
+    effects: z.object({ prestigeCulture: nonNeg, devotionAltar: nonNeg, militiaHero: nonNeg, intelligenceScouts: nonNeg }).strict(),
+    decay: z.array(z.object({ fromAge: nonNeg }).catchall(nonNeg)),
+    succession: z.object({ keep: z.record(idSchema, z.number().min(0).max(1)) }).strict(),
+    composure: z.object({ start: nonNeg, recoveryPerSeason: nonNeg, breakResetTo: nonNeg }).strict(),
+    traits: z.array(
+      z
+        .object({
+          id: idSchema.or(goodIdSchema),
+          name: z.string(),
+          kind: z.enum(["asset", "flaw", "neutral"]),
+          description: z.string(),
+          stats: statMapSchema,
+          heroStrength: z.number().optional(),
+        })
+        .strict(),
+    ),
+    ladders: z.array(
+      z
+        .object({
+          id: idSchema,
+          name: z.string(),
+          stat: idSchema,
+          tiers: z.array(z.object({ xp: posInt, trait: idSchema.or(goodIdSchema) }).strict()).min(1),
+        })
+        .strict(),
+    ),
+    day: z.object({ picksPerSeason: posInt, repeatPenalty: z.number().min(0).max(1) }).strict(),
+    routines: z.array(routineSchema).min(1),
+    pools: z.record(idSchema, idSchema.nullable()), // pool → the person who opens it (null: always open)
+  })
+  .strict();
+
+export const craftingSchema = z
+  .object({
+    _note: z.string().optional(),
+    recipes: z.array(
+      z
+        .object({
+          id: goodIdSchema,
+          name: z.string(),
+          output: z.record(goodIdSchema, posInt),
+          building: idSchema.optional(),
+          level: posInt.optional(),
+          people: z.record(idSchema, posInt),
+          resources: resourceMapSchema,
+          goods: z.record(goodIdSchema, posInt),
+          hours: pos, // at speed 1
+        })
+        .strict(),
+    ),
+    slots: z.object({ harbor: z.array(posInt).min(1), household: posInt }).strict(),
+    altar: z
+      .object({
+        building: idSchema,
+        seasons: pos,
+        offerings: z.array(z.object({ good: goodIdSchema, boost: pos }).strict()).min(1),
+      })
+      .strict(),
+  })
+  .strict();
+
+export const shipsSchema = z
+  .object({
+    _note: z.string().optional(),
+    supplyGood: goodIdSchema,
+    ships: z.array(
+      z
+        .object({
+          id: goodIdSchema,
+          name: z.string(),
+          role: z.enum(["transport", "warship"]),
+          range: posInt, // sea zones
+          troopSpace: posInt,
+          naval: nonNeg,
+          suppliesPerTrip: nonNeg,
+        })
+        .strict(),
+    ),
+    troopSpace: z.object({ infantry: posInt, cavalry: posInt, siege: posInt, hero: posInt }).strict(),
+    unitSpace: z.record(idSchema, posInt),
+    townFleet: z.object({ pentekonters: goodIdSchema, triremes: goodIdSchema }).strict(),
+  })
+  .strict();
+
+export const intrigueSchema = z
+  .object({
+    _note: z.string().optional(),
+    prestigeFloor: nonNeg,
+    cooldownHours: pos,
+    statScale: pos,
+    chance: z.object({ min: z.number().min(0).max(1), max: z.number().min(0).max(1) }).strict(),
+    poison: z.object({ good: goodIdSchema, base: z.number().min(0).max(1), illShare: z.number().min(0).max(1) }).strict(),
+    assassination: z.object({ cost: nonNeg, base: z.number().min(0).max(1), militiaWeight: nonNeg }).strict(),
+    cure: z.object({ good: goodIdSchema, needs: idSchema }).strict(),
+    defence: z.object({ physician: nonNeg, bodyguardMax: nonNeg, spymasterGuard: nonNeg }).strict(),
+    attack: z.object({ spymasterHunt: nonNeg }).strict(),
+    postureHours: pos,
+  })
+  .strict();
+
+export const massaliaSchema = z
+  .object({
+    market: marketSchema,
+    people: peopleSchema,
+    profile: profileSchema,
+    crafting: craftingSchema,
+    ships: shipsSchema,
+    intrigue: intrigueSchema,
+  })
+  .strict();
+
 // --- the bundle ---------------------------------------------------------------
 
 export const contentBundleSchema = z
@@ -506,6 +707,7 @@ export const contentBundleSchema = z
     hero: heroSchema,
     kingdoms: kingdomsSchema,
     family: familySchema,
+    massalia: massaliaSchema,
     map: mapSchema,
   })
   .strict();
@@ -524,6 +726,14 @@ export type FactionDef = z.infer<typeof factionSchema>;
 export type HeroDef = z.infer<typeof heroSchema>;
 export type KingdomsDef = z.infer<typeof kingdomsSchema>;
 export type FamilyDef = z.infer<typeof familySchema>;
+export type MassaliaDef = z.infer<typeof massaliaSchema>;
+export type GoodDef = MassaliaDef["market"]["goods"][number];
+export type PersonTypeDef = MassaliaDef["people"]["people"][number];
+export type RoutineDef = MassaliaDef["profile"]["routines"][number];
+export type ProfileTraitDef = MassaliaDef["profile"]["traits"][number];
+export type LadderDef = MassaliaDef["profile"]["ladders"][number];
+export type RecipeDef = MassaliaDef["crafting"]["recipes"][number];
+export type ShipDef = MassaliaDef["ships"]["ships"][number];
 export type FamilyTraitDef = FamilyDef["traits"][number];
 export type WorldDef = z.infer<typeof worldSchema>;
 export type LayoutDef = WorldDef["mapgen"]["layouts"][number];

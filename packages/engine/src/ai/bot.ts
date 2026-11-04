@@ -7,6 +7,7 @@ import { nextRandom } from "../core/rng.js";
 import { HOUR } from "../core/time.js";
 import type { GameState, Ms, Player, Village } from "../core/types.js";
 import { sendTroops, villageTile } from "../military/movements.js";
+import { seaRoute } from "../massalia/sea.js";
 import { touch } from "../village/timeline.js";
 import { buildingLevel, villageRates } from "../village/stats.js";
 import { distance } from "../world/map.js";
@@ -103,7 +104,8 @@ function raid(state: GameState, content: Content, p: Player, v: Village, at: Ms)
     if (c.kind !== "camp" || !c.npc || c.npc.tier > 1) continue;
     const tile = villageTile(content, c);
     const d = distance(content, home, tile);
-    if (d <= 12 && (!best || d < best.d)) best = { tile, d };
+    // AI governors keep no fleet: they raid what they can reach overland.
+    if (d <= 12 && (!best || d < best.d) && !seaRoute(content, home, tile).crossesSea) best = { tile, d };
   }
   if (best) sendTroops(state, content, { playerId: p.id, fromVillageId: v.id, toTile: best.tile, mission: "raid", troops: raiders }, at);
 }

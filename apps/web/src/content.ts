@@ -4,6 +4,12 @@ import family from "../../../content/family.json";
 import hero from "../../../content/hero.json";
 import kingdoms from "../../../content/kingdoms.json";
 import map from "../../../content/map/tiles.json";
+import crafting from "../../../content/massalia/crafting.json";
+import intrigue from "../../../content/massalia/intrigue.json";
+import market from "../../../content/massalia/market.json";
+import people from "../../../content/massalia/people.json";
+import profile from "../../../content/massalia/profile.json";
+import ships from "../../../content/massalia/ships.json";
 import resources from "../../../content/resources.json";
 import world from "../../../content/world.json";
 
@@ -17,6 +23,7 @@ export const content = parseContent({
   hero,
   kingdoms,
   family,
+  massalia: { market, people, profile, crafting, ships, intrigue },
   map,
   factions: Object.keys(factionFiles)
     .sort()

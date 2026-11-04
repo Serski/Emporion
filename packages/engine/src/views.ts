@@ -7,9 +7,11 @@ import { heroAlive, heroHealth, reviveCost, reviveMs, xpForLevel } from "./socia
 import { effectiveTreasures, kingdomAtTile } from "./social/kingdoms.js";
 import { lifeStage, personAge, portraitFile } from "./social/family.js";
 import { territoryAt } from "./world/territory.js";
+import { statOf } from "./massalia/profile.js";
+import { harbourFleet } from "./massalia/sea.js";
+import { stateAt } from "./massalia/states.js";
 import {
   cultureForVillages,
-  culturePerDay,
   expansionSlots,
   hidden,
   merchantCapacity,
@@ -67,7 +69,7 @@ export function villageSummary(state: GameState, content: Content, v: Village): 
     population: r.population,
     loyalty: v.loyalty,
     culture: v.culture,
-    culturePerDay: culturePerDay(content, v) * speed,
+    culturePerDay: r.culturePerDay * speed,
     resources: floorResources(v.resources),
     capacity: r.capacity,
     production: scale(r.production),
@@ -200,7 +202,7 @@ export function playerSummary(state: GameState, content: Content, p: Player): Pl
   let cpd = 0;
   for (const id of p.villageIds) {
     const v = state.villages[id];
-    if (v) cpd += culturePerDay(content, v) * state.settings.speed;
+    if (v) cpd += villageRates(state, content, v).culturePerDay * state.settings.speed;
   }
   return {
     id: p.id,
@@ -251,7 +253,9 @@ export function movementsFor(state: GameState, content: Content, playerId: strin
       out.push({ movement: m, direction: m.kind === "return" || m.kind === "tradeReturn" ? "home" : "out", hostile: false, fromName: name(m.fromTile), toName: name(m.toTile) });
     } else if (ownTiles.has(m.toTile) && m.kind !== "return" && m.kind !== "tradeReturn") {
       const hostile = m.kind === "attack" || m.kind === "raid" || m.kind === "scout";
-      out.push({ movement: hostile ? { ...m, troops: {} } : m, direction: "in", hostile, fromName: name(m.fromTile), toName: name(m.toTile) });
+      // A hetaira hears who marches, and how many.
+      const knows = Object.entries(p.people ?? {}).some(([id, n]) => n > 0 && content.people[id]?.revealsAttacks);
+      out.push({ movement: hostile && !knows ? { ...m, troops: {} } : m, direction: "in", hostile, fromName: name(m.fromTile), toName: name(m.toTile) });
     }
   }
   out.sort((a, b) => a.movement.arriveAt - b.movement.arriveAt);
@@ -275,6 +279,8 @@ export interface TileDetails {
   oasis: { state: OasisState | null; ownerName: string | null; ownerVillageName: string | null } | null;
   kingdomId: string | null;
   territory: { villageId: string; villageName: string; ownerId: string; ownerName: string } | null;
+  state: { id: string; name: string; color: string } | null; // the MASSALIA state whose land this is
+  fleet: Record<string, number> | null; // the ships in this town's harbour
 }
 
 export function tileDetails(state: GameState, content: Content, tile: number): TileDetails {
@@ -307,7 +313,18 @@ export function tileDetails(state: GameState, content: Content, tile: number): T
   const territory = claim
     ? { villageId: claim.id, villageName: claim.name, ownerId: claim.ownerId, ownerName: state.players[claim.ownerId]?.name ?? "?" }
     : null;
-  return { info, village, oasis, kingdomId: kingdomAtTile(state, content, tile), territory };
+  const polity = stateAt(content, tile);
+  const pol = polity ? content.map.polities[polity] : undefined;
+  const fleet = v ? harbourFleet(state, content, v) : null;
+  return {
+    info,
+    village,
+    oasis,
+    kingdomId: kingdomAtTile(state, content, tile),
+    territory,
+    state: polity && pol ? { id: polity, name: pol.name, color: pol.color } : null,
+    fleet: fleet && Object.values(fleet).some((n) => n > 0) ? fleet : null,
+  };
 }
 
 export interface RankingRow {
@@ -324,6 +341,8 @@ export interface RankingRow {
   heroName: string | null;
   heroLevel: number;
   heroXp: number;
+  purse: number;
+  prestige: number;
 }
 
 export function rankings(state: GameState, content: Content): RankingRow[] {
@@ -343,6 +362,8 @@ export function rankings(state: GameState, content: Content): RankingRow[] {
       heroName: p.hero?.name ?? null,
       heroLevel: p.hero?.level ?? 0,
       heroXp: p.hero?.xp ?? 0,
+      purse: p.purse ?? 0,
+      prestige: statOf(content, p, "prestige"),
     }))
     .sort((a, b) => b.population - a.population);
 }

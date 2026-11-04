@@ -1,0 +1,13 @@
+{
+  "_note": "MASSALIA's hostile acts (content/politics/interactions.json, packages/shared/src/interactions.ts), aimed here at a rival house's head.",
+  "prestigeFloor": 10,
+  "cooldownHours": 96,
+  "statScale": 40,
+  "chance": { "min": 0.05, "max": 0.95 },
+  "poison": { "good": "poison", "base": 0.5, "illShare": 0.6 },
+  "assassination": { "cost": 200, "base": 0.45, "militiaWeight": 0.5 },
+  "cure": { "good": "remedy", "needs": "physician" },
+  "defence": { "physician": 15, "bodyguardMax": 24, "spymasterGuard": 10 },
+  "attack": { "spymasterHunt": 10 },
+  "postureHours": 24
+}

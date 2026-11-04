@@ -40,6 +40,7 @@ export interface GameState {
   kingdoms: Record<string, Kingdom>;
   scheduled: ScheduledEvent[];
   npc: { campsPlayerId: string | null; townsPlayerId: string | null };
+  market: MarketState; // MASSALIA's players' market
 }
 
 export type PlayerKind = "human" | "ai" | "npc";
@@ -60,9 +61,69 @@ export interface Player {
   hero: Hero | null;
   house: House | null; // the hero's family (MASSALIA's family pack)
   kingdomId: string | null;
+  // MASSALIA's house economy and character sheet.
+  purse: number; // drachmae
+  goods: Record<string, number>; // the house's stores of goods (hulls at sea are not counted)
+  people: Record<string, number>; // hired people by type
+  profile: Profile | null; // stats, composure, ladders and the day (null for NPC owners)
+  crafts: CraftJob[];
+  altar: Altar | null;
+  voyages: Voyage[];
+  polityId: string | null; // set for an NPC state: the MASSALIA polity it is
   // Free-form slot for the hybrid layer (house, family, offices, …). The
   // engine never reads it.
   meta: Record<string, unknown>;
+}
+
+// --- MASSALIA's character sheet, crafts, altar, fleet and market ---------------
+
+export interface Profile {
+  stats: Record<string, number>; // base values 0..cap; traits add on top
+  composure: number; // 0..100
+  withdrawnSeason: number | null; // broke in this season: no day until the next
+  ladders: Record<string, number>; // experience per ladder
+  traits: string[]; // ladder tiers earned and afflictions (poisoned)
+  day: { season: number; picks: number; lastRoutine: string | null; lastSeason: number | null };
+  posture: "guard" | "hunt"; // the spymaster's
+  postureAt: Ms | null;
+  plots: Record<string, Ms>; // target player id → when last plotted against
+}
+
+export interface CraftJob {
+  id: string;
+  recipeId: string;
+  villageId: string | null; // the town that works it (null for household work)
+  people: Record<string, number>; // busy until readyAt
+  startAt: Ms;
+  readyAt: Ms;
+}
+
+export interface Altar {
+  good: string;
+  boost: number; // +share to every man the house fields
+  from: Ms;
+  until: Ms;
+}
+
+export interface Voyage {
+  id: string;
+  ships: Record<string, number>;
+  backAt: Ms;
+}
+
+export interface Stall {
+  id: string;
+  sellerId: string;
+  good: string; // a good, or a town resource sold in lots
+  remaining: number; // units (lots for a resource)
+  price: number; // drachmae per unit (per lot)
+  createdAt: Ms;
+  villageId: string | null; // where a resource stall's lots came from
+}
+
+export interface MarketState {
+  stalls: Record<string, Stall>;
+  taxCollected: number;
 }
 
 export interface HeroPoints {
@@ -273,6 +334,8 @@ export interface Movement {
   departAt: Ms;
   arriveAt: Ms;
   mission: MovementKind; // for a return: what the march out was
+  ships?: Record<string, number>; // hulls carrying the troops over open sea
+  seaZones?: number; // sea zones the straight line crosses
 }
 
 export interface Kingdom {
@@ -283,7 +346,7 @@ export interface Kingdom {
   createdAt: Ms;
 }
 
-export type ScheduledKind = "npcRaids" | "aiTurn" | "familyYear";
+export type ScheduledKind = "npcRaids" | "aiTurn" | "familyYear" | "season" | "craftDone" | "shipsHome";
 
 export interface ScheduledEvent {
   id: string;
@@ -302,7 +365,9 @@ export type ReportKind =
   | "starvation"
   | "hero"
   | "family"
-  | "kingdom";
+  | "kingdom"
+  | "market"
+  | "intrigue";
 
 export interface Report {
   id: string;

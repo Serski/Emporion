@@ -1,0 +1,37 @@
+{
+  "_note": "MASSALIA's hulls (content/military/ships.json). A march whose straight line crosses open sea needs hulls for every man; range counts the sea zones crossed. A town's own ships can drive off a landing (MASSALIA's naval check).",
+  "supplyGood": "naval-supplies",
+  "ships": [
+    {
+      "id": "trade-ship",
+      "name": "Pentekonter",
+      "role": "transport",
+      "range": 7,
+      "troopSpace": 20,
+      "naval": 1,
+      "suppliesPerTrip": 1
+    },
+    {
+      "id": "galley",
+      "name": "Trireme",
+      "role": "warship",
+      "range": 4,
+      "troopSpace": 4,
+      "naval": 5,
+      "suppliesPerTrip": 1
+    }
+  ],
+  "troopSpace": {
+    "infantry": 1,
+    "cavalry": 3,
+    "siege": 4,
+    "hero": 1
+  },
+  "unitSpace": {
+    "war_elephant": 6
+  },
+  "townFleet": {
+    "pentekonters": "trade-ship",
+    "triremes": "galley"
+  }
+}

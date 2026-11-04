@@ -1,0 +1,37 @@
+{
+  "_note": "MASSALIA's agora (content/buildings/buildings.json vendor, seasonal) and players' stalls (packages/shared/src/market.ts). Bands are { sell: what the agora charges, buy: what it pays } in drachmae, per unit for goods and per lot of resourceLot for a town's four resources.",
+  "currency": { "id": "drachmae", "name": "Drachmae", "short": "dr", "start": 150 },
+  "resourceLot": 100,
+  "resources": {
+    "timber": { "sell": 4, "buy": 2, "category": "agricultural" },
+    "stone": { "sell": 4, "buy": 2, "category": "yearround" },
+    "iron": { "sell": 8, "buy": 4, "category": "yearround" },
+    "grain": { "sell": 3, "buy": 1, "category": "agricultural" }
+  },
+  "goods": [
+    { "id": "wine", "name": "Wine", "icon": "WINE.webp", "group": "goods", "category": "agricultural", "sell": 5, "buy": 2 },
+    { "id": "oliveoil", "name": "Olive Oil", "icon": "OLIVE_OIL.webp", "group": "goods", "category": "agricultural", "sell": 6, "buy": 3 },
+    { "id": "chicken", "name": "Chicken", "icon": "CHICKEN.webp", "group": "goods", "category": "yearround", "sell": 3, "buy": 1 },
+    { "id": "bull", "name": "Bull", "icon": "BULL.webp", "group": "goods", "category": "agricultural", "sell": 25, "buy": 12 },
+    { "id": "horse", "name": "Horse", "icon": "HORSE.webp", "group": "goods", "category": "agricultural", "sell": 30, "buy": 15 },
+    { "id": "herbal", "name": "Herbs", "icon": "HERBS.webp", "group": "goods", "category": "yearround", "sell": 5, "buy": 2 },
+    { "id": "remedy", "name": "Remedy", "icon": "REMEDY.webp", "group": "goods", "category": "yearround", "sell": 40, "buy": 15 },
+    { "id": "poison", "name": "Poison", "icon": "POISON.webp", "group": "goods", "category": "yearround", "sell": 120, "buy": 40 },
+    { "id": "wool", "name": "Wool", "icon": "WOOL.webp", "group": "materials", "category": "agricultural", "sell": 5, "buy": 2 },
+    { "id": "salt", "name": "Salt", "icon": "SALT.webp", "group": "materials", "category": "yearround", "sell": 6, "buy": 3 },
+    { "id": "leather", "name": "Leather", "icon": "LEATHER.webp", "group": "materials", "category": "agricultural", "sell": 6, "buy": 3 },
+    { "id": "lead", "name": "Lead", "icon": "LEAD.webp", "group": "materials", "category": "yearround", "sell": 7, "buy": 3 },
+    { "id": "marble", "name": "Marble", "icon": "MARBLE.webp", "group": "materials", "category": "yearround", "sell": 12, "buy": 6 },
+    { "id": "tin", "name": "Tin", "icon": "TIN.webp", "group": "materials", "category": "yearround", "sell": 12, "buy": 6 },
+    { "id": "naval-supplies", "name": "Naval Supplies", "icon": "NAVAL_SUPPLIES.webp", "group": "naval", "category": "yearround", "sell": 14, "buy": 7 },
+    { "id": "trade-ship", "name": "Pentekonter", "icon": "PENTEKONTER.webp", "group": "naval", "category": "agricultural", "sell": 90, "buy": 36 },
+    { "id": "galley", "name": "Trireme", "icon": "TRIREME.webp", "group": "naval", "category": "agricultural", "sell": 180, "buy": 72 }
+  ],
+  "seasonal": {
+    "agricultural": [1.25, 1.05, 0.85, 0.95],
+    "yearround": [1.05, 1.0, 0.98, 1.0]
+  },
+  "prestigePriceBonus": 0.002,
+  "stalls": { "max": 10, "maxQty": 1000, "maxPrice": 10000, "taxRate": 0.1 },
+  "building": "agora"
+}

@@ -1,0 +1,65 @@
+{
+  "_note": "MASSALIA's character sheet (packages/shared/src/character.ts, composure.ts, age.ts) and its daily routine (routines.ts, content/routines). One routine per season here: a MASSALIA day is a season. Faction start bonuses and the stat effects in 'effects' are EMPORION's.",
+  "stats": [
+    { "id": "prestige", "name": "Prestige", "icon": "stat-prestige", "about": "Fame. +0.5% culture in every town per point, better prices at the agora, and at 10 or more rivals may plot against you." },
+    { "id": "devotion", "name": "Devotion", "icon": "stat-devotion", "about": "The gods' favour: each point makes an altar's blessing 1% stronger." },
+    { "id": "militia", "name": "Militia", "icon": "stat-militia", "about": "Soldiering: the hero fights 1% harder per point, and half of it guards against assassins." },
+    { "id": "intelligence", "name": "Intelligence", "icon": "stat-intelligence", "about": "Wits: the odds of every plot, made or foiled, and 1% stronger scouts per point." }
+  ],
+  "cap": 100,
+  "start": {
+    "hellenes": { "intelligence": 2 },
+    "celts": { "militia": 2 },
+    "carthaginians": { "prestige": 2 }
+  },
+  "effects": { "prestigeCulture": 0.005, "devotionAltar": 0.01, "militiaHero": 0.01, "intelligenceScouts": 0.01 },
+  "decay": [
+    { "fromAge": 40, "militia": 2 },
+    { "fromAge": 55, "militia": 4, "intelligence": 2, "devotion": 2 },
+    { "fromAge": 65, "militia": 6, "intelligence": 4, "devotion": 4 }
+  ],
+  "succession": { "keep": { "prestige": 1, "devotion": 0.5, "militia": 0.5, "intelligence": 0.5 } },
+  "composure": { "start": 70, "recoveryPerSeason": 5, "breakResetTo": 50 },
+  "traits": [
+    { "id": "poisoned", "name": "Poisoned", "kind": "flaw", "description": "Poison works in the blood. A physician and a remedy can cure it.", "stats": { "militia": -3, "intelligence": -2, "prestige": -1 }, "heroStrength": -0.2 },
+    { "id": "rhetoric-1", "name": "Stammering Speaker", "kind": "asset", "description": "Has begun to speak in the agora.", "stats": { "prestige": 2 } },
+    { "id": "rhetoric-2", "name": "Orator", "kind": "asset", "description": "Holds the agora when he speaks.", "stats": { "prestige": 4 } },
+    { "id": "rhetoric-3", "name": "Voice of the Agora", "kind": "asset", "description": "The city listens when he speaks.", "stats": { "prestige": 6 } },
+    { "id": "philosophia-1", "name": "Scribe", "kind": "asset", "description": "Reads and copies the masters.", "stats": { "intelligence": 2 } },
+    { "id": "philosophia-2", "name": "Thinker", "kind": "asset", "description": "Argues with the masters.", "stats": { "intelligence": 4 } },
+    { "id": "philosophia-3", "name": "Sage of Massalia", "kind": "asset", "description": "Others copy him now.", "stats": { "intelligence": 6 } },
+    { "id": "gymnasium-1", "name": "Levy", "kind": "asset", "description": "Knows which end of the spear goes forward.", "stats": { "militia": 2 } },
+    { "id": "gymnasium-2", "name": "Phalangite", "kind": "asset", "description": "Holds his place in the line.", "stats": { "militia": 4 } },
+    { "id": "gymnasium-3", "name": "Strategos-Trained", "kind": "asset", "description": "Could lead the line himself.", "stats": { "militia": 6 } },
+    { "id": "mysteries-1", "name": "Acolyte", "kind": "asset", "description": "Has learned the first rites.", "stats": { "devotion": 2 } },
+    { "id": "mysteries-2", "name": "Initiate", "kind": "asset", "description": "Has seen what the uninitiated may not.", "stats": { "devotion": 4 } },
+    { "id": "mysteries-3", "name": "Oracle's Chosen", "kind": "asset", "description": "The god speaks through him.", "stats": { "devotion": 6 } }
+  ],
+  "ladders": [
+    { "id": "rhetoric", "name": "Rhetoric", "stat": "prestige", "tiers": [{ "xp": 8, "trait": "rhetoric-1" }, { "xp": 20, "trait": "rhetoric-2" }, { "xp": 40, "trait": "rhetoric-3" }] },
+    { "id": "philosophia", "name": "Philosophia", "stat": "intelligence", "tiers": [{ "xp": 8, "trait": "philosophia-1" }, { "xp": 20, "trait": "philosophia-2" }, { "xp": 40, "trait": "philosophia-3" }] },
+    { "id": "gymnasium", "name": "Gymnasium", "stat": "militia", "tiers": [{ "xp": 8, "trait": "gymnasium-1" }, { "xp": 20, "trait": "gymnasium-2" }, { "xp": 40, "trait": "gymnasium-3" }] },
+    { "id": "mysteries", "name": "Mysteries", "stat": "devotion", "tiers": [{ "xp": 8, "trait": "mysteries-1" }, { "xp": 20, "trait": "mysteries-2" }, { "xp": 40, "trait": "mysteries-3" }] }
+  ],
+  "day": { "picksPerSeason": 1, "repeatPenalty": 0.5 },
+  "routines": [
+    { "id": "routine-gymnasium", "pool": "citizen", "name": "Train at the gymnasium", "effects": { "militia": 1 }, "ladder": "gymnasium", "xp": 2, "fee": 2, "waivedBy": "gymnasion" },
+    { "id": "routine-ride", "pool": "citizen", "name": "Ride the hills", "effects": { "militia": 1, "composure": 3 }, "needs": { "good": "horse", "qty": 1, "keep": true }, "waivedBy": "stables" },
+    { "id": "routine-stoa", "pool": "citizen", "name": "Study at the stoa", "effects": { "intelligence": 1 }, "ladder": "philosophia", "xp": 2, "boostedBy": { "philosopher": { "amount": 1.5, "xp": 1.5, "composure": 2 } } },
+    { "id": "routine-oratory", "pool": "citizen", "name": "Practice oratory in the agora", "effects": { "prestige": 1 }, "ladder": "rhetoric", "xp": 2 },
+    { "id": "routine-symposium", "pool": "citizen", "name": "Evening symposion", "effects": { "prestige": 1, "intelligence": 1 }, "needs": { "good": "wine", "qty": 1 } },
+    { "id": "routine-offerings", "pool": "citizen", "name": "Make an offering", "effects": { "devotion": 1, "composure": 3 }, "needs": { "good": "chicken", "qty": 1 }, "ladder": "mysteries", "xp": 2, "boostedBy": { "priest": { "amount": 1.5, "xp": 1.5, "composure": 2 } } },
+    { "id": "routine-holdings", "pool": "citizen", "name": "Oversee your holdings", "effects": { "drachmae": 10 } },
+    { "id": "routine-spar", "pool": "citizen", "name": "Spar with arms", "effects": { "militia": 1, "composure": -5 }, "ladder": "gymnasium", "xp": 1 },
+    { "id": "routine-rest", "pool": "citizen", "name": "Rest at the estate", "effects": { "composure": 15 } },
+    { "id": "routine-harbor", "pool": "citizen", "name": "Walk the harbor and reflect", "effects": { "intelligence": 1, "composure": 3 } },
+    { "id": "routine-bathhouse", "pool": "citizen", "name": "Bathhouse visit", "effects": { "composure": 5 }, "fee": 1 },
+    { "id": "routine-het-salon", "pool": "hetaira", "name": "Host a salon", "effects": { "prestige": 1 }, "ladder": "rhetoric", "xp": 2 },
+    { "id": "routine-het-symposium", "pool": "hetaira", "name": "Work a symposium", "effects": { "prestige": 1, "intelligence": 1 } },
+    { "id": "routine-het-patron", "pool": "hetaira", "name": "Cultivate a patron", "effects": { "drachmae": 12 } },
+    { "id": "routine-het-secrets", "pool": "hetaira", "name": "Trade in secrets", "effects": { "intelligence": 1 } },
+    { "id": "routine-het-arts", "pool": "hetaira", "name": "Tend your arts", "effects": { "prestige": 1, "composure": 3 } },
+    { "id": "routine-het-quiet", "pool": "hetaira", "name": "A quiet evening alone", "effects": { "composure": 12 } }
+  ],
+  "pools": { "citizen": null, "hetaira": "hetaira" }
+}

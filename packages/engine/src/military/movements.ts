@@ -22,6 +22,7 @@ import {
   troopSpeedBonus,
 } from "../village/stats.js";
 import { slowestSpeed } from "./combat.js";
+import { assembleFleet, checkFleet, harbourFleet, launchVoyage, navalStrength, seaRoute, troopSpace } from "../massalia/sea.js";
 import { ownVillage } from "../economy/construction.js";
 
 // ---------------------------------------------------------------------------
@@ -50,6 +51,7 @@ export interface SendOrder {
   troops: Troops;
   hero?: boolean;
   targets?: string[];
+  ships?: Record<string, number>; // hulls for a crossing; picked automatically when absent
 }
 
 export interface TargetInfo {
@@ -171,6 +173,26 @@ export function sendTroops(state: GameState, content: Content, order: SendOrder,
 
   const speed = slowestSpeed(content, troops, withHero ? content.hero.speed : null);
   const arriveAt = now + marchMs(state, content, v, fromTile, order.toTile, speed);
+
+  // Over open sea the troops need hulls (MASSALIA's ships).
+  let ships: Record<string, number> | undefined;
+  const route = seaRoute(content, fromTile, order.toTile);
+  if (route.crossesSea && player.kind !== "npc") {
+    const space = troopSpace(content, troops, withHero);
+    const tv = target.kind === "village" ? target.village! : null;
+    const escort = (order.mission === "attack" || order.mission === "raid") && !!tv && navalStrength(content, harbourFleet(state, content, tv)) > 0;
+    let fleet: Record<string, number>;
+    if (order.ships) fleet = order.ships;
+    else {
+      const picked = assembleFleet(content, player, space, route.zones, escort);
+      if (!picked.ok) return picked;
+      fleet = picked.ships;
+    }
+    const chk = checkFleet(content, player, fleet, space, route.zones);
+    if (!chk.ok) return chk;
+    ships = Object.fromEntries(Object.entries(fleet).filter(([, n]) => n > 0));
+  }
+
   addTroops(v.troops, troops, -1);
   const movement: Movement = {
     id: newId(state, "m"),
@@ -194,6 +216,11 @@ export function sendTroops(state: GameState, content: Content, order: SendOrder,
     arriveAt,
     mission: order.mission,
   };
+  if (ships) {
+    movement.ships = ships;
+    movement.seaZones = route.zones;
+    launchVoyage(state, content, player, ships, now, arriveAt);
+  }
   state.movements[movement.id] = movement;
   if (withHero && hero) {
     hero.status = "moving";

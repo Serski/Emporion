@@ -6,15 +6,23 @@ import {
   type FamilyTraitDef,
   type FactionDef,
   type FieldDef,
+  type GoodDef,
   type HeroDef,
   type KingdomsDef,
+  type LadderDef,
   type LayoutDef,
   type MapDef,
+  type MassaliaDef,
   type OasisTypeDef,
   type ParsedBundle,
+  type PersonTypeDef,
+  type ProfileTraitDef,
   type QueueDef,
+  type RecipeDef,
   type Requirement,
   type ResourceDef,
+  type RoutineDef,
+  type ShipDef,
   type TownDef,
   type UnitDef,
   type WorldDef,
@@ -44,6 +52,17 @@ export interface Content {
   mapRegion: Int32Array; // region index per tile (-1 none)
   towns: Record<string, TownDef>;
   townAtTile: Map<number, TownDef>;
+  // The MASSALIA pack and its lookups.
+  massalia: MassaliaDef;
+  goods: Record<string, GoodDef>;
+  goodIds: string[];
+  people: Record<string, PersonTypeDef>;
+  peopleIds: string[];
+  routines: Record<string, RoutineDef>;
+  profileTraits: Record<string, ProfileTraitDef>;
+  ladders: Record<string, LadderDef>;
+  recipes: Record<string, RecipeDef>;
+  ships: Record<string, ShipDef>;
 }
 
 export class ContentError extends Error {
@@ -196,6 +215,94 @@ export function parseContent(raw: ContentBundle): Content {
   }
   if (world.calendar.seasons.length === 0) fail("calendar needs at least one season");
 
+  // --- the MASSALIA pack ---
+  const { massalia } = bundle;
+  const { market, people: peopleFile, profile, crafting, ships: shipsFile, intrigue } = massalia;
+  const goods: Record<string, GoodDef> = {};
+  for (const g of market.goods) {
+    if (goods[g.id]) fail(`market: duplicate good ${g.id}`);
+    if (resourceSet.has(g.id)) fail(`market: good ${g.id} is also a town resource`);
+    goods[g.id] = g;
+    if (g.sell < g.buy) fail(`market: the agora would pay more for ${g.id} than it charges`);
+  }
+  const goodIds = market.goods.map((g) => g.id);
+  const isGood = (id: string) => !!goods[id];
+  for (const r of resourceIds) if (!market.resources[r]) fail(`market: no price band for resource ${r}`);
+  for (const [r, band] of Object.entries(market.resources)) {
+    if (!resourceSet.has(r)) fail(`market: unknown resource ${r}`);
+    if (band.sell < band.buy) fail(`market: the agora would pay more for ${r} than it charges`);
+  }
+  const seasonCount = world.calendar.seasons.length;
+  for (const [cat, coeffs] of Object.entries(market.seasonal)) {
+    if (coeffs.length !== seasonCount) fail(`market: ${cat} prices need ${seasonCount} seasonal coefficients`);
+  }
+  if (!buildings[market.building]) fail(`market: unknown building ${market.building}`);
+  if (!buildings[peopleFile.building]) fail(`people: unknown building ${peopleFile.building}`);
+
+  const people: Record<string, PersonTypeDef> = {};
+  for (const p of peopleFile.people) {
+    if (people[p.id]) fail(`people: duplicate ${p.id}`);
+    people[p.id] = p;
+    if (p.production) checkRes(p.production, `people ${p.id} production`);
+  }
+  const peopleIds = peopleFile.people.map((p) => p.id);
+
+  const statIds = new Set(profile.stats.map((x) => x.id));
+  const profileTraits: Record<string, ProfileTraitDef> = {};
+  for (const t of profile.traits) {
+    if (profileTraits[t.id]) fail(`profile: duplicate trait ${t.id}`);
+    profileTraits[t.id] = t;
+    for (const k of Object.keys(t.stats)) if (!statIds.has(k)) fail(`profile trait ${t.id}: unknown stat ${k}`);
+  }
+  if (!profileTraits["poisoned"]) fail(`profile: the poisoned trait is missing`);
+  const ladders: Record<string, LadderDef> = {};
+  for (const l of profile.ladders) {
+    ladders[l.id] = l;
+    if (!statIds.has(l.stat)) fail(`ladder ${l.id}: unknown stat ${l.stat}`);
+    for (const t of l.tiers) if (!profileTraits[t.trait]) fail(`ladder ${l.id}: unknown trait ${t.trait}`);
+  }
+  for (const [fid, bonus] of Object.entries(profile.start)) {
+    if (!factions[fid]) fail(`profile start: unknown faction ${fid}`);
+    for (const k of Object.keys(bonus)) if (!statIds.has(k)) fail(`profile start ${fid}: unknown stat ${k}`);
+  }
+  for (const d of profile.decay) for (const k of Object.keys(d)) if (k !== "fromAge" && !statIds.has(k)) fail(`profile decay: unknown stat ${k}`);
+  const routines: Record<string, RoutineDef> = {};
+  for (const r of profile.routines) {
+    if (routines[r.id]) fail(`routine: duplicate ${r.id}`);
+    routines[r.id] = r;
+    if (!(r.pool in profile.pools)) fail(`routine ${r.id}: unknown pool ${r.pool}`);
+    for (const k of Object.keys(r.effects)) if (!statIds.has(k) && k !== "composure" && k !== "drachmae") fail(`routine ${r.id}: unknown effect ${k}`);
+    if (r.ladder && !ladders[r.ladder]) fail(`routine ${r.id}: unknown ladder ${r.ladder}`);
+    if (r.needs && !isGood(r.needs.good)) fail(`routine ${r.id}: unknown good ${r.needs.good}`);
+    if (r.waivedBy && !buildings[r.waivedBy]) fail(`routine ${r.id}: unknown building ${r.waivedBy}`);
+    for (const k of Object.keys(r.boostedBy ?? {})) if (!people[k]) fail(`routine ${r.id}: unknown person ${k}`);
+  }
+  for (const [pool, who] of Object.entries(profile.pools)) if (who && !people[who]) fail(`routine pool ${pool}: unknown person ${who}`);
+
+  const recipes: Record<string, RecipeDef> = {};
+  for (const r of crafting.recipes) {
+    if (recipes[r.id]) fail(`craft: duplicate recipe ${r.id}`);
+    recipes[r.id] = r;
+    for (const g of [...Object.keys(r.output), ...Object.keys(r.goods)]) if (!isGood(g)) fail(`craft ${r.id}: unknown good ${g}`);
+    checkRes(r.resources, `craft ${r.id}`);
+    if (r.building && !buildings[r.building]) fail(`craft ${r.id}: unknown building ${r.building}`);
+    for (const k of Object.keys(r.people)) if (!people[k]) fail(`craft ${r.id}: unknown person ${k}`);
+  }
+  if (!buildings[crafting.altar.building]) fail(`altar: unknown building ${crafting.altar.building}`);
+  for (const o of crafting.altar.offerings) if (!isGood(o.good)) fail(`altar: unknown good ${o.good}`);
+
+  const ships: Record<string, ShipDef> = {};
+  for (const sh of shipsFile.ships) {
+    ships[sh.id] = sh;
+    if (!isGood(sh.id)) fail(`ship ${sh.id} is not a market good`);
+  }
+  if (!isGood(shipsFile.supplyGood)) fail(`ships: supply good ${shipsFile.supplyGood} is not a market good`);
+  for (const id of Object.values(shipsFile.townFleet)) if (!ships[id]) fail(`ships: town fleet names unknown ship ${id}`);
+  for (const u of Object.keys(shipsFile.unitSpace)) if (!units[u]) fail(`ships: unknown unit ${u}`);
+  if (!isGood(intrigue.poison.good)) fail(`intrigue: unknown good ${intrigue.poison.good}`);
+  if (!isGood(intrigue.cure.good)) fail(`intrigue: unknown good ${intrigue.cure.good}`);
+  if (!people[intrigue.cure.needs]) fail(`intrigue: unknown person ${intrigue.cure.needs}`);
+
   if (problems.length) throw new ContentError(problems);
 
   return {
@@ -221,6 +328,16 @@ export function parseContent(raw: ContentBundle): Content {
     mapRegion,
     towns,
     townAtTile,
+    massalia,
+    goods,
+    goodIds,
+    people,
+    peopleIds,
+    routines,
+    profileTraits,
+    ladders,
+    recipes,
+    ships,
   };
 }
 

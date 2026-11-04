@@ -8,6 +8,12 @@ import { assignHeroPoints, moveHeroHome, reviveHero, setHeroProduction } from ".
 import { collectTribute, foundKingdom, joinKingdom, leaveKingdom } from "./social/kingdoms.js";
 import { adopt, ensureFamilies, marry, nameChild } from "./social/family.js";
 import { markRead } from "./social/reports.js";
+import { craft, sacrifice } from "./massalia/crafting.js";
+import { dismiss, ensureMassalia, hire } from "./massalia/house.js";
+import { assassinate, cure, poison, setPosture } from "./massalia/intrigue.js";
+import { buyStall, cancelStall, listStall, vendorTrade } from "./massalia/market.js";
+import { doRoutine } from "./massalia/profile.js";
+import { ensureStates } from "./massalia/states.js";
 import { touch } from "./village/timeline.js";
 import { advance, advanceAll, settle } from "./world/settle.js";
 import { addPlayer, createWorld, type AddPlayerOptions, type WorldOptions } from "./world/world.js";
@@ -171,6 +177,73 @@ export class Game {
     markRead(this.state, playerId, reportId);
   }
 
+  // --- MASSALIA's markets, people, day, crafts, altar and plots ---
+
+  vendorTrade(playerId: string, villageId: string, action: "buy" | "sell", good: string, qty: number, now: Ms) {
+    this.at(now);
+    return vendorTrade(this.state, this.content, playerId, villageId, action, good, qty, now);
+  }
+
+  listStall(playerId: string, villageId: string, good: string, qty: number, price: number, now: Ms) {
+    this.at(now);
+    return listStall(this.state, this.content, playerId, villageId, good, qty, price, now);
+  }
+
+  buyStall(playerId: string, villageId: string, stallId: string, qty: number, now: Ms) {
+    this.at(now);
+    return buyStall(this.state, this.content, playerId, villageId, stallId, qty, now);
+  }
+
+  cancelStall(playerId: string, stallId: string, now: Ms) {
+    this.at(now);
+    return cancelStall(this.state, this.content, playerId, stallId, now);
+  }
+
+  hire(playerId: string, villageId: string, personId: string, count: number, now: Ms) {
+    this.at(now);
+    return hire(this.state, this.content, playerId, villageId, personId, count, now);
+  }
+
+  dismiss(playerId: string, personId: string, count: number, now: Ms) {
+    this.at(now);
+    return dismiss(this.state, this.content, playerId, personId, count, now);
+  }
+
+  doRoutine(playerId: string, routineId: string, now: Ms) {
+    this.at(now);
+    return doRoutine(this.state, this.content, playerId, routineId, now);
+  }
+
+  craft(playerId: string, recipeId: string, villageId: string | null, now: Ms) {
+    this.at(now);
+    return craft(this.state, this.content, playerId, recipeId, villageId, now);
+  }
+
+  sacrifice(playerId: string, villageId: string, good: string, now: Ms) {
+    this.at(now);
+    return sacrifice(this.state, this.content, playerId, villageId, good, now);
+  }
+
+  poison(playerId: string, targetId: string, now: Ms) {
+    this.at(now);
+    return poison(this.state, this.content, playerId, targetId, now);
+  }
+
+  assassinate(playerId: string, targetId: string, now: Ms) {
+    this.at(now);
+    return assassinate(this.state, this.content, playerId, targetId, now);
+  }
+
+  cure(playerId: string, now: Ms) {
+    this.at(now);
+    return cure(this.state, this.content, playerId, now);
+  }
+
+  setPosture(playerId: string, posture: "guard" | "hunt", now: Ms) {
+    this.at(now);
+    return setPosture(this.state, this.content, playerId, posture, now);
+  }
+
   // Plain JSON for storage; Game.restore(content, JSON.parse(json)) reverses it.
   serialize(): string {
     return JSON.stringify(this.state);
@@ -178,8 +251,11 @@ export class Game {
 
   static restore(content: Content, state: GameState): Game {
     if (state.schema !== 1) throw new Error(`unsupported save schema ${String((state as { schema?: unknown }).schema)}`);
-    // Saves from before the family pack get their houses now.
+    // Saves from before the family pack get their houses now, and saves from
+    // before the MASSALIA pack their purses, sheets and states.
     ensureFamilies(state, content, state.time);
+    ensureMassalia(state, content, state.time);
+    ensureStates(state, content, state.time);
     return new Game(content, state);
   }
 }

@@ -5,11 +5,15 @@ import { touch } from "../village/timeline.js";
 import { runNpcRaids } from "./npc.js";
 import { botTurn } from "../ai/bot.js";
 import { runFamilyYear } from "../social/family.js";
+import { finishCrafts } from "../massalia/crafting.js";
+import { runSeason } from "../massalia/house.js";
+import { shipsHome } from "../massalia/sea.js";
 
 // ---------------------------------------------------------------------------
 // The world clock. `settle(state, content, until)` processes every
 // cross-village event due by `until` in time order (ties by creation order):
-// marches arriving, NPC raid waves. Each handler touches the villages it
+// marches arriving, NPC raid waves, AI turns, the turn of the year and of the
+// season, finished crafts and hulls home from sea. Each handler touches the villages it
 // changes at the event's instant, so their own timelines stay exact.
 //
 // A server calls settle(now) before every request; the local client calls it
@@ -41,6 +45,9 @@ export function settle(state: GameState, content: Content, until: Ms): void {
       if (next.event.kind === "npcRaids") runNpcRaids(state, content, next.event.at);
       else if (next.event.kind === "aiTurn" && next.event.playerId) botTurn(state, content, next.event.playerId, next.event.at);
       else if (next.event.kind === "familyYear") runFamilyYear(state, content, next.event.at);
+      else if (next.event.kind === "season") runSeason(state, content, next.event.at);
+      else if (next.event.kind === "craftDone" && next.event.playerId) finishCrafts(state, content, next.event.playerId, next.event.at);
+      else if (next.event.kind === "shipsHome" && next.event.playerId) shipsHome(state, content, next.event.playerId, next.event.at);
     }
   }
   if (until > state.time) state.time = until;

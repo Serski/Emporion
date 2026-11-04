@@ -9,6 +9,9 @@ import { capacity } from "../village/stats.js";
 import { scheduleBot } from "../ai/bot.js";
 import { createHouse, familyEnabled, scheduleFamilyYear } from "../social/family.js";
 import { territoryAt } from "./territory.js";
+import { scheduleSeason } from "../massalia/house.js";
+import { createProfile } from "../massalia/profile.js";
+import { ensureStates } from "../massalia/states.js";
 
 export interface WorldOptions {
   seed?: number;
@@ -50,10 +53,13 @@ export function createWorld(content: Content, opts: WorldOptions): GameState {
     kingdoms: {},
     scheduled: [],
     npc: { campsPlayerId: null, townsPlayerId: null },
+    market: { stalls: {}, taxCollected: 0 },
   };
   if (opts.npcTowns !== false) placeTowns(state, content);
+  ensureStates(state, content, opts.startedAt);
   placeCamps(state, content, state.settings.npcCamps);
   scheduleFamilyYear(state, content, opts.startedAt);
+  scheduleSeason(state, content, opts.startedAt);
   if (state.settings.npcRaids && state.npc.campsPlayerId) {
     const interval = (content.world.npc.camps.raids.intervalHours * HOUR) / speed;
     state.scheduled.push({ id: newId(state, "e"), seq: nextSeq(state), at: Math.round(opts.startedAt + interval), kind: "npcRaids" });
@@ -66,13 +72,13 @@ function npcPlayer(state: GameState, content: Content, which: "camps" | "towns")
   const existing = state.npc[key];
   if (existing && state.players[existing]) return state.players[existing]!;
   const cfg = content.world.npc[which];
-  const p = makePlayer(state, cfg.playerName, cfg.factionId, "npc", state.settings.startedAt);
+  const p = makePlayer(state, content, cfg.playerName, cfg.factionId, "npc", state.settings.startedAt);
   p.protectedUntil = 0;
   state.npc[key] = p.id;
   return p;
 }
 
-function makePlayer(state: GameState, name: string, factionId: string, kind: PlayerKind, at: Ms): Player {
+function makePlayer(state: GameState, content: Content, name: string, factionId: string, kind: PlayerKind, at: Ms): Player {
   const p: Player = {
     id: newId(state, "p"),
     name,
@@ -89,6 +95,14 @@ function makePlayer(state: GameState, name: string, factionId: string, kind: Pla
     hero: null,
     house: null,
     kingdomId: null,
+    purse: kind === "npc" ? 0 : content.massalia.market.currency.start,
+    goods: {},
+    people: {},
+    profile: kind === "npc" ? null : createProfile(content, factionId),
+    crafts: [],
+    altar: null,
+    voyages: [],
+    polityId: null,
     meta: {},
   };
   state.players[p.id] = p;
@@ -202,7 +216,7 @@ export interface AddPlayerOptions {
 export function addPlayer(state: GameState, content: Content, opts: AddPlayerOptions): { player: Player; village: Village } {
   const faction = content.factions[opts.factionId];
   if (!faction || !faction.playable) throw new Error(`faction ${opts.factionId} is not playable`);
-  const player = makePlayer(state, opts.name, faction.id, opts.kind ?? "human", opts.at);
+  const player = makePlayer(state, content, opts.name, faction.id, opts.kind ?? "human", opts.at);
   const tile = findStartTile(state, content, faction.id, opts.nearTile);
   const village = createVillage(state, content, {
     ownerId: player.id,

@@ -17,7 +17,8 @@ export type FailCode =
   | "culture"
   | "no_slot"
   | "no_merchants"
-  | "storage";
+  | "storage"
+  | "limit";
 
 export interface Fail {
   ok: false;

@@ -37,6 +37,7 @@ export interface HeroInBattle {
 export interface BattleSideInput {
   stacks: UnitStack[];
   hero: HeroInBattle | null;
+  boost?: number; // multiplies the side's strength (an altar's blessing); 1 when absent
 }
 
 export interface BattleInput {
@@ -88,10 +89,10 @@ export function defenseOf(side: BattleSideInput, infShare: number, armoryBonus: 
 export const resolveBattle: BattleResolver = (input) => {
   const parts = attackParts(input.attacker, input.armoryBonusPerLevel);
   const raw = parts.infantry + parts.cavalry;
-  const attackPower = raw * (1 + (input.attacker.hero?.offenseBonus ?? 0)) * input.attacker.morale;
+  const attackPower = raw * (1 + (input.attacker.hero?.offenseBonus ?? 0)) * input.attacker.morale * (input.attacker.boost ?? 1);
   const infShare = raw > 0 ? parts.infantry / raw : 1;
   let defense = input.baseDefense;
-  for (const d of input.defenders) defense += defenseOf(d, infShare, input.armoryBonusPerLevel);
+  for (const d of input.defenders) defense += defenseOf(d, infShare, input.armoryBonusPerLevel) * (d.boost ?? 1);
   const defensePower = defense * (1 + input.wallBonusPerLevel) ** input.wallLevel;
 
   if (attackPower <= 0) {

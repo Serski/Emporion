@@ -8,6 +8,7 @@ import { capacity } from "../village/stats.js";
 import { touchId } from "../village/timeline.js";
 import { ageAt, calendarAt, yearIndexAt, yearMs } from "../world/calendar.js";
 import { addReport } from "./reports.js";
+import { ageDecay, heroStatFactor, inheritProfile } from "../massalia/profile.js";
 
 // ---------------------------------------------------------------------------
 // The family, ported from MASSALIA's family pack and seated on the hero: the
@@ -195,11 +196,14 @@ export interface FamilyMods {
   cultureBonus: number; // in the hero's home town
 }
 
+// What the house gives its hero: the head's age and his wife's trait, and from
+// the MASSALIA pack his militia, his afflictions and a philosopher's tutoring.
 export function familyMods(state: GameState, content: Content, player: Player | undefined, t: Ms): FamilyMods {
-  const out: FamilyMods = { strength: 1, defenseBonus: 0, xpBonus: 0, cultureBonus: 0 };
+  const out: FamilyMods = { strength: heroStatFactor(content, player), defenseBonus: 0, xpBonus: 0, cultureBonus: 0 };
+  for (const [id, n] of Object.entries(player?.people ?? {})) if (n > 0) out.xpBonus += content.people[id]?.heroXpBonus ?? 0;
   const h = player?.house;
   if (!h || !familyEnabled(content)) return out;
-  out.strength = lifeStage(content, personAge(state, content, h.head, t)).strength;
+  out.strength *= lifeStage(content, personAge(state, content, h.head, t)).strength;
   if (alive(h.spouse)) {
     const tr = traitOf(content, h.spouse);
     out.defenseBonus += tr?.heroDefenseBonus ?? 0;
@@ -278,11 +282,12 @@ function processHouse(state: GameState, content: Content, p: Player, at: Ms): vo
     }
   }
 
-  // Old age takes the head.
+  // Old age takes the head; short of that, it wears down his stats.
   if (age(h.head) >= h.head.deathAge) {
     succeed(state, content, p, at, "old age");
     return;
   }
+  ageDecay(state, content, p, age(h.head), at);
 
   if (!alive(h.spouse)) h.candidates = drawCandidates(state, content, p, at);
   const hasSon = h.children.some((c) => alive(c) && c.sex === "male");
@@ -305,6 +310,12 @@ export function successionPreview(state: GameState, content: Content, p: Player,
   if (h.adoptedHeir) return { kind: "adopted", heir: h.adoptedHeir, carryover: f.succession.xpCarryover.adopted };
   if (sons[0]) return { kind: "regent", heir: sons[0], carryover: f.succession.xpCarryover.regent };
   return { kind: "forced", heir: null, carryover: f.succession.xpCarryover.adopted };
+}
+
+// The head dies now (poison, an assassin's knife): the house passes on at once.
+export function headDies(state: GameState, content: Content, p: Player, at: Ms, cause: string): void {
+  if (!p.house) return;
+  succeed(state, content, p, at, cause);
 }
 
 function succeed(state: GameState, content: Content, p: Player, at: Ms, cause: string): void {
@@ -367,6 +378,7 @@ function install(state: GameState, content: Content, p: Player, next: Person, ki
   h.generation += 1;
   h.candidates = drawCandidates(state, content, p, at);
   h.adoptees = [];
+  inheritProfile(state, content, p, at);
 
   if (hero) {
     const xp = Math.floor(hero.xp * carry);
