@@ -6,6 +6,8 @@ import {
   hexCentre,
   hexNeighbour,
   kingdomAtTile,
+  stateIds,
+  statePerHex,
   territoryMap,
   tileDetails,
   tileIndex,
@@ -143,10 +145,104 @@ function townPolityColor(townId: string | null): string {
 // Kingdom frontiers run over them as a gold line.
 function claimColor(state: GameState, me: string, villageId: string): string | null {
   const v = state.villages[villageId];
-  if (!v || v.kind === "camp") return null;
-  if (v.kind === "town") return townPolityColor(v.npc?.townId ?? null);
+  // Free cities belong to their states, whose land is drawn whole (below).
+  if (!v || v.kind !== "player") return null;
   if (v.ownerId === me) return "#e8b04a";
   return factionColor(state.players[v.ownerId]?.factionId ?? "");
+}
+
+// --- MASSALIA's states: each power's land washed in its colour, one border
+// around the whole state (its "realm rim"), and its name at low zoom.
+const STATE_OF = statePerHex(content);
+const STATE_IDS = stateIds(content);
+const STATE_COLOR = STATE_IDS.map((id) => content.map.polities[id]?.color ?? "#b9a88a");
+const STATE_HEXES: number[][] = STATE_IDS.map(() => []);
+for (let t = 0; t < W * H; t++) if (STATE_OF[t]! >= 0) STATE_HEXES[STATE_OF[t]!]!.push(t);
+// Every edge where a state's land meets another state's, the sea or the edge.
+const STATE_RIMS: { tile: number; dir: number; state: number }[] = [];
+for (let t = 0; t < W * H; t++) {
+  const st = STATE_OF[t]!;
+  if (st < 0) continue;
+  for (let d = 0; d < 6; d++) {
+    const n = neighbourOf(t, d);
+    if (n === null || STATE_OF[n] !== st) STATE_RIMS.push({ tile: t, dir: d, state: st });
+  }
+}
+// A state's name sits on its largest region.
+const STATE_LABELS = STATE_IDS.map((id, i) => {
+  const byRegion = new Map<number, number[]>();
+  for (const t of STATE_HEXES[i]!) {
+    const r = content.mapRegion[t] ?? -1;
+    if (!byRegion.has(r)) byRegion.set(r, []);
+    byRegion.get(r)!.push(t);
+  }
+  let best: number[] = [];
+  for (const list of byRegion.values()) if (list.length > best.length) best = list;
+  if (best.length === 0) return null;
+  const x = best.reduce((a, t) => a + centreX(t), 0) / best.length;
+  const y = best.reduce((a, t) => a + centreY(t), 0) / best.length;
+  return { id, name: content.map.polities[id]?.name ?? id, x, y, n: STATE_HEXES[i]!.length };
+}).filter((l): l is NonNullable<typeof l> => !!l);
+
+let stateWash: HTMLCanvasElement | null = null;
+function stateOverlay(): HTMLCanvasElement {
+  if (stateWash) return stateWash;
+  const c = document.createElement("canvas");
+  c.width = Math.ceil(WORLD_W * OVERLAY_K);
+  c.height = Math.ceil(WORLD_H * OVERLAY_K);
+  const ctx = c.getContext("2d")!;
+  ctx.globalAlpha = 0.14;
+  STATE_HEXES.forEach((tiles, i) => {
+    ctx.beginPath();
+    for (const t of tiles) addHex(ctx, centreX(t) * OVERLAY_K, centreY(t) * OVERLAY_K, OVERLAY_K);
+    ctx.fillStyle = STATE_COLOR[i]!;
+    ctx.fill();
+  });
+  stateWash = c;
+  return c;
+}
+
+function drawStates(ctx: CanvasRenderingContext2D, f: Frame) {
+  const { zoom, sx, sy, x0, y0, wpx, hpx } = f;
+  if (zoom < 16) {
+    ctx.drawImage(stateOverlay(), x0 * OVERLAY_K, y0 * OVERLAY_K, (wpx / zoom) * OVERLAY_K, (hpx / zoom) * OVERLAY_K, 0, 0, wpx, hpx);
+  } else {
+    ctx.save();
+    ctx.globalAlpha = 0.14;
+    const byState = new Map<number, number[]>();
+    for (const t of f.visible) {
+      const st = STATE_OF[t]!;
+      if (st < 0) continue;
+      if (!byState.has(st)) byState.set(st, []);
+      byState.get(st)!.push(t);
+    }
+    for (const [st, tiles] of byState) {
+      ctx.beginPath();
+      for (const t of tiles) addHex(ctx, sx(centreX(t)), sy(centreY(t)), zoom);
+      ctx.fillStyle = STATE_COLOR[st]!;
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+  // One border per state, drawn just inside its own land.
+  const lw = zoom >= 14 ? 2.2 : zoom >= 8 ? 1.6 : 1.2;
+  const shrink = Math.max(0.8, 1 - (lw / 2 + (zoom >= 14 ? 1 : 0.4)) / (zoom * HEX_RADIUS));
+  ctx.save();
+  ctx.globalAlpha = 0.85;
+  ctx.lineWidth = lw;
+  const byState = new Map<number, { tile: number; dir: number }[]>();
+  for (const r of STATE_RIMS) {
+    if (!inView(f, r.tile)) continue;
+    if (!byState.has(r.state)) byState.set(r.state, []);
+    byState.get(r.state)!.push(r);
+  }
+  for (const [st, edges] of byState) {
+    ctx.strokeStyle = STATE_COLOR[st]!;
+    ctx.beginPath();
+    for (const e of edges) addEdge(ctx, sx(centreX(e.tile)), sy(centreY(e.tile)), zoom * shrink, e.dir);
+    ctx.stroke();
+  }
+  ctx.restore();
 }
 
 type Claims = ReturnType<typeof territoryMap>;
@@ -295,6 +391,7 @@ function draw(ctx: CanvasRenderingContext2D, wpx: number, hpx: number, view: Vie
     }
   }
 
+  drawStates(ctx, f);
   drawTerritories(ctx, f, state, me);
 
   if (zoom >= 12) {
@@ -316,12 +413,28 @@ function draw(ctx: CanvasRenderingContext2D, wpx: number, hpx: number, view: Vie
     ctx.stroke();
   }
 
-  if (zoom <= 10) {
-    ctx.font = `600 ${zoom <= 5 ? 10 : 12}px "Cinzel", Georgia, serif`;
+  if (zoom < 10) {
+    // Zoomed out: the states' names, larger for larger states.
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    for (const l of STATE_LABELS) {
+      if (l.n < 40 && zoom < 8) continue;
+      const px = sx(l.x);
+      const py = sy(l.y);
+      if (px < -120 || py < -30 || px > wpx + 120 || py > hpx + 30) continue;
+      const size = Math.max(10, Math.min(20, Math.sqrt(l.n) * 0.7));
+      ctx.font = `700 ${size}px "Cinzel", Georgia, serif`;
+      ctx.lineWidth = 3.5;
+      ctx.strokeStyle = "rgba(244, 234, 210, 0.75)";
+      ctx.strokeText(l.name.toUpperCase(), px, py);
+      ctx.fillStyle = "rgba(48, 30, 18, 0.9)";
+      ctx.fillText(l.name.toUpperCase(), px, py);
+    }
+  } else if (zoom <= 16) {
+    ctx.font = `600 ${zoom <= 12 ? 11 : 12}px "Cinzel", Georgia, serif`;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     for (const r of regionCentroids) {
-      if (zoom <= 5 && r.n < 120) continue;
       const px = sx(r.x);
       const py = sy(r.y);
       if (px < -80 || py < -20 || px > wpx + 80 || py > hpx + 20) continue;
@@ -595,15 +708,16 @@ export function MapView() {
   const hoverInfo = (() => {
     if (!hover) return null;
     const d = tileDetails(s.state, content, tileIndex(content, hover.x, hover.y));
-    const claim = d.territory && d.territory.villageId !== d.village?.id ? `Territory of ${d.territory.villageName}` : null;
+    const claim = d.territory && d.territory.villageId !== d.village?.id && s.state.villages[d.territory.villageId]?.kind === "player" ? `Territory of ${d.territory.villageName}` : null;
+    const land = d.state ? d.state.name : null;
     if (d.village) {
       const label = d.village.kind === "town" ? "Free city" : d.village.kind === "camp" ? d.village.label : `${d.village.ownerName}${d.village.isCapital ? " · capital" : ""}`;
       return { title: d.village.name, sub: `${label} · ${d.village.population} people`, layout: null };
     }
     if (d.info.oasis) return { title: d.info.oasis.name, sub: d.oasis?.ownerVillageName ? `Held by ${d.oasis.ownerVillageName}` : (claim ?? "Unclaimed oasis"), layout: null };
-    if (d.info.kind === "valley") return { title: "Free valley", sub: [d.info.regionName, claim].filter(Boolean).join(" · ") || null, layout: d.info.layout?.fields ?? null };
+    if (d.info.kind === "valley") return { title: "Free valley", sub: [land, d.info.regionName, claim].filter(Boolean).join(" · ") || null, layout: d.info.layout?.fields ?? null };
     const names: Record<string, string> = { water: "Open water", fog: "Beyond the known world", wild: "Wild land", town: "City" };
-    return { title: names[d.info.kind] ?? "Land", sub: [d.info.regionName, claim].filter(Boolean).join(" · ") || null, layout: null };
+    return { title: names[d.info.kind] ?? "Land", sub: [land, d.info.regionName, claim].filter(Boolean).join(" · ") || null, layout: null };
   })();
 
   return (
