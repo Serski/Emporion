@@ -41,6 +41,7 @@ Every push to `main` runs the gate on GitHub and, if it passes, publishes the cl
 - `engine/src/world/calendar.ts` — seasons and years; `world/territory.ts` — the borders every town claims.
 - `engine/src/views.ts` — read models for clients. `engine/src/game.ts` — the command facade.
 - `apps/web/src/session.ts` — the local host (clock, save, hot-seat). `hud.tsx` — the top bar and the HUD over the view. `views/` — the three full-screen views. `windows/` — every window.
+- `apps/web/src/front/` — the pages around the game in MASSALIA's layout: the front page, founding a house and the lobby. `route.ts` — the hash routes between them and the game. `record.ts` — the record of worlds played in this browser.
 
 ## Commit discipline
 

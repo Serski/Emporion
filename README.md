@@ -18,7 +18,7 @@ pnpm simulate       # AI governors play a world for 14 game days
 pnpm gate           # build, lint, typecheck and test everything
 ```
 
-The client runs the whole game in the browser: pick a people and a world speed, and play against AI rivals. The clock can pause, run ×1 to ×1000, or jump an hour. The game saves in localStorage. Hot-seat players can be added from the player menu.
+The client runs the whole game in the browser. The front page leads to founding a house (a people, the founder's age and face, a world), and the game opens on the map against AI rivals; the lobby keeps your world, your record and a hall of fame of the worlds that ended. The clock can pause, run ×1 to ×1000, or jump an hour. The game saves in localStorage. Hot-seat players can be added from the player menu.
 
 ## Layout
 

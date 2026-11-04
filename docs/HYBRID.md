@@ -21,6 +21,9 @@ EMPORION was built to MASSALIA's conventions so the two can merge: TypeScript en
 | the slipway's crafts | `content/massalia/crafting.json` and `massalia/crafting.ts`: the Harbor's slips and the physician's bench; the altar in the Barracks |
 | hostile acts (`content/politics/interactions.json`, `interactions.ts`) | `content/massalia/intrigue.json` and `massalia/intrigue.ts`: poison, the assassin, the cure, the spymaster's posture |
 | goods, people, stat and season art, the agora banner | `apps/web/public/assets/` and `apps/web/public/art/` |
+| the landing page, the lobby and character creation (`App.tsx` landing, `lobby/`, `CharacterCreation.tsx`, their stylesheets) | `apps/web/src/front/`: the same layouts and rules, read from the local save instead of the API |
+| the starting ages and their faces (`content/age/age-config.json` ageOptions, avatars) | `content/family.json` `head.ageOptions`, taken by `join()` as `startAge` and `portrait` |
+| MASSALIA's front painting | `apps/web/public/art/front.webp` |
 
 ## Where MASSALIA's systems go
 
