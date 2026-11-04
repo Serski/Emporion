@@ -4,6 +4,10 @@
 
 The world is MASSALIA's: the grid of 33,856 hexagons is derived from MASSALIA's hand-drawn world 2 map (its terrain art, its 175 regions and its 105 towns), and the client follows Travian Kingdoms' screen layout in MASSALIA's theme and art. It is becoming a hybrid: MASSALIA's family already runs the hero (the hero is the head of a house who marries, has children, ages and passes the sword to an heir) and MASSALIA's calendar dates the world from 300 BC. Festivals and politics come next. See [docs/HYBRID.md](docs/HYBRID.md).
 
+## Play
+
+**https://serski.github.io/Emporion/** runs the latest `main`. After every push, `.github/workflows/pages.yml` runs the gate, then rebuilds and publishes the game. It plays in the browser and saves there.
+
 ## Quick start
 
 ```bash
