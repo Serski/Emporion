@@ -18,7 +18,8 @@ EMPORION was built to MASSALIA's conventions so the two can merge: TypeScript en
 | the household's people (`people.json`) | `content/massalia/people.json` and `massalia/house.ts`, hired at the Agora, paid each season, fed from the capital |
 | the character sheet, composure, age and the daily routine (`character.ts`, `composure.ts`, `age.ts`, `routines.ts`, `content/routines`) | `content/massalia/profile.json` and `massalia/profile.ts`: four stats, traits, ladders, one routine a season |
 | the hulls and the naval check (`content/military/ships.json`, `reach.ts`, `mapActions.ts`) | `content/massalia/ships.json` and `massalia/sea.ts`: sea crossings need hulls and naval supplies; a town's fleet drives off landings |
-| the slipway's crafts | `content/massalia/crafting.json` and `massalia/crafting.ts`: the Harbor's slips and the physician's bench; the altar in the Barracks |
+| the slipway's crafts | `content/massalia/crafting.json` and `massalia/crafting.ts`: the Shipyard's slips and the hetaira's Salon; the altar in the Sanctuary, served by a priest |
+| the estates and farms: yields, staffing, `buildingYield` (× 1.8 a tier) and the seasonal production factors (`buildings.json`) | `massalia/holdings.ts` with holding buildings in `content/buildings.json` (`effects.goods`); four levels for MASSALIA's four tiers |
 | hostile acts (`content/politics/interactions.json`, `interactions.ts`) | `content/massalia/intrigue.json` and `massalia/intrigue.ts`: poison, the assassin, the cure, the spymaster's posture |
 | goods, people, stat and season art, the agora banner | `apps/web/public/assets/` and `apps/web/public/art/` |
 | the landing page, the lobby and character creation (`App.tsx` landing, `lobby/`, `CharacterCreation.tsx`, their stylesheets) | `apps/web/src/front/`: the same layouts and rules, read from the local save instead of the API |
