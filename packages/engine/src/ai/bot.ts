@@ -10,6 +10,7 @@ import { sendTroops, villageTile } from "../military/movements.js";
 import { touch } from "../village/timeline.js";
 import { buildingLevel, villageRates } from "../village/stats.js";
 import { distance } from "../world/map.js";
+import { adopt, alive, marry, personAge } from "../social/family.js";
 
 // ---------------------------------------------------------------------------
 // A simple AI governor, so a local world has rivals. Every turn (scheduled in
@@ -31,6 +32,11 @@ export function scheduleBot(state: GameState, playerId: string, at: Ms): void {
 export function botTurn(state: GameState, content: Content, playerId: string, at: Ms): void {
   const p = state.players[playerId];
   if (!p || p.kind !== "ai") return;
+  // The house: wed the first match on offer; adopt once the head grows old
+  // without a son.
+  const h = p.house;
+  if (h && !alive(h.spouse) && h.candidates[0]) marry(state, content, p.id, h.candidates[0].id, at);
+  if (h && !h.adoptedHeir && h.adoptees[0] && personAge(state, content, h.head, at) >= 45) adopt(state, content, p.id, h.adoptees[0].id, at);
   for (const id of p.villageIds) {
     const v = state.villages[id];
     if (!v) continue;

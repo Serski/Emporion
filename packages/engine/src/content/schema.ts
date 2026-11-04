@@ -332,6 +332,11 @@ const levelScaleSchema = z.object({ base: nonNeg, per10000: nonNeg, max: posInt 
 export const worldSchema = z
   .object({
     defaults: z.object({ name: z.string(), speed: pos, npcCamps: int.nonnegative() }).strict(),
+    // MASSALIA's calendar: one season per `seasonHours` at speed 1, four seasons
+    // a year, years counted down from startYearBC.
+    calendar: z.object({ seasonHours: pos, seasons: z.array(z.string()).min(1), startYearBC: int }).strict(),
+    // Every town claims the tiles within this many fields (the nearest town wins).
+    territory: z.object({ townRadius: nonNeg, cityRadius: nonNeg }).strict(),
     village: z
       .object({
         slots: posInt,
@@ -428,6 +433,65 @@ export const worldSchema = z
   })
   .strict();
 
+// --- family (ported from MASSALIA's family pack) ---------------------------------
+
+const ageRange = z.tuple([nonNeg, nonNeg]);
+const namePoolSchema = z.object({ male: z.array(z.string()).min(1), female: z.array(z.string()).min(1) }).strict();
+
+export const familySchema = z
+  .object({
+    enabled: z.boolean(),
+    comingOfAge: posInt,
+    head: z.object({ startAge: nonNeg, deathAge: z.object({ min: posInt, max: posInt }).strict() }).strict(),
+    lifeStages: z.array(z.object({ fromAge: nonNeg, name: z.string(), strength: pos }).strict()).min(1),
+    portraitStages: z.array(z.object({ fromAge: nonNeg, stage: z.string() }).strict()).min(1),
+    childStages: z.array(z.object({ fromAge: nonNeg, stage: z.string() }).strict()).min(1),
+    candidates: z.object({ perDraw: posInt, ageRange, traitChance: z.number().min(0).max(1) }).strict(),
+    traits: z.array(
+      z
+        .object({
+          id: idSchema,
+          name: z.string(),
+          description: z.string(),
+          childChanceBonus: z.number().optional(),
+          birthDeathRiskMod: z.number().optional(),
+          dowry: resourceMapSchema.optional(),
+          heroXpBonus: z.number().optional(),
+          cultureBonus: z.number().optional(),
+          heroDefenseBonus: z.number().optional(),
+        })
+        .strict(),
+    ),
+    spouse: z
+      .object({
+        deathAge: z.object({ min: posInt, max: posInt }).strict(),
+        fertility: z.object({ from: nonNeg, to: nonNeg }).strict(),
+      })
+      .strict(),
+    children: z
+      .object({
+        yearlyChance: z.number().min(0).max(1),
+        thirdPlusChance: z.number().min(0).max(1),
+        birthDeathRisk: z.number().min(0).max(1),
+        max: int.nonnegative(),
+        boys: z.number().min(0).max(1),
+      })
+      .strict(),
+    succession: z
+      .object({
+        xpCarryover: z.object({ blood: z.number().min(0).max(1), adopted: z.number().min(0).max(1), regent: z.number().min(0).max(1) }).strict(),
+        adoptedAge: ageRange,
+        regentAge: ageRange,
+      })
+      .strict(),
+    adoption: z.object({ perDraw: posInt }).strict(),
+    portraits: z
+      .object({ male: z.array(z.string()).min(1), female: z.array(z.string()).min(1), boy: z.string(), girl: z.string() })
+      .strict(),
+    names: z.record(z.string(), namePoolSchema),
+  })
+  .strict();
+
 // --- the bundle ---------------------------------------------------------------
 
 export const contentBundleSchema = z
@@ -438,6 +502,7 @@ export const contentBundleSchema = z
     factions: z.array(factionSchema).min(1),
     hero: heroSchema,
     kingdoms: kingdomsSchema,
+    family: familySchema,
     map: mapSchema,
   })
   .strict();
@@ -455,6 +520,8 @@ export type UnitDef = z.infer<typeof unitSchema>;
 export type FactionDef = z.infer<typeof factionSchema>;
 export type HeroDef = z.infer<typeof heroSchema>;
 export type KingdomsDef = z.infer<typeof kingdomsSchema>;
+export type FamilyDef = z.infer<typeof familySchema>;
+export type FamilyTraitDef = FamilyDef["traits"][number];
 export type WorldDef = z.infer<typeof worldSchema>;
 export type LayoutDef = WorldDef["mapgen"]["layouts"][number];
 export type OasisTypeDef = WorldDef["mapgen"]["oases"][number];

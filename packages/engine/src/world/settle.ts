@@ -4,6 +4,7 @@ import { arrive } from "../military/arrivals.js";
 import { touch } from "../village/timeline.js";
 import { runNpcRaids } from "./npc.js";
 import { botTurn } from "../ai/bot.js";
+import { runFamilyYear } from "../social/family.js";
 
 // ---------------------------------------------------------------------------
 // The world clock. `settle(state, content, until)` processes every
@@ -39,6 +40,7 @@ export function settle(state: GameState, content: Content, until: Ms): void {
       state.scheduled = state.scheduled.filter((e) => e !== next.event);
       if (next.event.kind === "npcRaids") runNpcRaids(state, content, next.event.at);
       else if (next.event.kind === "aiTurn" && next.event.playerId) botTurn(state, content, next.event.playerId, next.event.at);
+      else if (next.event.kind === "familyYear") runFamilyYear(state, content, next.event.at);
     }
   }
   if (until > state.time) state.time = until;

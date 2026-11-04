@@ -31,9 +31,11 @@ import {
   troopUpkeep,
   wallLevel,
 } from "../village/stats.js";
-import { distance, tileInfo, tileXY } from "../world/map.js";
+import { tileInfo, tileXY } from "../world/map.js";
 import { oasisAt } from "../world/oases.js";
 import { createVillage, isFreeValley } from "../world/world.js";
+import { familyMods } from "../social/family.js";
+import { inForeignTerritory, villageClaims } from "../world/territory.js";
 import {
   carryCapacity,
   demolish,
@@ -229,8 +231,15 @@ function resolveAttack(state: GameState, content: Content, m: Movement, at: Ms):
 
   const outcome = battle({
     mode,
-    attacker: { stacks: stacksOf(content, m.troops, m.armory), hero: attackerHero ? heroInBattle(content, attackerHero) : null, morale: moraleFactor },
-    defenders: groups.map((g) => ({ stacks: stacksOf(content, g.troops, g.armory), hero: g.heroOwner?.hero ? heroInBattle(content, g.heroOwner.hero) : null })),
+    attacker: {
+      stacks: stacksOf(content, m.troops, m.armory),
+      hero: attackerHero ? heroInBattle(content, attackerHero, familyMods(state, content, attacker, at)) : null,
+      morale: moraleFactor,
+    },
+    defenders: groups.map((g) => ({
+      stacks: stacksOf(content, g.troops, g.armory),
+      hero: g.heroOwner?.hero ? heroInBattle(content, g.heroOwner.hero, familyMods(state, content, g.heroOwner, at)) : null,
+    })),
     wallLevel: wall,
     wallBonusPerLevel: defenderFaction?.wall.bonusPerLevel ?? 0,
     baseDefense: tv ? content.world.village.baseDefense : 0,
@@ -263,7 +272,7 @@ function resolveAttack(state: GameState, content: Content, m: Movement, at: Ms):
   let heroReturns = false;
   if (m.hero) {
     const w = woundHero(state, content, attacker, outcome.attackerLossRate, at);
-    const xp = w.died ? 0 : Math.round(defenderLossUpkeep * content.hero.xpPerUpkeep);
+    const xp = w.died ? 0 : Math.round(defenderLossUpkeep * content.hero.xpPerUpkeep * (1 + familyMods(state, content, attacker, at).xpBonus));
     if (!w.died && attacker.hero) grantXp(content, attacker.hero, xp);
     attackerSide.hero = { present: true, healthLost: w.lost, died: w.died, xp };
     heroReturns = !w.died;
@@ -271,9 +280,10 @@ function resolveAttack(state: GameState, content: Content, m: Movement, at: Ms):
   if (defenderHeroes.length > 0) {
     const xp = Math.round((attackerLossUpkeep * content.hero.xpPerUpkeep) / defenderHeroes.length);
     for (const p of defenderHeroes) {
-      if (p.hero) grantXp(content, p.hero, xp);
+      const mine = Math.round(xp * (1 + familyMods(state, content, p, at).xpBonus));
+      if (p.hero) grantXp(content, p.hero, mine);
       const s = defenderSides.find((d) => d.playerId === p.id && d.hero);
-      if (s?.hero) s.hero.xp = xp;
+      if (s?.hero) s.hero.xp = mine;
     }
   }
   if (attacker.kind !== "npc") attacker.offense += defenderLossUpkeep;
@@ -497,8 +507,7 @@ export function conquer(state: GameState, content: Content, tv: Village, attacke
 
 function annexOasis(state: GameState, content: Content, o: OasisState, attacker: Player, home: Village | null, report: BattleReportData, at: Ms) {
   if (!home || home.ownerId !== attacker.id) return;
-  const homeTile = villageTile(content, home);
-  const inReach = distance(content, homeTile, o.tile) <= content.hero.oasisRadius;
+  const inReach = villageClaims(state, content, home, o.tile);
   const hasSlot = oasisSlots(content, home) - home.oases.length > 0;
   if (o.ownerVillageId) {
     const prev = state.villages[o.ownerVillageId];
@@ -513,7 +522,7 @@ function annexOasis(state: GameState, content: Content, o: OasisState, attacker:
     o.ownerVillageId = null;
   }
   if (!inReach) {
-    report.notes.push(`The oasis lies too far from ${home.name} to annex (at most ${content.hero.oasisRadius} fields).`);
+    report.notes.push(`The oasis lies outside the territory of ${home.name}, so it cannot be annexed from there.`);
     return;
   }
   if (!hasSlot) {
@@ -655,6 +664,7 @@ function resolveSettle(state: GameState, content: Content, m: Movement, at: Ms):
   };
   if (!home || home.ownerId !== player.id) return goBack("Their home town is lost.");
   if (!isFreeValley(state, content, m.toTile)) return goBack("Someone else settled the valley first.");
+  if (inForeignTerritory(state, content, m.toTile, player.id)) return goBack("The valley now lies inside another town's territory.");
   const need = cultureForVillages(content, player.villageIds.length + 1);
   if (playerCulture(state, player) < need) return goBack(`You need ${need} culture points for another town.`);
   if (expansionSlots(content, home) - home.children.length <= 0) return goBack(`${home.name} has no free expansion slot.`);

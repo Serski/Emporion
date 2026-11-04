@@ -1,5 +1,7 @@
 {
   "defaults": { "name": "Emporion", "speed": 1, "npcCamps": 90 },
+  "calendar": { "seasonHours": 24, "seasons": ["Winter", "Spring", "Summer", "Autumn"], "startYearBC": 300 },
+  "territory": { "townRadius": 4, "cityRadius": 2 },
   "village": {
     "slots": 22,
     "fieldCount": 18,

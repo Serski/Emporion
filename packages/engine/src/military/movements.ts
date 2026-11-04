@@ -7,6 +7,7 @@ import type { GameState, MissionKind, Movement, MovementKind, Ms, Resources, Tro
 import { onMap, tileIndex, tileKind, travelDistance } from "../world/map.js";
 import { isFreeValley } from "../world/world.js";
 import { oasisAt } from "../world/oases.js";
+import { inForeignTerritory } from "../world/territory.js";
 import { heroAlive } from "../social/hero.js";
 import { touch } from "../village/timeline.js";
 import {
@@ -107,6 +108,7 @@ export function sendTroops(state: GameState, content: Content, order: SendOrder,
         return fail("invalid", `Send exactly ${need} settlers, and nothing else, to found a town.`);
       }
       if (!isFreeValley(state, content, order.toTile)) return fail("invalid", "Settlers need an empty valley.");
+      if (inForeignTerritory(state, content, order.toTile, player.id)) return fail("invalid", "That valley lies inside another town's territory.");
       const cp = playerCulture(state, player);
       const need2 = cultureForVillages(content, player.villageIds.length + 1);
       if (cp < need2) return fail("culture", `You need ${need2} culture points for another town (you have ${Math.floor(cp)}).`);

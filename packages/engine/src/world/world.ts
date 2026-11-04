@@ -7,6 +7,8 @@ import type { GameState, Hero, Ms, Player, PlayerKind, Resources, Troops, Villag
 import { distance, tileIndex, tileKind, tileLayout, tilesAround, tileXY } from "./map.js";
 import { capacity } from "../village/stats.js";
 import { scheduleBot } from "../ai/bot.js";
+import { createHouse, familyEnabled, scheduleFamilyYear } from "../social/family.js";
+import { territoryAt } from "./territory.js";
 
 export interface WorldOptions {
   seed?: number;
@@ -51,6 +53,7 @@ export function createWorld(content: Content, opts: WorldOptions): GameState {
   };
   if (opts.npcTowns !== false) placeTowns(state, content);
   placeCamps(state, content, state.settings.npcCamps);
+  scheduleFamilyYear(state, content, opts.startedAt);
   if (state.settings.npcRaids && state.npc.campsPlayerId) {
     const interval = (content.world.npc.camps.raids.intervalHours * HOUR) / speed;
     state.scheduled.push({ id: newId(state, "e"), seq: nextSeq(state), at: Math.round(opts.startedAt + interval), kind: "npcRaids" });
@@ -84,6 +87,7 @@ function makePlayer(state: GameState, name: string, factionId: string, kind: Pla
     defense: 0,
     looted: 0,
     hero: null,
+    house: null,
     kingdomId: null,
     meta: {},
   };
@@ -214,6 +218,7 @@ export function addPlayer(state: GameState, content: Content, opts: AddPlayerOpt
     at: opts.at,
   });
   if (content.hero.enabled) player.hero = newHero(content, `${opts.name}`, village.id, opts.at);
+  if (familyEnabled(content)) createHouse(state, content, player, opts.name, opts.at);
   if (player.kind === "ai") scheduleBot(state, player.id, opts.at);
   return { player, village };
 }
@@ -251,7 +256,8 @@ function findStartTile(state: GameState, content: Content, factionId: string, ne
       (t) =>
         isFreeValley(state, content, t) &&
         tileLayout(content, state.settings.seed, t)?.id === start.id &&
-        !nearVillage(state, content, t, spacing),
+        !nearVillage(state, content, t, spacing) &&
+        !territoryAt(state, content, t),
     );
     const outward = candidates.find((t) => distance(content, t, center) >= ring);
     const pick = outward ?? candidates[0];

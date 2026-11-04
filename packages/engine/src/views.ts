@@ -5,6 +5,8 @@ import type { GameState, HeroPoints, Movement, Ms, OasisState, Player, Resources
 import { constructionBlocker, planBuild, type BuildPlan } from "./economy/construction.js";
 import { heroAlive, heroHealth, reviveCost, reviveMs, xpForLevel } from "./social/hero.js";
 import { effectiveTreasures, kingdomAtTile } from "./social/kingdoms.js";
+import { lifeStage, personAge, portraitFile } from "./social/family.js";
+import { territoryAt } from "./world/territory.js";
 import {
   cultureForVillages,
   culturePerDay,
@@ -134,6 +136,9 @@ export function fieldPlans(state: GameState, content: Content, v: Village): Buil
 
 export interface HeroView {
   name: string;
+  age: number | null;
+  lifeStage: string | null;
+  portrait: string | null; // portrait file stem under portraits/
   level: number;
   xp: number;
   xpNext: number;
@@ -152,8 +157,13 @@ export interface HeroView {
 export function heroView(state: GameState, content: Content, p: Player, now: Ms): HeroView | null {
   const h = p.hero;
   if (!h) return null;
+  const head = p.house?.head;
+  const age = head ? personAge(state, content, head, now) : null;
   return {
     name: h.name,
+    age,
+    lifeStage: age !== null ? lifeStage(content, age).name : null,
+    portrait: head && age !== null ? portraitFile(content, head, age) : null,
     level: h.level,
     xp: h.xp,
     xpNext: xpForLevel(content, h.level + 1),
@@ -264,6 +274,7 @@ export interface TileDetails {
   } | null;
   oasis: { state: OasisState | null; ownerName: string | null; ownerVillageName: string | null } | null;
   kingdomId: string | null;
+  territory: { villageId: string; villageName: string; ownerId: string; ownerName: string } | null;
 }
 
 export function tileDetails(state: GameState, content: Content, tile: number): TileDetails {
@@ -292,7 +303,11 @@ export function tileDetails(state: GameState, content: Content, tile: number): T
     const ov = o?.ownerVillageId ? state.villages[o.ownerVillageId] : undefined;
     oasis = { state: o, ownerName: ov ? state.players[ov.ownerId]?.name ?? null : null, ownerVillageName: ov?.name ?? null };
   }
-  return { info, village, oasis, kingdomId: kingdomAtTile(state, content, tile) };
+  const claim = territoryAt(state, content, tile);
+  const territory = claim
+    ? { villageId: claim.id, villageName: claim.name, ownerId: claim.ownerId, ownerName: state.players[claim.ownerId]?.name ?? "?" }
+    : null;
+  return { info, village, oasis, kingdomId: kingdomAtTile(state, content, tile), territory };
 }
 
 export interface RankingRow {

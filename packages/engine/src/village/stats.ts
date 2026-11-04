@@ -2,6 +2,7 @@ import type { Content } from "../content/load.js";
 import { curveAt, curveSum } from "../content/curves.js";
 import type { BuildingDef, FactionDef } from "../content/schema.js";
 import type { GameState, Player, Resources, Troops, Village } from "../core/types.js";
+import { familyMods } from "../social/family.js";
 
 // ---------------------------------------------------------------------------
 // Derived village numbers. Everything here is a pure read of the state and the
@@ -212,7 +213,7 @@ export function villageRates(state: GameState, content: Content, v: Village, tra
     upkeep,
     net,
     capacity: capacity(content, v),
-    culturePerDay: culturePerDay(content, v),
+    culturePerDay: culturePerDay(content, v) * (owner?.hero?.homeVillageId === v.id ? 1 + familyMods(state, content, owner, v.updatedAt).cultureBonus : 1),
     loyaltyPerHour: loyalty,
     population: pop,
   };

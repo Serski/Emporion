@@ -58,6 +58,7 @@ export interface Player {
   defense: number; // … while defending
   looted: number; // resources carried home from raids
   hero: Hero | null;
+  house: House | null; // the hero's family (MASSALIA's family pack)
   kingdomId: string | null;
   // Free-form slot for the hybrid layer (house, family, offices, …). The
   // engine never reads it.
@@ -86,6 +87,51 @@ export interface Hero {
   points: HeroPoints;
   unspent: number;
   productionResource: ResourceId | "all";
+}
+
+// --- family -------------------------------------------------------------------
+
+export type Sex = "male" | "female";
+
+export interface Person {
+  id: string;
+  name: string;
+  sex: Sex;
+  bornAt: Ms; // ages are counted on the world's calendar from here
+  portrait: string; // the adult portrait set (children show the child set until of age)
+  traitId: string | null;
+  deathAge: number; // old age takes them at this age
+  diedAt: Ms | null;
+  cause: string | null;
+}
+
+export interface LineageEntry {
+  name: string;
+  portrait: string;
+  bornAt: Ms;
+  from: Ms;
+  to: Ms;
+  cause: string;
+  kind: string; // how they came to head the house: founder, blood, adopted, regent, forced
+  level: number;
+}
+
+export interface House {
+  name: string;
+  generation: number;
+  head: Person; // the hero is the head of the house
+  headSince: Ms;
+  headKind: string;
+  spouse: (Person & { marriedAt: Ms }) | null;
+  children: Person[]; // the head's children, living and dead
+  kin: Person[]; // siblings and others carried over from earlier generations
+  candidates: Person[]; // marriage prospects, redrawn each year while unwed
+  adoptees: Person[]; // adoption prospects, drawn while the house has no son
+  adoptedHeir: Person | null;
+  regentFor: string | null; // the child id a regent holds the house for
+  year: number; // the last calendar year processed
+  lineage: LineageEntry[];
+  chronicle: { at: Ms; text: string }[];
 }
 
 export type VillageKind = "player" | "camp" | "town";
@@ -237,7 +283,7 @@ export interface Kingdom {
   createdAt: Ms;
 }
 
-export type ScheduledKind = "npcRaids" | "aiTurn";
+export type ScheduledKind = "npcRaids" | "aiTurn" | "familyYear";
 
 export interface ScheduledEvent {
   id: string;
@@ -255,6 +301,7 @@ export type ReportKind =
   | "settle"
   | "starvation"
   | "hero"
+  | "family"
   | "kingdom";
 
 export interface Report {

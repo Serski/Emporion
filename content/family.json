@@ -1,0 +1,57 @@
+{
+  "enabled": true,
+  "comingOfAge": 15,
+  "head": { "startAge": 20, "deathAge": { "min": 55, "max": 68 } },
+  "lifeStages": [
+    { "fromAge": 0, "name": "Prime", "strength": 1 },
+    { "fromAge": 40, "name": "Middle Age", "strength": 0.95 },
+    { "fromAge": 55, "name": "Old", "strength": 0.85 },
+    { "fromAge": 65, "name": "Venerable", "strength": 0.7 }
+  ],
+  "portraitStages": [
+    { "fromAge": 0, "stage": "young" },
+    { "fromAge": 30, "stage": "prime" },
+    { "fromAge": 50, "stage": "old" }
+  ],
+  "childStages": [
+    { "fromAge": 0, "stage": "infant" },
+    { "fromAge": 3, "stage": "child" }
+  ],
+  "candidates": { "perDraw": 3, "ageRange": [18, 30], "traitChance": 0.45 },
+  "traits": [
+    { "id": "fertile", "name": "Fertile", "description": "Children come easily to this line.", "childChanceBonus": 0.15, "birthDeathRiskMod": -0.04 },
+    { "id": "dowried", "name": "Dowried", "description": "Brings stores into the marriage.", "dowry": { "timber": 600, "stone": 600, "iron": 600, "grain": 600 } },
+    { "id": "learned", "name": "Learned", "description": "Raised among scrolls. The hero learns 10% faster.", "heroXpBonus": 0.1 },
+    { "id": "devout", "name": "Devout", "description": "The gods know this name. +10% culture in the hero's home town.", "cultureBonus": 0.1 },
+    { "id": "stern", "name": "Stern", "description": "Runs a hard, orderly household. +5% defence where the hero stands.", "heroDefenseBonus": 0.05 },
+    { "id": "frail", "name": "Frail", "description": "Health was never her ally.", "childChanceBonus": -0.05, "birthDeathRiskMod": 0.05 }
+  ],
+  "spouse": { "deathAge": { "min": 60, "max": 70 }, "fertility": { "from": 18, "to": 35 } },
+  "children": { "yearlyChance": 0.4, "thirdPlusChance": 0.15, "birthDeathRisk": 0.07, "max": 4, "boys": 0.5 },
+  "succession": {
+    "xpCarryover": { "blood": 0.5, "adopted": 0.35, "regent": 0.3 },
+    "adoptedAge": [20, 35],
+    "regentAge": [25, 45]
+  },
+  "adoption": { "perDraw": 3 },
+  "portraits": {
+    "male": ["avatar-20-1", "avatar-20-2", "avatar-20-3", "avatar-20-4", "avatar-20-5", "avatar-20-6", "avatar-20-7", "avatar-20-8", "avatar-30-1", "avatar-30-2", "avatar-30-3", "avatar-30-4", "avatar-30-5", "avatar-30-6", "avatar-30-7"],
+    "female": ["wife-01", "wife-02", "wife-03", "wife-04", "wife-05", "wife-06", "wife-07", "wife-08", "wife-09", "wife-10", "wife-11", "wife-12", "wife-13", "wife-14", "wife-15", "wife-16"],
+    "boy": "child-boy",
+    "girl": "child-girl"
+  },
+  "names": {
+    "hellenes": {
+      "male": ["Lykos", "Damon", "Theron", "Nikias", "Kleon", "Hippias", "Demetrios", "Sostratos", "Kallias", "Philon", "Andreas", "Eumenes", "Leonidas", "Pyrrhos", "Aristos", "Kimon", "Drakon", "Hieron", "Menon", "Telamon"],
+      "female": ["Aglaia", "Theano", "Niobe", "Chloe", "Myrrine", "Lysandra", "Phoebe", "Eirene", "Kallisto", "Daphne", "Penelope", "Aspasia", "Helike", "Berenike", "Xanthe", "Melitta", "Phryne", "Glykera", "Ariadne", "Korinna"]
+    },
+    "celts": {
+      "male": ["Brennos", "Ambiorix", "Catumandus", "Comanus", "Nannos", "Orgetorix", "Dumnorix", "Cingetorix", "Bituitos", "Luerios", "Epasnactos", "Diviciacos", "Litaviccos", "Segovax", "Togirix", "Cassivellos"],
+      "female": ["Gyptis", "Brigantia", "Onnona", "Rosmerta", "Sirona", "Damona", "Nantosuelta", "Elouna", "Senuna", "Ancamna", "Litavis", "Verbeia", "Cartimanda", "Banna", "Epona", "Sequana"]
+    },
+    "carthaginians": {
+      "male": ["Hanno", "Himilco", "Bomilcar", "Mago", "Hasdrubal", "Hamilcar", "Gisco", "Adherbal", "Bostar", "Carthalo", "Maharbal", "Himilkat", "Abdmelqart", "Eshmunazar", "Baalyaton", "Hiempsal"],
+      "female": ["Sophonisba", "Elissa", "Arishat", "Batbaal", "Amatbaal", "Batnoam", "Hanna", "Ummashtart", "Abibaal", "Tanitbaal", "Arisatbaal", "Hotmilk", "Saponibaal", "Amotmelqart", "Imilke", "Bodashtart"]
+    }
+  }
+}

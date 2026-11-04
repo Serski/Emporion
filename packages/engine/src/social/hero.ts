@@ -5,6 +5,7 @@ import { fail, ok, type Result } from "../core/result.js";
 import { DAY, scaledMs } from "../core/time.js";
 import type { GameState, Hero, HeroPoints, Ms, Player, Resources } from "../core/types.js";
 import type { HeroInBattle } from "../military/combat.js";
+import type { FamilyMods } from "./family.js";
 import { touchId } from "../village/timeline.js";
 import { effectFactor, firstBuildingWith } from "../village/stats.js";
 
@@ -30,12 +31,12 @@ function settleHealth(state: GameState, content: Content, hero: Hero, t: Ms) {
   hero.healthAt = t;
 }
 
-export function heroInBattle(content: Content, hero: Hero): HeroInBattle {
+export function heroInBattle(content: Content, hero: Hero, mods?: FamilyMods): HeroInBattle {
   const h = content.hero;
   return {
-    strength: h.strength.base + h.strength.perPoint * hero.points.strength,
+    strength: (h.strength.base + h.strength.perPoint * hero.points.strength) * (mods?.strength ?? 1),
     offenseBonus: h.offensePerPoint * hero.points.offense,
-    defenseBonus: h.defensePerPoint * hero.points.defense,
+    defenseBonus: h.defensePerPoint * hero.points.defense + (mods?.defenseBonus ?? 0),
   };
 }
 

@@ -6,6 +6,7 @@ import { holdFestival, research, train, upgradeUnit } from "./economy/training.j
 import { sendResources, sendTroops, withdraw, type SendOrder } from "./military/movements.js";
 import { assignHeroPoints, moveHeroHome, reviveHero, setHeroProduction } from "./social/hero.js";
 import { collectTribute, foundKingdom, joinKingdom, leaveKingdom } from "./social/kingdoms.js";
+import { adopt, ensureFamilies, marry, nameChild } from "./social/family.js";
 import { markRead } from "./social/reports.js";
 import { touch } from "./village/timeline.js";
 import { advance, advanceAll, settle } from "./world/settle.js";
@@ -151,6 +152,21 @@ export class Game {
     return collectTribute(this.state, this.content, playerId, now);
   }
 
+  marry(playerId: string, candidateId: string, now: Ms) {
+    this.at(now);
+    return marry(this.state, this.content, playerId, candidateId, now);
+  }
+
+  nameChild(playerId: string, childId: string, name: string, now: Ms) {
+    this.at(now);
+    return nameChild(this.state, this.content, playerId, childId, name);
+  }
+
+  adopt(playerId: string, candidateId: string, now: Ms) {
+    this.at(now);
+    return adopt(this.state, this.content, playerId, candidateId, now);
+  }
+
   markRead(playerId: string, reportId: string) {
     markRead(this.state, playerId, reportId);
   }
@@ -162,6 +178,8 @@ export class Game {
 
   static restore(content: Content, state: GameState): Game {
     if (state.schema !== 1) throw new Error(`unsupported save schema ${String((state as { schema?: unknown }).schema)}`);
+    // Saves from before the family pack get their houses now.
+    ensureFamilies(state, content, state.time);
     return new Game(content, state);
   }
 }

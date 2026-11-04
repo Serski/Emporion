@@ -19,6 +19,7 @@ export function rawBundle(): ContentBundle {
     factions,
     hero: read("hero.json"),
     kingdoms: read("kingdoms.json"),
+    family: read("family.json"),
     map: read(pathJoin("map", "tiles.json")),
   };
 }

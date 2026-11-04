@@ -2,6 +2,8 @@ import {
   contentBundleSchema,
   type BuildingDef,
   type ContentBundle,
+  type FamilyDef,
+  type FamilyTraitDef,
   type FactionDef,
   type FieldDef,
   type HeroDef,
@@ -36,6 +38,8 @@ export interface Content {
   oasisTypes: Record<string, OasisTypeDef>;
   hero: HeroDef;
   kingdoms: KingdomsDef;
+  family: FamilyDef;
+  familyTraits: Record<string, FamilyTraitDef>;
   map: MapDef;
   mapRegion: Int32Array; // region index per tile (-1 none)
   towns: Record<string, TownDef>;
@@ -54,7 +58,7 @@ export function parseContent(raw: ContentBundle): Content {
   const problems: string[] = [];
   const fail = (msg: string) => problems.push(msg);
 
-  const { world, hero, kingdoms, map } = bundle;
+  const { world, hero, kingdoms, family, map } = bundle;
   const resources = bundle.resources.resources;
   const resourceIds = resources.map((r) => r.id);
   const resourceSet = new Set(resourceIds);
@@ -181,6 +185,17 @@ export function parseContent(raw: ContentBundle): Content {
     if (f.start && !towns[f.start.town]) fail(`faction ${f.id}: start town ${f.start.town} is not on the map`);
   }
 
+  const familyTraits: Record<string, FamilyTraitDef> = {};
+  for (const t of family.traits) {
+    if (familyTraits[t.id]) fail(`duplicate family trait ${t.id}`);
+    familyTraits[t.id] = t;
+    if (t.dowry) checkRes(t.dowry, `family trait ${t.id} dowry`);
+  }
+  if (family.enabled) {
+    for (const f of bundle.factions) if (f.playable && !family.names[f.id]) fail(`family: no name pool for faction ${f.id}`);
+  }
+  if (world.calendar.seasons.length === 0) fail("calendar needs at least one season");
+
   if (problems.length) throw new ContentError(problems);
 
   return {
@@ -200,6 +215,8 @@ export function parseContent(raw: ContentBundle): Content {
     oasisTypes,
     hero,
     kingdoms,
+    family,
+    familyTraits,
     map,
     mapRegion,
     towns,
