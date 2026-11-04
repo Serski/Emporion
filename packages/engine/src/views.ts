@@ -320,6 +320,10 @@ export interface RankingRow {
   offense: number;
   defense: number;
   looted: number;
+  house: string | null;
+  heroName: string | null;
+  heroLevel: number;
+  heroXp: number;
 }
 
 export function rankings(state: GameState, content: Content): RankingRow[] {
@@ -335,6 +339,10 @@ export function rankings(state: GameState, content: Content): RankingRow[] {
       offense: p.offense,
       defense: p.defense,
       looted: p.looted,
+      house: p.house?.name ?? null,
+      heroName: p.hero?.name ?? null,
+      heroLevel: p.hero?.level ?? 0,
+      heroXp: p.hero?.xp ?? 0,
     }))
     .sort((a, b) => b.population - a.population);
 }

@@ -6,6 +6,7 @@ import {
   familyView,
   parseContent,
   personAge,
+  rankings,
   yearMs,
   type Content,
   type GameState,
@@ -128,6 +129,10 @@ describe("the house", () => {
     expect(h.kin.map((k) => k.name)).toContain("Hieron");
     const view = familyView(g.state, g.content, p, nextYear(g, T0))!;
     expect(view.head.name).toBe("Kimon");
+    const row = rankings(g.state, g.content).find((r) => r.playerId === pid)!;
+    expect(row.house).toBe("House of Protis");
+    expect(row.heroName).toBe("Kimon");
+    expect(row.heroXp).toBe(1000);
   });
 
   it("puts a regent in for a minor son, and hands over when he comes of age", () => {
