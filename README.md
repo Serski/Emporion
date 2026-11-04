@@ -1,8 +1,8 @@
 # EMPORION
 
-*Working title.* A browser strategy game in the tradition of the tile-map empire builders: towns with resource fields and buildings, timed construction and training, armies marching across a square-tile world, raids, sieges, conquest and colonies, a hero, oases, outlaw camps and kingdoms.
+*Working title.* A browser strategy game in the tradition of the tile-map empire builders: towns with resource fields and buildings, timed construction and training, armies marching across a square-tile world, raids, sieges, conquest and colonies, borders around every town, a hero, oases, outlaw camps and kingdoms.
 
-The world is MASSALIA's: the 33,124-tile grid is derived from MASSALIA's hand-drawn world 2 map (its terrain art, its 175 regions and its 105 towns), and the client wears MASSALIA's theme and art. It is meant to become a hybrid: MASSALIA's houses, families, festivals and politics built on top of this strategy layer. See [docs/HYBRID.md](docs/HYBRID.md).
+The world is MASSALIA's: the 33,124-tile grid is derived from MASSALIA's hand-drawn world 2 map (its terrain art, its 175 regions and its 105 towns), and the client follows Travian Kingdoms' screen layout in MASSALIA's theme and art. It is becoming a hybrid: MASSALIA's family already runs the hero (the hero is the head of a house who marries, has children, ages and passes the sword to an heir) and MASSALIA's calendar dates the world from 300 BC. Festivals and politics come next. See [docs/HYBRID.md](docs/HYBRID.md).
 
 ## Quick start
 

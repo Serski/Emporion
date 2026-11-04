@@ -9,16 +9,19 @@ EMPORION was built to MASSALIA's conventions so the two can merge: TypeScript en
 | `apps/web/public/map2/world2.json`, `terrain2.webp`, `names2.json`, `politics2.json`, `townstats.json` | copied into `tools/map/sources/`; `build_tiles.py` turns them into the tile grid. Rebuild after MASSALIA's PSD changes. |
 | goods `timber`, `stone`, `iron`, `grain` (Wood, Stone, Iron, Wheat) | the four resources, same ids |
 | unit art (`PELTAST.webp`, `HOPLITE.webp`, `HIPPEIS.webp`, `BAND_*.webp`, goods icons) | `apps/web/public/assets/`, referenced by `icon` in content as in `units.json` |
-| Cinzel + Spectral, night-bronze palette | the client's theme tokens in `apps/web/src/styles.css` |
+| Cinzel + Spectral, night-bronze palette, Greek-key band, banners | the client's theme tokens and band in `apps/web/src/styles.css`; banners and building paintings in `apps/web/public/art/` |
+| family portraits (`avatar-20-*`, `avatar-30-*`, `wife-*`, children, by age stage) | `apps/web/public/portraits/`, named in `content/family.json` |
+| family rules (`family.ts`: marriage, children, death, succession, adoption, regency) | `packages/engine/src/social/family.ts` with `content/family.json`, seated on the hero |
+| the calendar's seasons and BC years | `packages/engine/src/world/calendar.ts` (`world.calendar` in content) |
 | polities and their colours | free cities on the map wear their polity's colour; tile windows name the region and polity |
 
 ## Where MASSALIA's systems go
 
 | MASSALIA system | Plug-in point here | Notes |
 | --- | --- | --- |
-| Houses, characters, family, heirs (`family.ts`, `character.ts`) | `Player.meta` (free-form, never read by the engine) for a first pass, then a `house` module in the engine | The hero is the natural seat for the house's head: `Player.hero` already levels, falls and is revived. An heir could be revived as the new hero. |
+| Houses, characters, family, heirs (`family.ts`, `character.ts`) | done: `Player.house` and `social/family.ts` | The head of the house is the hero: age weakens him, his wife's trait helps him, and at his death the heir becomes the hero with part of the experience. Still to come from MASSALIA: characters' skills and offices, dowry negotiation, marriages between players' houses. |
 | Festivals, Olympiad, Dionysia (`festival.ts`, `olympiad.ts`, `leagueFestivals.ts`) | the Theatre's `festivals` in `content/buildings.json`, the `FestivalJob` on the village timeline | World-wide festivals fit a new `ScheduledKind` in `world/settle.ts` (like `npcRaids`) that every player can join. |
-| Calendar and seasons, one season per real day (`calendar.ts`, seasonal coefficients in `buildings.json`) | `village/stats.ts → villageRates` for the multiplier, `village/timeline.ts → nextEventAt` for the season boundary | Add the boundary as a timeline event and accrual stays exact, which is better than MASSALIA's "current season for the whole window". |
+| Calendar and seasons, one season per real day (`calendar.ts`, seasonal coefficients in `buildings.json`) | the calendar is in (`world/calendar.ts`); for seasonal production, `village/stats.ts → villageRates` for the multiplier and `village/timeline.ts → nextEventAt` for the season boundary | Seasons name the date and age the family today. Add the boundary as a timeline event and seasonal accrual stays exact, which is better than MASSALIA's "current season for the whole window". |
 | More goods (wine, olive oil, salt, wool…) | `content/resources.json`: resources and fields are data | Add buildings that produce them through `effects.production`, and add them to unit costs. Only one resource may be food. |
 | Market, vendor bands, player listings (`market.ts`) | the Agora (`economy`, `sendResources`) | A vendor or exchange module can sit beside the merchants; prices belong in content. |
 | Oligarchy, elections, League, Koinon, government (`oligarchy.ts`, `league*.ts`, `koinon.ts`) | `social/kingdoms.ts` | Kingdoms are the simplest political layer (king, governors, tribute, influence, victory points); MASSALIA's institutions can replace or extend it. |
@@ -47,6 +50,6 @@ The client's `Session` (`apps/web/src/session.ts`) is the local host; a remote h
 
 1. Put the engine and content into the MASSALIA monorepo as `packages/strategy` and `content/strategy`, or keep this repo and import `@massalia/shared` here.
 2. Add a server route per command, plus the snapshot table.
-3. Bring houses and family onto `Player.meta` and the hero.
-4. Bring the calendar in: seasons as timeline boundaries, festivals as world events.
+3. Houses and family on the hero: done. Next, characters and offices.
+4. The calendar is in; next, seasons as production boundaries and festivals as world events.
 5. Decide whether kingdoms or MASSALIA's institutions run the politics.

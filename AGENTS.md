@@ -33,9 +33,10 @@ pnpm gate                                  # the green light: build, lint, typec
 - `engine/src/world/settle.ts` — the world clock (marches, NPC raid waves, AI turns, in time order).
 - `engine/src/military/` — combat math (`combat.ts`, swappable via `setBattleResolver`), sending (`movements.ts`), arrivals (`arrivals.ts`).
 - `engine/src/economy/` — construction, training, research, armory, festivals.
-- `engine/src/social/` — hero, kingdoms, reports.
+- `engine/src/social/` — hero, the house and family (`family.ts`), kingdoms, reports.
+- `engine/src/world/calendar.ts` — seasons and years; `world/territory.ts` — the borders every town claims.
 - `engine/src/views.ts` — read models for clients. `engine/src/game.ts` — the command facade.
-- `apps/web/src/session.ts` — the local host (clock, save, hot-seat). `views/` and `windows/` — the panels.
+- `apps/web/src/session.ts` — the local host (clock, save, hot-seat). `hud.tsx` — the top bar and the HUD over the view. `views/` — the three full-screen views. `windows/` — every window.
 
 ## Commit discipline
 

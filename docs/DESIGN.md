@@ -8,6 +8,7 @@ Every number below is a default from `content/`; change the JSON, not the code. 
 - **World clock.** `settle(until)` (`world/settle.ts`) processes cross-town events in time order, ties broken by creation order: marches arriving, outlaw raid waves, AI turns. A server calls it before each request; the client calls it every tick.
 - **Scale.** Content times are seconds at speed 1, rates are per hour at speed 1. Speed multiplies production, upkeep, construction, training, research, culture, loyalty and regrowth. Troop speed (default = speed) multiplies marching.
 - **Determinism.** The state carries a seeded generator (`core/rng.ts`); map features use a stateless hash of the seed. Same seed and same commands give the same world (tested).
+- **Calendar** (`world/calendar.ts`). A season lasts 24 hours ÷ speed (`world.calendar.seasonHours`). The world opens in Winter, 300 BC; Winter, Spring, Summer and Autumn make a year. A person's age is the number of calendar years since their birth. The house's yearly roll (`familyYear`) is a scheduled world event at each new year.
 
 ## Towns
 
@@ -43,6 +44,7 @@ Every number below is a default from `content/`; change the JSON, not the code. 
 - **What stands on land** is drawn from the world seed, weighted by terrain. Plains are 84% valley, 10% oasis and 6% wild; mountains 32%, 10% and 58%. Valleys take a field layout weighted by terrain (wheat-rich on plains, iron and stone in the mountains). Oases take a bonus type the same way.
 - **Distance** is straight-line in tiles, with no wrap-around. Travel distance = d · (1 − w) + d · w · 1.5, where w is the share of the line over water or fog. Marches keep straight lines, but sea legs cost half again.
 - **March time** = travel distance ÷ the slowest unit's speed (fields per hour), ÷ troop speed. The Hippodrome adds 8% per level on the part beyond 15 fields.
+- **Borders** (`world/territory.ts`). Every town claims the tiles within a radius of it: 4 fields for a player's town, 2 for a free city, 0 (its own tile) for an outlaw camp. A tile inside two claims goes to the nearer town, and on a tie to the one founded first. The claim map is cached and rebuilt only when a town is founded; a conquest changes the claim's owner, not its shape. Borders are checked in three places: settlers cannot found a town in another player's borders (when sent and again on arrival), a new player's start tile lies outside every border, and an oasis can only be annexed from the town whose borders hold it.
 
 ## Missions
 
@@ -67,7 +69,18 @@ Beginner protection lasts 80 hours ÷ speed, at least 6. Protected players canno
 - **Loot.** The survivors' carrying capacity, filled evenly across resources from the stock above the cache (cache × faction multiplier, 1.5 for the Celts; outlaws and cities have none). A win against outlaws or a city also takes their treasures.
 - **Scouting.** Attacking scout power is compared with the defending scouts' power. With no defending scouts, the attacker gets through unseen. If the attacker is stronger they get through but are seen, losing (defence ÷ attack)^1.5. Otherwise all are caught.
 - **Hero.** Health lost = side's loss rate × 100; the hero falls at 0 or when the side is wiped out. Experience = the wheat upkeep of the enemies killed. Level L needs 80 · L(L+1)/2 experience and every level gives 4 points. A fallen hero is revived at home for a cost and time that grow with level; the Heroon shortens it.
-- **Oases.** Win an attack with the hero alive, within 4 fields of home, with a free Heroon slot (levels 5, 12 and 20) to annex the oasis. An owned oasis loses 34 loyalty per hero victory and changes hands at 0.
+- **Oases.** Win an attack with the hero alive on an oasis inside the home town's borders, with a free Heroon slot (levels 5, 12 and 20), to annex it. An owned oasis loses 34 loyalty per hero victory and changes hands at 0.
+
+## The house (`social/family.ts`, `content/family.json`)
+
+MASSALIA's family, seated on the hero. Every player has a house; its head is the hero.
+
+- **The head** starts at 20 and has a hidden death age between 55 and 68. Age scales the hero's strength: ×1 until 40, ×0.95 to 55, ×0.85 to 65, ×0.7 after. The portrait follows the age (young, prime from 30, old from 50).
+- **Each new year**, in order: a wife past her death age (60–70) dies; a wife aged 18–35 may bear a child (40% a year for the first two, 15% after, at most 4, half sons; 7% of births cost the mother's life); sons who turn 15 are announced as heirs; a regent hands over to a ward who came of age; a head past his death age dies and the house passes on; an unwed head is offered three new brides (18–30); a house with no son and no adopted heir is offered three men to adopt (20–35).
+- **Traits** come with 45% of brides and act while she lives: Fertile (+15% child chance, −4% birth risk), Dowried (600 of each resource into the capital on the wedding, up to its storage), Learned (+10% hero experience), Devout (+10% culture in the hero's home town), Stern (+5% defence for the hero's side), Frail (−5% child chance, +5% birth risk).
+- **Succession** takes the first that exists: the eldest son of 15 or more (50% of the hero's experience), the adopted heir (35%), a regent for a son under 15 (30%, handing over at 15), or a stranger the house adopts (35%). The heir becomes the hero at home with that experience, his level recomputed and every attribute point unspent. A hero on the march or stationed away is brought home. The dead head goes into the lineage, and the house's generation counts up.
+- **Commands:** `marry` (one of this year's brides), `nameChild`, `adopt` (one of this year's candidates). AI governors marry the first bride and adopt at 45 if they have no son.
+- **Saves** from before the family pack get a house for every player on load (`ensureFamilies`).
 
 ## NPC world
 
@@ -86,4 +99,11 @@ Beginner protection lasts 80 hours ÷ speed, at least 6. Protected players canno
 
 - `GameState` (`core/types.ts`) is plain JSON: players, villages, oases (created when first touched), movements, reports (the newest 1,500 kept), kingdoms and scheduled events.
 - `Game` (`game.ts`) is the command facade. Each command settles to `now`, then validates and applies, and returns a `Result`.
-- `views.ts` holds the read models a client renders: town summary, slots, construction options, movements, tile details, rankings and hero.
+- `views.ts` holds the read models a client renders: town summary, slots, construction options, movements, tile details (with the tile's territory), rankings (with each player's house and hero) and hero (with age, life stage and portrait). `familyView` in `social/family.ts` is the house's read model.
+
+## The client (`apps/web`)
+
+- **Layout.** Travian Kingdoms' arrangement in MASSALIA's dress. `App.tsx` renders the top bar, the stage (one of `views/FieldsView`, `views/TownView`, `views/MapView`) and the HUD from `hud.tsx` over it: the town switcher (top left), the three view medallions and the stores ribbon (top centre), the hero badge with marches and troops at home (top right), the tool rail (left), the builders (bottom) and quick actions (bottom right). Below 960 px the HUD stacks around the view and the rail becomes a bar along the bottom.
+- **Windows** (`windows/`) open from the HUD and the views: field, building and construction; tile; send troops and goods; the hero (Hero, Family, Lineage tabs); reports (filed by kind, opened in place); standings (players with a podium, kingdoms, houses); kingdom; troops (at home, abroad, on the road); players.
+- **Map.** A canvas over MASSALIA's terrain art. It draws each town's borders as a wash of its owner's colour with an edge line, kingdom frontiers in gold when zoomed in, and a hover card for the tile under the pointer.
+- **Art.** `public/art/` holds a painting per building (`b-<id>.webp`), the view medallions, the lion coin and the window banners; `public/portraits/` the family faces by stage; `public/assets/` the unit and goods art. All are MASSALIA's.
