@@ -105,7 +105,10 @@ export function assembleFleet(content: Content, p: Player, space: number, zones:
     );
   }
   if (escort) {
-    for (const s of ordered) if (s.role === "warship") picked[s.id] = goodsOf(p, s.id);
+    for (const s of ordered) {
+      const n = goodsOf(p, s.id);
+      if (s.role === "warship" && n > 0) picked[s.id] = n;
+    }
   }
   return ok({ ships: picked });
 }

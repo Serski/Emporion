@@ -3,6 +3,7 @@ import {
   Game,
   HOUR,
   altarBoost,
+  assembleFleet,
   calendarAt,
   constructionOptions,
   createVillage,
@@ -348,6 +349,11 @@ describe("the sea", () => {
     const sent = g.send({ playerId: pid, fromVillageId: post.id, toTile: tileIndex(g.content, massalia.x, massalia.y), mission: "raid", troops: { hoplite: 20 } }, T0);
     expect(sent.ok).toBe(true);
     if (!sent.ok) return;
+    // No triremes in port: the escort the Send window shows adds none, not a zero count.
+    p.goods["trade-ship"] = 1;
+    const fleet = assembleFleet(g.content, p, 20, 1, true);
+    expect(fleet.ok && Object.entries(fleet.ships)).toEqual([["trade-ship", 1]]);
+    p.goods["trade-ship"] = 0;
     g.advance(sent.movement.arriveAt + 1);
     const report = Object.values(g.state.reports).find((r) => r.title.startsWith("The landing at"));
     expect(report).toBeDefined();
