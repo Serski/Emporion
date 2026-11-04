@@ -129,7 +129,9 @@ function PeopleTab({ enabled }: { enabled: boolean }) {
       {spymaster > 0 && (
         <section className="subpanel">
           <h3 className="subpanel__title">Your spy network</h3>
-          <p className="small">Spymaster posture · {posture === "guard" ? "Guarding the house (+10 against plots)" : "Hunting for openings (+10 to your plots)"}</p>
+          <p className="small">
+            Spymaster posture · {posture === "guard" ? `Guarding the house (+${content.massalia.intrigue.defence.spymasterGuard} against plots)` : `Hunting for openings (+${content.massalia.intrigue.attack.spymasterHunt} to your plots)`}
+          </p>
           <div className="actions">
             <button className={`btn btn--small${posture === "guard" ? " btn--buy" : ""}`} onClick={() => s.run((g, t) => g.setPosture(s.active, "guard", t), "Your spymaster guards the house.")}>
               Guard the house
@@ -205,7 +207,7 @@ function StallsTab({ enabled }: { enabled: boolean }) {
   const full = view.myStalls >= view.stallCap;
   return (
     <>
-      <p className="lede">Houses sell to houses here, at their own price. The city takes one drachma in ten from every sale.</p>
+      <p className="lede">Houses sell to houses here, at their own price. The city takes {pct(view.taxRate)} of every sale.</p>
       <section className="subpanel">
         <div className="subpanel__head">
           <h3 className="subpanel__title">Sell</h3>

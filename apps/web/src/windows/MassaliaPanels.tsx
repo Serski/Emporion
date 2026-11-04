@@ -35,7 +35,10 @@ export function AltarPanel() {
           </div>
         ))}
       </div>
-      <p className="muted small">Devotion makes the blessing stronger; a priest keeps the fire half as long again. The agora sells bulls and chickens.</p>
+      <p className="muted small">
+        Devotion makes the blessing stronger; a priest keeps the fire burning {pct((content.people["priest"]?.altarDuration ?? 1) - 1)} longer. The agora sells{" "}
+        {content.massalia.crafting.altar.offerings.map((o) => (content.goods[o.good]?.name ?? o.good).toLowerCase()).join(" and ")}.
+      </p>
     </section>
   );
 }
